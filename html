@@ -1,1 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ふわもこギルド物語</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="game">
+
+  <h1>🐱ふわもこギルド</h1>
+
+  <div id="resources">
+    💰 ゴールド: <span id="gold">100</span>
+  </div>
+
+  <div id="cats">
+    <h2>編成ネコ</h2>
+    <div id="catList"></div>
+  </div>
+
+  <div id="quests">
+    <h2>クエスト</h2>
+    <button onclick="startQuest('easy')">🌿おつかい (5秒)</button>
+    <button onclick="startQuest('normal')">🌲もり探索 (10秒)</button>
+    <button onclick="startQuest('hard')">🐉討伐 (15秒)</button>
+  </div>
+
+  <div id="status"></div>
+
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>
 
