@@ -1,1 +1,33 @@
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background: #fdf6f0;
+  text-align: center;
+}
+
+#game {
+  max-width: 400px;
+  margin: auto;
+  padding: 10px;
+}
+
+button {
+  display: block;
+  width: 100%;
+  margin: 5px 0;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: #ffccdd;
+  font-size: 16px;
+}
+
+button:active {
+  transform: scale(0.95);
+}
+
+#status {
+  margin-top: 15px;
+  font-weight: bold;
+}
 
