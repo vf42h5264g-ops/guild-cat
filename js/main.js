@@ -66,17 +66,15 @@ function bindEvents() {
 });
 }
 
-function onDispatchClick(questId) {
-  // ✅ 派遣中 or 受取待ち があるなら開始できない
+function onDispatchClick(questId, mult = 1) {
   if (state.dispatch?.inQuest) return;
   if (state.dispatch?.pendingResult) return;
 
   const q = state?.daily?.quests?.find((x) => x.id === questId);
   if (!q) return;
 
-  // 派遣開始
-  startDispatch(state, q);
-  appendLog(state, `🚀 派遣開始：${q.icon} ${q.typeLabel}：${q.title}`);
+  startDispatch(state, q, mult);
+  appendLog(state, `🚀 派遣開始：${q.icon} ${q.typeLabel}：${q.title}（×${mult}）`);
 
   saveState(state);
   render(state);
