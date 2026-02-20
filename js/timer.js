@@ -26,7 +26,9 @@ export function getRemainingSec(state) {
 }
 
 export function shouldSettle(state) {
-  return !!state.dispatch?.inQuest && Date.now() >= state.dispatch.endAt;
+  return !!state.dispatch?.inQuest
+    && !state.dispatch.settled
+    && Date.now() >= state.dispatch.endAt;
 }
 
 export function clearDispatch(state) {
