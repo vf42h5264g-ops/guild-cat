@@ -11,6 +11,8 @@ export function startDispatch(state, quest) {
     endAt: now + quest.durationSec * 1000,
     settled: false,
     pendingResult: null,
+
+    teamCatIds, // ← 追加
   };
   return state;
 }
