@@ -115,17 +115,25 @@ export function renderQuests(state) {
           return `<div class="actions"><div class="muted">⏳ 進行中…（残り ${fmtMMSS(rem)}）</div></div>`;
         }
 
-        // ✅ 受取待ちがある間は「派遣する」を無効化（二重取りや状態破綻を防ぐ）
-        const disabled = inQuest || hasPending ? "disabled" : "";
-        return `
-          <div class="actions">
-            <button class="btn" ${disabled}
-              data-action="dispatch"
-              data-quest-id="${q.id}">
-              派遣する
-            </button>
-          </div>
-        `;
+        // ✅ 受取待ちがある間は「派遣する」を無効化
+　　　　const disabled = (inQuest || hasPending) ? "disabled" : "";
+
+　　　　return `
+ 　　　　 <div class="actions">
+    　　　　<select class="select" data-role="mult" ${disabled}>
+     　　　　 <option value="1">×1（基本）</option>
+    　　　　  <option value="2">×2</option>
+      　　　　<option value="4">×4</option>
+     　　　　 <option value="8">×8（最大8時間）</option>
+  　　　　  </select>
+
+   　　　　 <button class="btn" ${disabled}
+   　　　　   data-action="dispatch"
+    　　　　  data-quest-id="${q.id}">
+    　　　　  派遣する
+   　　　　 </button>
+ 　　　　 </div>
+　　　　`;
       })();
 
       const activeClass = isActive || isPending ? "isActive" : "";
