@@ -91,7 +91,11 @@ function onClaimClick() {
 
   // 反映（ここで初めて付与）
   state.gold = (state.gold || 0) + goldDelta;
-  state.cats = (state.cats || []).map((c) => applyExpAndLevelUp(c, expDelta));
+  const teamCatIds = payload.teamCatIds || state.dispatch?.teamCatIds || [];
+state.cats = (state.cats || []).map((c) => {
+  if (!teamCatIds.includes(c.id)) return c;
+  return applyExpAndLevelUp(c, expDelta);
+});
 
   // ログ
   const outcome = payload.outcome;
@@ -184,6 +188,7 @@ function settleDispatchToPending() {
       rewards: { goldDelta, expDelta },
       // 参考情報（UIやデバッグ用に残したければ）
       questTitle: `${quest.icon} ${quest.typeLabel}：${quest.title}`,
+      teamCatIds, // ← 追加
     },
   };
 
