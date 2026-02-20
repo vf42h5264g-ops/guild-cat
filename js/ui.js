@@ -41,9 +41,11 @@ export function render(state) {
 
 export function renderHeader(state) {
   qs("gold").textContent = `💰 ${state.gold ?? 0}G`;
-  if (state.dispatch?.inQuest) {
+    if (state.dispatch?.inQuest) {
     const rem = getRemainingSec(state);
     qs("status").textContent = `⏳ 派遣中 ${fmtMMSS(rem)}`;
+  } else if (state.dispatch?.pendingResult) {
+    qs("status").textContent = `🎁 帰還！報酬受取待ち`;
   } else {
     qs("status").textContent = `🟢 待機中`;
   }
