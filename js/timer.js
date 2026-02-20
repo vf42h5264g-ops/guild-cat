@@ -44,3 +44,11 @@ export function clearDispatch(state) {
   };
   return state;
 }
+
+export function markDispatchPending(state, pendingResult) {
+  // 派遣自体は終了。結果は pendingResult に保持
+  state.dispatch.inQuest = false;
+  state.dispatch.settled = true;
+  state.dispatch.pendingResult = pendingResult; // { resultId, payload, claimed:false } など
+  return state;
+}
