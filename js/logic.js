@@ -163,3 +163,175 @@ export function applyExpAndLevelUp(cat, expDelta) {
   }
   return c;
 }
+
+// ===== M3: pendingResult + 二重取り防止 =====
+
+// resultId（nonce）
+export function makeResultId() {
+  return `res_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+
+// 1回の派遣結果を「確定」して返す（※受取時に再計算しない）
+export function computeDispatchResult({ quest, teamCats }) {
+  const teamPower = teamCats.reduce((s, c) => s + (c.power || 0), 0);
+  const teamLuck  = teamCats.reduce((s, c) => s + (c.luck  || 0), 0);
+  const teamPersonalities = teamCats.map(c => c.personality);
+
+  const synergy = calcSynergy(teamPersonalities);
+  const questBonus = calcQuestTypeBonus(quest.type, teamPersonalities);
+
+  const successRate = calcSuccessRate({
+    teamPower,
+    difficulty: quest.difficulty,
+    synergyEffects: synergy.effects,
+    questBonus
+  });
+
+  const greatRate = calcGreatRate({
+    teamLuck,
+    difficulty: quest.difficulty,
+    synergyEffects: synergy.effects
+  });
+
+  const outcome = rollOutcome(successRate, greatRate);
+  const rewards = calcRewards(quest, outcome);
+
+  return {
+    outcome,
+    successRate,
+    greatRate,
+    synergyLabel: synergy.label,
+    rewards, // { goldDelta, expDelta }
+  };
+}
+
+/**
+ * dispatching -> pendingResult への遷移を「一度だけ」確定させる
+ * - endAtを過ぎたら pendingResult を生成して固定
+ * - すでに pendingResult があれば再生成しない（＝二重取りの根絶）
+ *
+ * 想定state例：
+ * state.guild.dispatch = {
+ *   state: "idle"|"dispatching"|"pendingResult",
+ *   endAt: number,
+ *   questId: string,
+ *   teamCatIds: string[],
+ *   pendingResult: null | { resultId, createdAt, payload, claimed }
+ * }
+ */
+export function tickDispatchToPending(state, { getQuestById } = {}) {
+  const d = state?.guild?.dispatch;
+  if (!d) return false;
+
+  if (d.state !== "dispatching") return false;
+  if (Date.now() < (d.endAt || 0)) return false;
+
+  // 既に確定済みなら再生成しない（重要）
+  if (d.pendingResult?.resultId) {
+    d.state = "pendingResult";
+    return true;
+  }
+
+  // quest取得
+  const quest = getQuestById ? getQuestById(d.questId) : null;
+  if (!quest) {
+    // questが取れない場合は壊れないように pending にだけしておく（※UIで要救済表示推奨）
+    d.pendingResult = {
+      resultId: makeResultId(),
+      createdAt: Date.now(),
+      claimed: false,
+      payload: { error: "QUEST_NOT_FOUND", questId: d.questId }
+    };
+    d.state = "pendingResult";
+    return true;
+  }
+
+  // team取得（idで引ける想定。state.cats or state.guild.cats のどちらでも動くようにする）
+  const allCats = state.cats || state.guild?.cats || [];
+  const teamCats = (d.teamCatIds || [])
+    .map(id => allCats.find(c => c.id === id))
+    .filter(Boolean);
+
+  const payload = computeDispatchResult({ quest, teamCats });
+
+  d.pendingResult = {
+    resultId: makeResultId(),
+    createdAt: Date.now(),
+    claimed: false,
+    payload, // outcome/rewards 等
+  };
+  d.state = "pendingResult";
+  return true;
+}
+
+// 連打・二重クリック対策ロック（メモリ上）
+let __claimLock = false;
+
+/**
+ * pendingResult を受け取る（1回だけ）
+ * - claimedフラグで二重取り防止（保存データ側の最終防衛線）
+ * - lockで連打防止（UI側の事故防止）
+ *
+ * applyGold / updateCats は外から注入できる形にして、既存実装に合わせやすくする
+ */
+export function claimPendingResult(
+  state,
+  { applyGold, updateCats, save } = {}
+) {
+  const d = state?.guild?.dispatch;
+  if (!d || d.state !== "pendingResult" || !d.pendingResult) {
+    return { ok: false, reason: "no_pending" };
+  }
+
+  if (__claimLock) return { ok: false, reason: "locked" };
+  __claimLock = true;
+
+  try {
+    const pr = d.pendingResult;
+    if (pr.claimed) return { ok: false, reason: "already_claimed" };
+
+    // ここで付与（payload.rewards を消費するだけ！再計算しない）
+    const payload = pr.payload || {};
+    const rewards = payload.rewards || { goldDelta: 0, expDelta: 0 };
+
+    // Gold
+    if (typeof applyGold === "function") {
+      applyGold(rewards.goldDelta || 0);
+    } else {
+      // フォールバック：state.guild.gold を直接加算
+      state.guild.gold = (state.guild.gold || 0) + (rewards.goldDelta || 0);
+    }
+
+    // EXP（派遣に出した猫へ）
+    if (typeof updateCats === "function") {
+      // updateCats 側で teamCatIds を見て applyExpAndLevelUp を回す想定
+      updateCats(rewards.expDelta || 0);
+    } else {
+      // フォールバック：teamCatIds を使ってここで更新
+      const allCats = state.cats || state.guild?.cats || [];
+      const ids = d.teamCatIds || [];
+      const next = allCats.map(c => {
+        if (!ids.includes(c.id)) return c;
+        return applyExpAndLevelUp(c, rewards.expDelta || 0);
+      });
+      if (state.cats) state.cats = next;
+      else if (state.guild?.cats) state.guild.cats = next;
+    }
+
+    // 二重取り防止：先に claimed を立てる
+    pr.claimed = true;
+
+    // 受取後は idle に戻して pending を消す（事故りにくい）
+    d.pendingResult = null;
+    d.state = "idle";
+    d.endAt = 0;
+    d.questId = null;
+    d.teamCatIds = [];
+
+    if (typeof save === "function") save();
+
+    return { ok: true, payload };
+  } finally {
+    setTimeout(() => { __claimLock = false; }, 250);
+  }
+}
