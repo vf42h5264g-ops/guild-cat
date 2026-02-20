@@ -1,22 +1,29 @@
 // js/timer.js
 
-export function startDispatch(state, quest) {
+export function startDispatch(state, quest, mult = 1) {
   const now = Date.now();
 
-  const teamCatIds = (state.cats || []).map(c => c.id); // ← 追加
-  
+  const teamCatIds = (state.cats || []).map(c => c.id);
+
+  // 最大8時間（秒）
+  const MAX_SEC = 8 * 60 * 60;
+
+  const baseSec = quest.durationSec;
+  const durationSec = Math.min(baseSec * mult, MAX_SEC);
+
   state.dispatch = {
     inQuest: true,
     questId: quest.id,
-    questSnapshot: { ...quest }, // 日付またぎ対策の下地
+    questSnapshot: { ...quest, durationSec }, // 実際の派遣時間でスナップ
     dispatchId: `d_${now}_${Math.random().toString(36).slice(2, 8)}`,
     startedAt: now,
-    endAt: now + quest.durationSec * 1000,
+    endAt: now + durationSec * 1000,
     settled: false,
     pendingResult: null,
-
-    teamCatIds, // ← 追加
+    teamCatIds,
+    mult, // ついでに保存
   };
+
   return state;
 }
 
