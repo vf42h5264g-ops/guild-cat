@@ -176,6 +176,9 @@ function settleDispatchToPending() {
   // 報酬（確定して pendingResult に固定）
   const { goldDelta, expDelta } = calcRewards(quest, outcome);
 
+  // ✅ 参加ネコID（現状は全員参加。将来は選抜UIで差し替え）
+　const teamCatIds = state.dispatch.teamCatIds || (state.cats || []).map(c => c.id);
+
   // ✅ pendingResult を「一度だけ」作る（二重生成を防ぐ）
   state.dispatch.settled = true;
   state.dispatch.inQuest = false;
