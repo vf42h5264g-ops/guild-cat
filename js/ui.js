@@ -31,6 +31,13 @@ function chanceToLabel(rate) {
   return { text: "高い", cls: "badge-high" };
 }
 
+function outcomeToText(outcome) {
+  if (outcome === "great") return "大成功";
+  if (outcome === "success") return "成功";
+  if (outcome === "fail") return "失敗";
+  return "完了";
+}
+
 export function render(state) {
   renderHeader(state);
   renderQuests(state);
@@ -41,7 +48,8 @@ export function render(state) {
 
 export function renderHeader(state) {
   qs("gold").textContent = `💰 ${state.gold ?? 0}G`;
-    if (state.dispatch?.inQuest) {
+
+  if (state.dispatch?.inQuest) {
     const rem = getRemainingSec(state);
     qs("status").textContent = `⏳ 派遣中 ${fmtMMSS(rem)}`;
   } else if (state.dispatch?.pendingResult) {
@@ -63,92 +71,127 @@ export function renderQuests(state) {
   const hasPending = !!state.dispatch?.pendingResult;
   const activeQuestId = state.dispatch?.questId;
 
-  const teamPersonalities = (state.cats || []).map(c => c.personality);
+  const teamPersonalities = (state.cats || []).map((c) => c.personality);
   const teamPower = (state.cats || []).reduce((s, c) => s + (c.power || 0), 0);
   const synergy = calcSynergy(teamPersonalities);
 
-  wrap.innerHTML = daily.quests.map((q) => {
-    const questBonus = calcQuestTypeBonus(q.type, teamPersonalities);
-    const successRate = calcSuccessRate({
-      teamPower,
-      difficulty: q.difficulty,
-      synergyEffects: synergy.effects,
-      questBonus,
-    });
-        const isActive = inQuest && activeQuestId === q.id;
-    const isPending = !inQuest && hasPending && activeQuestId === q.id;
+  wrap.innerHTML = daily.quests
+    .map((q) => {
+      const questBonus = calcQuestTypeBonus(q.type, teamPersonalities);
+      const successRate = calcSuccessRate({
+        teamPower,
+        difficulty: q.difficulty,
+        synergyEffects: synergy.effects,
+        questBonus,
+      });
+      const chance = chanceToLabel(successRate);
 
-    const actionsHtml = (() => {
-      // ✅ 受取待ち（pendingResultがあるクエスト）
-      if (isPending) {
-        const pr = state.dispatch.pendingResult;
-        const outcome =
-          pr?.payload?.outcome === "great" ? "大成功" :
-          pr?.payload?.outcome === "success" ? "成功" :
-          pr?.payload?.outcome === "fail" ? "失敗" : "完了";
-        const g = pr?.payload?.rewards?.goldDelta ?? 0;
-        const e = pr?.payload?.rewards?.expDelta ?? 0;
+      const isActive = inQuest && activeQuestId === q.id;
+      const isPending = !inQuest && hasPending && activeQuestId === q.id;
 
+      const actionsHtml = (() => {
+        // ✅ 受取待ち（pendingResultがあるクエスト）
+        if (isPending) {
+          const pr = state.dispatch.pendingResult;
+          const outcome = outcomeToText(pr?.payload?.outcome);
+          const g = pr?.payload?.rewards?.goldDelta ?? 0;
+          const e = pr?.payload?.rewards?.expDelta ?? 0;
+          const claimed = !!pr?.claimed;
+
+          const disabled = claimed ? "disabled" : "";
+          const btnText = claimed ? "受取済み" : "報酬を受け取る";
+
+          return `
+            <div class="actions">
+              <div class="muted">🎁 帰還！結果：${outcome}（💰 +${g} / ⭐ +${e}）</div>
+              <button class="btn" ${disabled} data-action="claim">${btnText}</button>
+            </div>
+          `;
+        }
+
+        // ✅ 派遣中
+        if (isActive) {
+          const rem = getRemainingSec(state);
+          return `<div class="actions"><div class="muted">⏳ 進行中…（残り ${fmtMMSS(rem)}）</div></div>`;
+        }
+
+        // ✅ 受取待ちがある間は「派遣する」を無効化（二重取りや状態破綻を防ぐ）
+        const disabled = inQuest || hasPending ? "disabled" : "";
         return `
           <div class="actions">
-            <div class="muted">🎁 帰還！結果：${outcome}（💰 +${g} / ⭐ +${e}）</div>
-            <button class="btn"
-              data-action="claim">
-              報酬を受け取る
+            <button class="btn" ${disabled}
+              data-action="dispatch"
+              data-quest-id="${q.id}">
+              派遣する
             </button>
           </div>
         `;
-      }
+      })();
 
-      // ✅ 派遣中
-      if (isActive) {
-        const rem = getRemainingSec(state);
-        return `<div class="actions"><div class="muted">⏳ 進行中…（残り ${fmtMMSS(rem)}）</div></div>`;
-      }
+      const activeClass = isActive || isPending ? "isActive" : "";
 
-      // ✅ 受取待ちがある間は「派遣する」を無効化（二重取りや状態破綻を防ぐ）
-      const disabled = (inQuest || hasPending) ? "disabled" : "";
       return `
-        <div class="actions">
-          <button class="btn" ${disabled}
-            data-action="dispatch"
-            data-quest-id="${q.id}">
-            派遣する
-          </button>
+        <div class="card ${activeClass}">
+          <div class="cardTitle">${q.icon} ${q.typeLabel}：${q.title}</div>
+          <div class="meta">
+            <div>⏱ ${fmtDuration(q.durationSec)}</div>
+            <div>💀 難易度 ${q.difficulty}</div>
+          </div>
+          <div class="rewards">
+            <div>💰 ${q.rewardGold}</div>
+            <div>⭐ ${q.rewardExp}</div>
+          </div>
+          <div class="muted">
+            ${q.notes || ""}
+            <span style="margin-left:10px;">成功見込み：</span>
+            <span class="badge ${chance.cls}">${chance.text}</span>
+          </div>
+          ${actionsHtml}
         </div>
       `;
-    })();
+    })
+    .join("");
+}
+
 export function renderCats(state) {
   const wrap = qs("cats");
   const cats = state.cats || [];
-  wrap.innerHTML = cats.map((c) => {
-    const pLabel = personalityLabel(c.personality);
-    // 次LV必要EXP（表示用）
-    const need = 20 * (c.level || 1);
-    const exp = c.exp || 0;
-    return `
-      <div class="card">
-        <div class="cardTitle">${c.name}（${pLabel}） Lv${c.level}</div>
-        <div class="meta">
-          <div>⚔ ${c.power}</div>
-          <div>🍀 ${c.luck}</div>
+  wrap.innerHTML = cats
+    .map((c) => {
+      const pLabel = personalityLabel(c.personality);
+      // 次LV必要EXP（表示用）
+      const need = 20 * (c.level || 1);
+      const exp = c.exp || 0;
+      return `
+        <div class="card">
+          <div class="cardTitle">${c.name}（${pLabel}） Lv${c.level}</div>
+          <div class="meta">
+            <div>⚔ ${c.power}</div>
+            <div>🍀 ${c.luck}</div>
+          </div>
+          <div class="muted">${c.coat} / ${c.pattern}</div>
+          <div class="muted" style="margin-top:6px;">EXP: ${exp}/${need}</div>
         </div>
-        <div class="muted">${c.coat} / ${c.pattern}</div>
-        <div class="muted" style="margin-top:6px;">EXP: ${exp}/${need}</div>
-      </div>
-    `;
-  }).join("");
+      `;
+    })
+    .join("");
 }
 
 export function renderSynergy(state) {
-  const teamPersonalities = (state.cats || []).map(c => c.personality);
+  const teamPersonalities = (state.cats || []).map((c) => c.personality);
   const synergy = calcSynergy(teamPersonalities);
   const prefix =
-    synergy.label.startsWith("火花") ? "🔥" :
-    synergy.label.startsWith("安心") ? "🧊" :
-    synergy.label.startsWith("あまえんぼ") ? "🍯" :
-    synergy.label.startsWith("バランス") ? "🤝" :
-    synergy.label.startsWith("統一") ? "🧩" : "🤝";
+    synergy.label.startsWith("火花")
+      ? "🔥"
+      : synergy.label.startsWith("安心")
+      ? "🧊"
+      : synergy.label.startsWith("あまえんぼ")
+      ? "🍯"
+      : synergy.label.startsWith("バランス")
+      ? "🤝"
+      : synergy.label.startsWith("統一")
+      ? "🧩"
+      : "🤝";
   qs("synergy").textContent = `${prefix} 相性：${synergy.label}`;
 }
 
@@ -159,7 +202,9 @@ export function renderLog(state) {
     wrap.innerHTML = `<div class="muted">まだログはありません</div>`;
     return;
   }
-  wrap.innerHTML = lines.map((t) => `<div class="logLine">・${escapeHtml(t)}</div>`).join("");
+  wrap.innerHTML = lines
+    .map((t) => `<div class="logLine">・${escapeHtml(t)}</div>`)
+    .join("");
 }
 
 function escapeHtml(str) {
