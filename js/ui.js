@@ -60,7 +60,9 @@ export function renderQuests(state) {
   }
 
   const inQuest = !!state.dispatch?.inQuest;
+  const hasPending = !!state.dispatch?.pendingResult;
   const activeQuestId = state.dispatch?.questId;
+
   const teamPersonalities = (state.cats || []).map(c => c.personality);
   const teamPower = (state.cats || []).reduce((s, c) => s + (c.power || 0), 0);
   const synergy = calcSynergy(teamPersonalities);
