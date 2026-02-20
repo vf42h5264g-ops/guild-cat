@@ -75,15 +75,39 @@ export function renderQuests(state) {
       synergyEffects: synergy.effects,
       questBonus,
     });
-    const chance = chanceToLabel(successRate);
-    const isActive = inQuest && activeQuestId === q.id;
+        const isActive = inQuest && activeQuestId === q.id;
+    const isPending = !inQuest && hasPending && activeQuestId === q.id;
 
     const actionsHtml = (() => {
+      // ✅ 受取待ち（pendingResultがあるクエスト）
+      if (isPending) {
+        const pr = state.dispatch.pendingResult;
+        const outcome =
+          pr?.payload?.outcome === "great" ? "大成功" :
+          pr?.payload?.outcome === "success" ? "成功" :
+          pr?.payload?.outcome === "fail" ? "失敗" : "完了";
+        const g = pr?.payload?.rewards?.goldDelta ?? 0;
+        const e = pr?.payload?.rewards?.expDelta ?? 0;
+
+        return `
+          <div class="actions">
+            <div class="muted">🎁 帰還！結果：${outcome}（💰 +${g} / ⭐ +${e}）</div>
+            <button class="btn"
+              data-action="claim">
+              報酬を受け取る
+            </button>
+          </div>
+        `;
+      }
+
+      // ✅ 派遣中
       if (isActive) {
         const rem = getRemainingSec(state);
         return `<div class="actions"><div class="muted">⏳ 進行中…（残り ${fmtMMSS(rem)}）</div></div>`;
       }
-      const disabled = inQuest ? "disabled" : "";
+
+      // ✅ 受取待ちがある間は「派遣する」を無効化（二重取りや状態破綻を防ぐ）
+      const disabled = (inQuest || hasPending) ? "disabled" : "";
       return `
         <div class="actions">
           <button class="btn" ${disabled}
@@ -94,31 +118,6 @@ export function renderQuests(state) {
         </div>
       `;
     })();
-
-    const activeClass = isActive ? "isActive" : "";
-
-    return `
-      <div class="card ${activeClass}">
-        <div class="cardTitle">${q.icon} ${q.typeLabel}：${q.title}</div>
-        <div class="meta">
-          <div>⏱ ${fmtDuration(q.durationSec)}</div>
-          <div>💀 難易度 ${q.difficulty}</div>
-        </div>
-        <div class="rewards">
-          <div>💰 ${q.rewardGold}</div>
-          <div>⭐ ${q.rewardExp}</div>
-        </div>
-        <div class="muted">
-          ${q.notes || ""}
-          <span style="margin-left:10px;">成功見込み：</span>
-          <span class="badge ${chance.cls}">${chance.text}</span>
-        </div>
-        ${actionsHtml}
-      </div>
-    `;
-  }).join("");
-}
-
 export function renderCats(state) {
   const wrap = qs("cats");
   const cats = state.cats || [];
