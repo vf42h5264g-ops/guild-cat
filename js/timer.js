@@ -2,6 +2,9 @@
 
 export function startDispatch(state, quest) {
   const now = Date.now();
+
+  const teamCatIds = (state.cats || []).map(c => c.id); // ← 追加
+  
   state.dispatch = {
     inQuest: true,
     questId: quest.id,
