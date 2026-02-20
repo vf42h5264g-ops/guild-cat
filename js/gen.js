@@ -173,6 +173,37 @@ export function generateDaily(dateKey) {
     };
   });
 
+  // ✅ 追加：長時間（8時間）クエを1つ生成
+  // 既存3クエの「1秒あたり報酬」を平均して8時間分にする（A：時間比例）
+  const D8H = 8 * 60 * 60; // 28800 sec
+
+  const avgGoldPerSec =
+    quests.reduce((s, q) => s + (q.rewardGold / Math.max(1, q.durationSec)), 0) / quests.length;
+
+  const avgExpPerSec =
+    quests.reduce((s, q) => s + (q.rewardExp / Math.max(1, q.durationSec)), 0) / quests.length;
+
+  const rewardGold = Math.max(1, Math.round(avgGoldPerSec * D8H * 0.90)); // Goldは少し抑制
+  const rewardExp  = Math.max(1, Math.round(avgExpPerSec  * D8H * 1.00)); // EXPは比例
+
+  const avgDiff =
+    quests.reduce((s, q) => s + (q.difficulty || 0), 0) / quests.length;
+
+  const difficulty = Math.max(1, Math.round(avgDiff * 1.15));
+
+  quests.push({
+    id: "long_8h", // 固定ID（重複防止＆デバッグしやすい）
+    type: "explore",
+    icon: "🌙",
+    typeLabel: "長時間遠征",
+    title: "夜通しパトロール",
+    durationSec: D8H,
+    difficulty,
+    rewardGold,
+    rewardExp,
+    notes: "放置向け：報酬は時間に比例（Goldは少し控えめ）",
+  });
+
   return { dateKey, quests, generatedAt: Date.now() };
 }
 
