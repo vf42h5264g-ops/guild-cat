@@ -42,22 +42,28 @@ function bindEvents() {
 
   // ✅ dispatch と claim を同じ委譲で拾う
   questsEl.addEventListener("click", (ev) => {
-    const btn = ev.target?.closest?.("button[data-action]");
-    if (!btn) return;
+  const btn = ev.target?.closest?.("button[data-action]");
+  if (!btn) return;
 
-    const action = btn.getAttribute("data-action");
-    if (action === "dispatch") {
-      const questId = btn.getAttribute("data-quest-id");
-      if (!questId) return;
-      onDispatchClick(questId);
-      return;
-    }
+  const action = btn.getAttribute("data-action");
+  if (action === "dispatch") {
+    const questId = btn.getAttribute("data-quest-id");
+    if (!questId) return;
 
-    if (action === "claim") {
-      onClaimClick();
-      return;
-    }
-  });
+    // ここで倍率を読む（なければ1）
+    const actions = btn.closest(".actions");
+    const sel = actions?.querySelector?.('select[data-role="mult"]');
+    const mult = sel ? Number(sel.value) : 1;
+
+    onDispatchClick(questId, mult);
+    return;
+  }
+
+  if (action === "claim") {
+    onClaimClick();
+    return;
+  }
+});
 }
 
 function onDispatchClick(questId) {
