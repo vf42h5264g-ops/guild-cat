@@ -1,4 +1,7 @@
+// js/ui.js
 import { personalityLabel } from "./gen.js";
+import { calcSynergy, calcQuestTypeBonus, calcSuccessRate } from "./logic.js";
+import { getRemainingSec } from "./timer.js";
 
 function qs(id) {
   const el = document.getElementById(id);
@@ -14,13 +17,18 @@ function fmtDuration(sec) {
   return `${m}分${s}秒`;
 }
 
-// M1：まだ成功率計算は未接続なので、仮の見込みを置く
-// M2で logic.js を繋いで「低/ふつう/高」を計算に差し替える
-function roughChanceLabel(_state, quest) {
-  // 固定テーブルに合わせた仮（あとで置換）
-  if (quest.type === "guard") return { text: "高い", cls: "badge-high" };
-  if (quest.type === "explore") return { text: "ふつう", cls: "badge-mid" };
-  return { text: "低い", cls: "badge-low" };
+function fmtMMSS(totalSec) {
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+function chanceToLabel(rate) {
+  // 低い: 5〜44 / ふつう: 45〜64 / 高い: 65〜95
+  const pct = rate * 100;
+  if (pct <= 44) return { text: "低い", cls: "badge-low" };
+  if (pct <= 64) return { text: "ふつう", cls: "badge-mid" };
+  return { text: "高い", cls: "badge-high" };
 }
 
 export function render(state) {
@@ -33,7 +41,12 @@ export function render(state) {
 
 export function renderHeader(state) {
   qs("gold").textContent = `💰 ${state.gold ?? 0}G`;
-  qs("status").textContent = state.dispatch?.inQuest ? `⏳ 派遣中` : `🟢 待機中`;
+  if (state.dispatch?.inQuest) {
+    const rem = getRemainingSec(state);
+    qs("status").textContent = `⏳ 派遣中 ${fmtMMSS(rem)}`;
+  } else {
+    qs("status").textContent = `🟢 待機中`;
+  }
 }
 
 export function renderQuests(state) {
@@ -46,14 +59,25 @@ export function renderQuests(state) {
 
   const inQuest = !!state.dispatch?.inQuest;
   const activeQuestId = state.dispatch?.questId;
+  const teamPersonalities = (state.cats || []).map(c => c.personality);
+  const teamPower = (state.cats || []).reduce((s, c) => s + (c.power || 0), 0);
+  const synergy = calcSynergy(teamPersonalities);
 
   wrap.innerHTML = daily.quests.map((q) => {
-    const chance = roughChanceLabel(state, q);
+    const questBonus = calcQuestTypeBonus(q.type, teamPersonalities);
+    const successRate = calcSuccessRate({
+      teamPower,
+      difficulty: q.difficulty,
+      synergyEffects: synergy.effects,
+      questBonus,
+    });
+    const chance = chanceToLabel(successRate);
     const isActive = inQuest && activeQuestId === q.id;
 
     const actionsHtml = (() => {
       if (isActive) {
-        return `<div class="actions"><div class="muted">⏳ 進行中…</div></div>`;
+        const rem = getRemainingSec(state);
+        return `<div class="actions"><div class="muted">⏳ 進行中…（残り ${fmtMMSS(rem)}）</div></div>`;
       }
       const disabled = inQuest ? "disabled" : "";
       return `
@@ -96,6 +120,9 @@ export function renderCats(state) {
   const cats = state.cats || [];
   wrap.innerHTML = cats.map((c) => {
     const pLabel = personalityLabel(c.personality);
+    // 次LV必要EXP（表示用）
+    const need = 20 * (c.level || 1);
+    const exp = c.exp || 0;
     return `
       <div class="card">
         <div class="cardTitle">${c.name}（${pLabel}） Lv${c.level}</div>
@@ -104,15 +131,22 @@ export function renderCats(state) {
           <div>🍀 ${c.luck}</div>
         </div>
         <div class="muted">${c.coat} / ${c.pattern}</div>
+        <div class="muted" style="margin-top:6px;">EXP: ${exp}/${need}</div>
       </div>
     `;
   }).join("");
 }
 
-// M1：相性はまだ計算未接続。表示だけ固定。
-// M2で logic.calcSynergy() につなぐ
-export function renderSynergy(_state) {
-  qs("synergy").textContent = `🤝 相性：なし`;
+export function renderSynergy(state) {
+  const teamPersonalities = (state.cats || []).map(c => c.personality);
+  const synergy = calcSynergy(teamPersonalities);
+  const prefix =
+    synergy.label.startsWith("火花") ? "🔥" :
+    synergy.label.startsWith("安心") ? "🧊" :
+    synergy.label.startsWith("あまえんぼ") ? "🍯" :
+    synergy.label.startsWith("バランス") ? "🤝" :
+    synergy.label.startsWith("統一") ? "🧩" : "🤝";
+  qs("synergy").textContent = `${prefix} 相性：${synergy.label}`;
 }
 
 export function renderLog(state) {
