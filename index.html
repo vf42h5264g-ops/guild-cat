@@ -1,38 +1,40 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ふわもこギルド物語</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ネコギルド</title>
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
+  <div id="app">
+    <div id="header" class="header card">
+      <div id="title" class="title">🐱 ネコギルド</div>
+      <div class="headerRow">
+        <div id="gold" class="gold">💰 0G</div>
+        <div id="status" class="status">🟢 待機中</div>
+      </div>
+    </div>
 
-<div id="game">
+    <section id="questsSection" class="section">
+      <div id="questsTitle" class="sectionTitle">今日のクエスト</div>
+      <div id="quests" class="stack"></div>
+    </section>
 
-  <h1>🐱ふわもこギルド</h1>
+    <section id="catsSection" class="section">
+      <div id="catsTitle" class="sectionTitle">編成ネコ</div>
+      <div id="cats" class="stack"></div>
+    </section>
 
-  <div id="resources">
-    💰 ゴールド: <span id="gold">100</span>
+    <div id="synergy" class="synergy card">🤝 相性：なし</div>
+
+    <section id="logSection" class="section">
+      <div id="logTitle" class="sectionTitle">ログ</div>
+      <div id="log" class="log card"></div>
+    </section>
   </div>
 
-  <div id="cats">
-    <h2>編成ネコ</h2>
-    <div id="catList"></div>
-  </div>
-
-  <div id="quests">
-    <h2>クエスト</h2>
-    <button onclick="startQuest('easy')">🌿おつかい (5秒)</button>
-    <button onclick="startQuest('normal')">🌲もり探索 (10秒)</button>
-    <button onclick="startQuest('hard')">🐉討伐 (15秒)</button>
-  </div>
-
-  <div id="status"></div>
-
-</div>
-
-<script src="main.js"></script>
+  <script type="module" src="./js/main.js"></script>
 </body>
 </html>
 
