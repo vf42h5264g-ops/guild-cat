@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cozy Cat Guild</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Start Screen -->
+  <section id="startScreen" class="screen">
+    <div class="card">
+      <h1 class="title">Cozy Cat Guild</h1>
+      <p class="subtitle" id="startSubtitle">ねこの小さなギルド経営記</p>
+
+      <div class="tip">
+        <div class="tipLabel">🐾 今日のひとこと</div>
+        <div class="tipText" id="dailyTip">「やる気はあるにゃ。」</div>
+      </div>
+
+      <p class="bodyText">
+        街の片隅に、小さなギルドができました。<br>
+        依頼をこなし、訓練で育てて、<br>
+        あなただけのギルドを大きくしよう。
+      </p>
+
+      <button id="btnStart" class="primary">タップして開始</button>
+      <div class="small">Version 0.1</div>
+    </div>
+  </section>
+
+  <!-- Main Screen -->
+  <section id="mainScreen" class="screen hidden">
+    <header class="header">
+      <div class="headerRow">
+        <div class="brand">Cozy Cat Guild</div>
+        <button id="btnSave" class="ghost">保存</button>
+      </div>
+      <div class="statsRow" id="hud"></div>
+
+      <!-- Collapsible Log -->
+      <div class="logHeader" id="logHeader">
+        <span id="logChevron">▶</span>
+        <span>ログ</span>
+        <span class="pill" id="logUnreadPill">0</span>
+      </div>
+      <div class="logPanel hidden" id="logPanel"></div>
+
+      <!-- Pending Results Summary -->
+      <div class="pendingBar hidden" id="pendingBar">
+        <span id="pendingText">受取待ち: 0</span>
+        <button id="btnCollectAll" class="primary smallBtn">まとめて受取</button>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- Tabs -->
+      <nav class="tabs">
+        <button class="tab active" data-tab="quest">
+          クエスト <span class="dot hidden" id="dotQuest">●</span>
+        </button>
+        <button class="tab" data-tab="cats">
+          ネコ <span class="dot hidden" id="dotCats">●</span>
+        </button>
+        <button class="tab" data-tab="training">
+          訓練 <span class="dot hidden" id="dotTraining">●</span>
+        </button>
+      </nav>
+
+      <!-- Tab Panels -->
+      <section id="tab-quest" class="tabPanel"></section>
+      <section id="tab-cats" class="tabPanel hidden"></section>
+      <section id="tab-training" class="tabPanel hidden"></section>
+    </main>
+  </section>
+
+  <!-- Modal -->
+  <div id="modalBackdrop" class="backdrop hidden"></div>
+  <div id="modal" class="modal hidden">
+    <div class="modalHeader">
+      <div id="modalTitle">Modal</div>
+      <button id="modalClose" class="ghost">×</button>
+    </div>
+    <div id="modalBody" class="modalBody"></div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
