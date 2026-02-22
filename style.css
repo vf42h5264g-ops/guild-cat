@@ -44,6 +44,17 @@ body { margin: 0; background: #0f1115; color: #e9ecf1; }
 .logTime { font-size: 11px; opacity: .7; float: right; }
 
 .pendingBar { margin-top: 10px; background: #10141b; border: 1px solid #232a36; border-radius: 12px; padding: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.rankBar {
+  margin-top: 10px;
+  background: #10141b;
+  border: 1px solid #232a36;
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
 
 .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.55); }
 .modal { position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%); width: min(520px, calc(100% - 24px)); background: #151a22; border: 1px solid #232a36; border-radius: 16px; }
