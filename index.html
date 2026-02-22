@@ -32,56 +32,59 @@
 
   <!-- Main Screen -->
   <section id="mainScreen" class="screen hidden">
-    <header class="header">
-      <div class="headerRow">
-        <div class="brand">Cozy Cat Guild</div>
-        <button id="btnSave" class="ghost">保存</button>
-      </div>
-      <div class="statsRow" id="hud"></div>
+    <div class="container">
+      <header class="header">
+        <div class="headerRow">
+          <div class="brand">Cozy Cat Guild</div>
+          <button id="btnSave" class="ghost">保存</button>
+        </div>
 
-      <!-- Collapsible Log -->
-      <div class="logHeader" id="logHeader">
-        <span id="logChevron">▶</span>
-        <span>ログ</span>
-        <span class="pill" id="logUnreadPill">0</span>
-      </div>
-      <div class="logPanel hidden" id="logPanel"></div>
+        <div class="statsGrid" id="hud"></div>
 
-      <!-- Pending Results Summary -->
-      <div class="pendingBar hidden" id="pendingBar">
-        <span id="pendingText">受取待ち: 0</span>
-        <button id="btnCollectAll" class="primary smallBtn">まとめて受取</button>
-      </div>
-    </header>
-    
-　　　<!-- Rank Up -->
-　　　<div class="rankBar" id="rankBar">
-　　　  <div>
- 　　　   <div><b>ギルドランク</b> <span class="dim" id="rankInfo">Rank 1 → 2</span></div>
-  　　　  <div class="dim" id="rankCostText">必要: 5,000G</div>
-　　　  </div>
-　　　  <button id="btnRankUp" class="primary smallBtn">ランクアップ</button>
-　　　</div>
-    
-    <main class="content">
-      <!-- Tabs -->
-      <nav class="tabs">
-        <button class="tab active" data-tab="quest">
-          クエスト <span class="dot hidden" id="dotQuest">●</span>
-        </button>
-        <button class="tab" data-tab="cats">
-          ネコ <span class="dot hidden" id="dotCats">●</span>
-        </button>
-        <button class="tab" data-tab="training">
-          訓練 <span class="dot hidden" id="dotTraining">●</span>
-        </button>
-      </nav>
+        <!-- Rank Up (compact) -->
+        <div class="rankRow" id="rankRow">
+          <div>
+            <div><b>ランクアップ</b> <span class="dim" id="rankInfo">Rank 1 → 2</span></div>
+            <div class="dim" id="rankCostText">必要: 5,000G</div>
+          </div>
+          <button id="btnRankUp" class="primary smallBtn">昇格</button>
+        </div>
 
-      <!-- Tab Panels -->
-      <section id="tab-quest" class="tabPanel"></section>
-      <section id="tab-cats" class="tabPanel hidden"></section>
-      <section id="tab-training" class="tabPanel hidden"></section>
-    </main>
+        <!-- Collapsible Log -->
+        <div class="logHeader" id="logHeader">
+          <span id="logChevron">▶</span>
+          <span>ログ</span>
+          <span class="pill" id="logUnreadPill">0</span>
+        </div>
+        <div class="logPanel hidden" id="logPanel"></div>
+
+        <!-- Pending Results Summary -->
+        <div class="pendingBar hidden" id="pendingBar">
+          <span id="pendingText">受取待ち: 0</span>
+          <button id="btnCollectAll" class="primary smallBtn">まとめて受取</button>
+        </div>
+      </header>
+
+      <main class="content">
+        <!-- Tabs -->
+        <nav class="tabs">
+          <button class="tab active" data-tab="quest">
+            クエスト <span class="dot hidden" id="dotQuest">●</span>
+          </button>
+          <button class="tab" data-tab="cats">
+            ネコ <span class="dot hidden" id="dotCats">●</span>
+          </button>
+          <button class="tab" data-tab="training">
+            訓練 <span class="dot hidden" id="dotTraining">●</span>
+          </button>
+        </nav>
+
+        <!-- Tab Panels -->
+        <section id="tab-quest" class="tabPanel"></section>
+        <section id="tab-cats" class="tabPanel hidden"></section>
+        <section id="tab-training" class="tabPanel hidden"></section>
+      </main>
+    </div>
   </section>
 
   <!-- Modal -->
