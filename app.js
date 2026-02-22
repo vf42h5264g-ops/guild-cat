@@ -311,6 +311,10 @@ function tickJobsToPending(save) {
 
 // --- UI elements ---
 const el = {
+  rankBar: document.getElementById("rankBar"),
+  rankInfo: document.getElementById("rankInfo"),
+  rankCostText: document.getElementById("rankCostText"),
+  btnRankUp: document.getElementById("btnRankUp"),
   startScreen: document.getElementById("startScreen"),
   mainScreen: document.getElementById("mainScreen"),
   btnStart: document.getElementById("btnStart"),
@@ -367,6 +371,7 @@ function renderAll() {
   recalcDerived(SAVE);
 
   renderHud();
+  renderRankBar();
   renderPendingBar();
   renderLog();
   renderDots();
@@ -376,6 +381,21 @@ function renderAll() {
   renderTrainingTab();
 
   saveToStorage(SAVE);
+}
+
+function renderRankBar() {
+  const g = SAVE.guild;
+  const nextRank = g.rank + 1;
+  const cost = rankCost(nextRank);
+
+  el.rankInfo.textContent = `Rank ${g.rank} → ${nextRank}`;
+  el.rankCostText.textContent = `必要: ${cost.toLocaleString()}G`;
+
+  const canPay = g.gold >= cost;
+  el.btnRankUp.disabled = !canPay;
+
+  // ランクアップは常時表示でOK（ゆる運営）
+  el.rankBar.classList.remove("hidden");
 }
 
 function renderHud() {
@@ -993,6 +1013,29 @@ el.btnCollectAll.addEventListener("click", () => {
 el.btnSave.addEventListener("click", () => {
   saveToStorage(SAVE);
   addLog(SAVE, "system", "【保存】セーブしました");
+  renderAll();
+});
+
+el.btnRankUp.addEventListener("click", () => {
+  const g = SAVE.guild;
+  const nextRank = g.rank + 1;
+  const cost = rankCost(nextRank);
+  if (g.gold < cost) return;
+
+  g.gold -= cost;
+  g.rank = nextRank;
+
+  // derived値は起動時再計算方針なので、ここでも再計算
+  recalcDerived(SAVE);
+
+  // 新ランク到達ログ
+  addLog(SAVE, "rank_up", `【昇格】ギルドランク ${nextRank}（-${cost.toLocaleString()}G）`);
+
+  // ランクで解放される難易度が増えるので、クエストボードを再抽選しておく（任意だがおすすめ）
+  SAVE.questBoard.slots.str = genQuest("str", g.rank);
+  SAVE.questBoard.slots.agi = genQuest("agi", g.rank);
+  SAVE.questBoard.slots.int = genQuest("int", g.rank);
+
   renderAll();
 });
 
