@@ -2,13 +2,15 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Cozy Cat Guild</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- Start Screen -->
+  <!-- =========================
+       Start Screen
+       ========================= -->
   <section id="startScreen" class="screen">
     <div class="card">
       <h1 class="title">Cozy Cat Guild</h1>
@@ -30,29 +32,36 @@
     </div>
   </section>
 
-  <!-- Main Screen -->
+  <!-- =========================
+       Main Screen
+       ========================= -->
   <section id="mainScreen" class="screen hidden mainScreen">
     <div class="container">
+
+      <!-- ===== Header (sticky) ===== -->
       <header class="header" id="header">
         <div class="headerRow">
           <div class="brand">Cozy Cat Guild</div>
-        <div style="display:flex; gap:8px;">
-  　　　　 <button id="btnReset" class="ghost">リセット</button>
-          <button id="btnSave" class="ghost">保存</button>
+
+          <div class="headerBtns">
+            <button id="btnReset" class="ghost">リセット</button>
+            <button id="btnSave" class="ghost">保存</button>
+          </div>
         </div>
 
+        <!-- HUD -->
         <div class="statsGrid" id="hud"></div>
 
-        <!-- Rank Up (compact) -->
+        <!-- Rank Up -->
         <div class="rankRow" id="rankRow">
-          <div>
+          <div class="rankText">
             <div><b>ランクアップ</b> <span class="dim" id="rankInfo">Rank 1 → 2</span></div>
             <div class="dim" id="rankCostText">必要: 5,000G</div>
           </div>
           <button id="btnRankUp" class="primary smallBtn">昇格</button>
         </div>
 
-        <!-- Collapsible Log -->
+        <!-- Logs -->
         <div class="logHeader" id="logHeader">
           <span id="logChevron">▶</span>
           <span>ログ</span>
@@ -60,23 +69,24 @@
         </div>
         <div class="logPanel hidden" id="logPanel"></div>
 
-        <!-- Pending Results Summary -->
+        <!-- Pending -->
         <div class="pendingBar hidden" id="pendingBar">
           <span id="pendingText">受取待ち: 0</span>
           <button id="btnCollectAll" class="primary smallBtn">まとめて受取</button>
         </div>
       </header>
 
+      <!-- ===== Content ===== -->
       <main class="content" id="content">
         <!-- Tabs -->
-        <nav class="tabs">
-          <button class="tab active" data-tab="quest">
+        <nav class="tabs" aria-label="tabs">
+          <button class="tab active" data-tab="quest" type="button">
             クエスト <span class="dot hidden" id="dotQuest">●</span>
           </button>
-          <button class="tab" data-tab="cats">
+          <button class="tab" data-tab="cats" type="button">
             ネコ <span class="dot hidden" id="dotCats">●</span>
           </button>
-          <button class="tab" data-tab="training">
+          <button class="tab" data-tab="training" type="button">
             訓練 <span class="dot hidden" id="dotTraining">●</span>
           </button>
         </nav>
@@ -86,15 +96,19 @@
         <section id="tab-cats" class="tabPanel hidden"></section>
         <section id="tab-training" class="tabPanel hidden"></section>
       </main>
+
     </div>
   </section>
 
-  <!-- Modal -->
+  <!-- =========================
+       Modal
+       ========================= -->
   <div id="modalBackdrop" class="backdrop hidden"></div>
-  <div id="modal" class="modal hidden">
+
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modalHeader">
       <div id="modalTitle">Modal</div>
-      <button id="modalClose" class="ghost">×</button>
+      <button id="modalClose" class="ghost" type="button">×</button>
     </div>
     <div id="modalBody" class="modalBody"></div>
   </div>
