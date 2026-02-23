@@ -1,5 +1,31 @@
 :root { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+/* ---- overflow fix (重要) ---- */
+* { box-sizing: border-box; }
 
+html, body {
+  overflow-x: hidden;          /* 横スクロールを物理的に殺す */
+}
+
+.container {
+  width: 100%;
+  overflow-x: hidden;          /* コンテンツのはみ出しも封じる */
+}
+
+/* グリッドの子要素が縮めるようにする */
+.statsGrid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.badge {
+  min-width: 0;                /* ← これがないと縮まずはみ出す事がある */
+}
+
+.badge .k, .badge .v {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;     /* 万一長い時も…で収める */
+  white-space: nowrap;
+}
 html, body {
   margin: 0;
   background: #0f1115;
@@ -16,6 +42,12 @@ html, body {
 .mainScreen { align-items: flex-start; justify-content: flex-start; }
 
 .container { width: min(560px, 100%); margin: 0 auto; }
+
+.header, .content {
+  overflow-x: hidden;
+}
+
+.brand { font-size: 18px; }
 
 /* Cards */
 .card { width: min(520px, 100%); background: #151a22; border: 1px solid #232a36; border-radius: 16px; padding: 18px; }
