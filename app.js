@@ -4,6 +4,10 @@
 const LS_SAVE = "ccg_save_v1";
 const LEVEL_CAP = 20;
 
+// --- Quest EXP tuning (new) ---
+const QUEST_EXP_RATE_SUCCESS = 0.5; // success: duration * 0.5
+const QUEST_EXP_RATE_FAIL = 0.2;    // fail:    duration * 0.2
+
 // --- Tips ---
 const DAILY_TIPS_JA = [
   "「やる気はあるにゃ。」",
@@ -133,6 +137,8 @@ function genQuest(statType, rank) {
   const difficulty = choice(unlockedDifficulties(rank));
   return { id: uid("q"), statType, durationMin, difficulty, baseGold: QUEST_BASE[durationMin] };
 }
+
+// ★ success / great / grade を付ける（大成功報酬つき）
 function calcQuestOutcome(save, quest, cats) {
   const sumStat = cats.reduce((acc, c) => acc + c.stats[quest.statType], 0);
   const diff = DIFF[quest.difficulty];
@@ -143,12 +149,78 @@ function calcQuestOutcome(save, quest, cats) {
   const roll = Math.random() * 100;
   const success = roll < finalRate;
 
+  // 大成功：成功ゾーンの上位20%（= 0〜finalRate のうち前半に入ったら）
+  const great = success && roll < finalRate * 0.2;
+
   const successBonus = Math.min(1 + sumStat * 0.005, 1.5);
   const gMult = goldMultiplier(save.guild.rank);
-  const gross = quest.baseGold * gMult * diff.mult * successBonus;
+  const greatMult = great ? 1.15 : 1.0;
+
+  const gross = quest.baseGold * gMult * diff.mult * successBonus * greatMult;
   const gold = Math.floor(success ? gross : gross * 0.5);
 
-  return { success, finalRate, sumStat, gold };
+  const grade = success ? (great ? "大成功" : "成功") : "失敗";
+
+  return { success, great, grade, finalRate, sumStat, gold, roll };
+}
+
+// --- Rank-up unlock snapshot + modal builder ---
+function snapshotUnlockState(save) {
+  return {
+    rank: save.guild.rank,
+    hireSlots: save.guild.hireSlots,
+    trainingSlots: save.guild.trainingSlots,     // 理論値
+    dispatchSlots: save.guild.dispatchSlots,
+    goldMultiplier: save.guild.goldMultiplier,
+  };
+}
+
+function buildRankUpModalHtml(before, after) {
+  const lines = [];
+
+  if (after.hireSlots > before.hireSlots) {
+    const diff = after.hireSlots - before.hireSlots;
+    lines.push(`・雇用枠 +${diff}（最大 ${after.hireSlots}）`);
+  }
+  if (after.trainingSlots > before.trainingSlots) {
+    const diff = after.trainingSlots - before.trainingSlots;
+    lines.push(`・訓練枠 +${diff}（理論値 ${after.trainingSlots}）※追加枠は開放が必要`);
+  }
+  if (after.dispatchSlots > before.dispatchSlots) {
+    const diff = after.dispatchSlots - before.dispatchSlots;
+    lines.push(`・派遣枠 +${diff}（最大 ${after.dispatchSlots}）`);
+  }
+  if (after.goldMultiplier > before.goldMultiplier) {
+    lines.push(`・Gold倍率 ×${after.goldMultiplier.toFixed(1)}（前：×${before.goldMultiplier.toFixed(1)}）`);
+  }
+
+  const newlyUnlocked = Object.entries(DIFF)
+    .filter(([k, v]) => v.unlockRank > before.rank && v.unlockRank <= after.rank)
+    .map(([k]) => k);
+
+  if (newlyUnlocked.length) {
+    lines.push(`・クエスト難易度 解放：${newlyUnlocked.join(" / ")}`);
+  }
+
+  if (!lines.length) lines.push("・（新しい効果はありません）");
+
+  return `
+    <div class="panelCard">
+      <div style="font-size:18px"><b>🎉 ギルド昇格！</b></div>
+      <div class="dim" style="margin-top:6px;">Rank ${before.rank} → <b>Rank ${after.rank}</b></div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px">
+      <div><b>アンロック / 変化</b></div>
+      <div class="dim" style="margin-top:8px; line-height:1.8">
+        ${lines.map(t => escapeHtml(t)).join("<br>")}
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:10px">
+      <button class="primary smallBtn" id="rankModalOk">OK</button>
+    </div>
+  `;
 }
 
 // --- Save schema ---
@@ -175,9 +247,10 @@ function makeNewSave() {
     logs: { items: [], collapsed: true, unreadCount: 0 },
     hiring: { candidates: [], tutorialFreeHireUsed: false, refreshCountToday: 0, refreshDate: "" },
     tutorial: { completed: false },
+    uiFlags: { hasTabNotification: { quest:false, cats:false, training:false } },
   };
 
-  // initial cats: pick 2 distinct personalities (B方針)
+  // initial cats: pick 2 distinct personalities
   const persKeys = PERSONALITY.map(p => p.key).sort(() => Math.random() - 0.5);
   const selected = persKeys.slice(0, 2);
 
@@ -233,6 +306,9 @@ function loadFromStorage() {
   try {
     const obj = JSON.parse(raw);
     if (!obj || obj.schemaVersion !== 1) return null;
+    // uiFlagsが古いセーブに無い場合の保険
+    obj.uiFlags = obj.uiFlags ?? { hasTabNotification: { quest:false, cats:false, training:false } };
+    obj.uiFlags.hasTabNotification = obj.uiFlags.hasTabNotification ?? { quest:false, cats:false, training:false };
     return obj;
   } catch { return null; }
 }
@@ -350,18 +426,15 @@ function tickJobsToPending(save) {
     }
 
     if (job.type === "quest") {
+      const grade = job.result?.grade ?? (job.result?.success ? "成功" : "失敗");
       addLog(save, "quest_complete",
-        `【完了】${STAT_TYPE[job.payload.statType].label} ${job.payload.difficulty} / ${job.payload.durationMin}分　${job.payload.catNames.join("・")}`
+        `【完了】${STAT_TYPE[job.payload.statType].label} ${job.payload.difficulty} / ${job.payload.durationMin}分　${job.payload.catNames.join("・")}　→ ${grade}`
       );
-      save.uiFlags = save.uiFlags ?? {};
-      save.uiFlags.hasTabNotification = save.uiFlags.hasTabNotification ?? { quest:false, cats:false, training:false };
       save.uiFlags.hasTabNotification.quest = true;
     } else if (job.type === "training") {
       addLog(save, "training_complete",
         `【完了】訓練 ${job.payload.durationMin}分　${job.payload.catNames.join("・")}`
       );
-      save.uiFlags = save.uiFlags ?? {};
-      save.uiFlags.hasTabNotification = save.uiFlags.hasTabNotification ?? { quest:false, cats:false, training:false };
       save.uiFlags.hasTabNotification.training = true;
     }
   }
@@ -552,25 +625,39 @@ el.btnSave.addEventListener("click", () => {
   renderAll();
 });
 
-// --- Rank Up ---
+// --- Rank Up (with celebration modal) ---
 el.btnRankUp.addEventListener("click", () => {
   const g = SAVE.guild;
   const nextRank = g.rank + 1;
   const cost = rankCost(nextRank);
   if (g.gold < cost) return;
 
+  recalcDerived(SAVE);
+  const before = snapshotUnlockState(SAVE);
+
   g.gold -= cost;
   g.rank = nextRank;
 
   recalcDerived(SAVE);
+  const after = snapshotUnlockState(SAVE);
+
   addLog(SAVE, "rank_up", `【昇格】ギルドランク ${nextRank}（-${cost.toLocaleString()}G）`);
 
-  // ランク到達の体感：ボード再抽選
+  // 体感：ボード再抽選
   SAVE.questBoard.slots.str = genQuest("str", g.rank);
   SAVE.questBoard.slots.agi = genQuest("agi", g.rank);
   SAVE.questBoard.slots.int = genQuest("int", g.rank);
 
   renderAll();
+
+  const html = buildRankUpModalHtml(before, after);
+  openModal("ランクアップ", html);
+
+  const ok = document.getElementById("rankModalOk");
+  if (ok) ok.addEventListener("click", () => {
+    closeModal();
+    renderAll();
+  });
 });
 
 // --- Start ---
@@ -661,7 +748,8 @@ function openQuestModal(quest) {
     <div class="panelCard">
       <div><b>${st.icon} ${st.label}</b> <span class="mono dim">${quest.difficulty}</span></div>
       <div class="dim">${quest.durationMin}分 / 基準${quest.baseGold.toLocaleString()}G</div>
-      <div class="dim">成功率補正 -${diff.penalty}% / 報酬×${diff.mult}</div>
+      <div class="dim">成功率補正 -${diff.penalty}% / 報酬×${diff.mult} / 大成功×1.15</div>
+      <div class="dim">クエEXP：成功 ${Math.round(quest.durationMin * QUEST_EXP_RATE_SUCCESS)} / 失敗 ${Math.round(quest.durationMin * QUEST_EXP_RATE_FAIL)}</div>
     </div>
 
     <div style="margin-top:10px"><b>編成（最大3匹）</b> <span class="dim">※待機中のみ</span></div>
@@ -757,7 +845,11 @@ function startQuest(quest, catIds) {
     endsAt,
     catIds,
     payload: { title, ...quest, catNames: cats.map(c => c.name) },
-    result: { success: outcome.success, goldGained: outcome.gold },
+    result: {
+      success: outcome.success,
+      grade: outcome.grade,      // 成功/大成功/失敗
+      goldGained: outcome.gold
+    },
   };
 
   SAVE.jobs.active.push(job);
@@ -798,7 +890,6 @@ function catCardHtml(cat) {
   `;
 }
 
-// ★ 追加：候補に「性格説明（得意ステ）」を一行表示
 function candidateFlavorLine(personalityKey) {
   const p = personalityByKey(personalityKey);
   if (p.key === "tsundere") return "得意：戦闘（STR）";
@@ -1023,8 +1114,6 @@ function unlockTrainingSlot(slotNo) {
   SAVE.guild.gold -= cost;
   SAVE.guild.trainingSlotUnlocked[idx] = true;
   addLog(SAVE, "system", `【開放】訓練枠 ${slotNo}（-${cost.toLocaleString()}G）`);
-  SAVE.uiFlags = SAVE.uiFlags ?? {};
-  SAVE.uiFlags.hasTabNotification = SAVE.uiFlags.hasTabNotification ?? { quest:false, cats:false, training:false };
   SAVE.uiFlags.hasTabNotification.training = true;
 }
 
@@ -1128,11 +1217,37 @@ function startTraining(catId, durationMin) {
 }
 
 // --- Collect (pending) ---
+function questExpFor(durationMin, success) {
+  return Math.floor(durationMin * (success ? QUEST_EXP_RATE_SUCCESS : QUEST_EXP_RATE_FAIL));
+}
+
 function collectPending(p) {
   if (p.type === "quest") {
     const gold = p.result?.goldGained ?? 0;
+    const success = !!p.result?.success;
+    const grade = p.result?.grade ?? (success ? "成功" : "失敗");
+    const duration = p.payload?.durationMin ?? 0;
+
+    // Gold
     SAVE.guild.gold += gold;
-    addLog(SAVE, "quest_reward", `【受取】+${gold.toLocaleString()}G`);
+
+    // EXP: use party cats
+    const exp = questExpFor(duration, success);
+    for (const cid of p.catIds) {
+      const c = SAVE.cats.find(x => x.id === cid);
+      if (!c) continue;
+      c.exp += exp;
+
+      const beforeLv = c.level;
+      const leveled = processLevelUps(c);
+      if (leveled > 0) {
+        const afterLv = c.level;
+        addLog(SAVE, "level_up", `【成長】${escapeLogName(c.name)} Lv${beforeLv} → Lv${afterLv} (+${leveled})`);
+        SAVE.uiFlags.hasTabNotification.cats = true;
+      }
+    }
+
+    addLog(SAVE, "quest_reward", `【受取】+${gold.toLocaleString()}G（${grade}） / +${exp}EXP（参加ネコ全員）`);
   } else if (p.type === "training") {
     const catId = p.catIds[0];
     const c = SAVE.cats.find(x => x.id === catId);
@@ -1148,8 +1263,6 @@ function collectPending(p) {
     if (leveled > 0) {
       const afterLv = c.level;
       addLog(SAVE, "level_up", `【成長】${escapeLogName(c.name)} Lv${beforeLv} → Lv${afterLv} (+${leveled})`);
-      SAVE.uiFlags = SAVE.uiFlags ?? {};
-      SAVE.uiFlags.hasTabNotification = SAVE.uiFlags.hasTabNotification ?? { quest:false, cats:false, training:false };
       SAVE.uiFlags.hasTabNotification.cats = true;
     }
   }
@@ -1163,10 +1276,8 @@ function collectAll() {
   for (const p of pending) collectPending(p);
 
   SAVE.jobs.pendingResults = [];
-  if (SAVE.uiFlags?.hasTabNotification) {
-    SAVE.uiFlags.hasTabNotification.quest = false;
-    SAVE.uiFlags.hasTabNotification.training = false;
-  }
+  SAVE.uiFlags.hasTabNotification.quest = false;
+  SAVE.uiFlags.hasTabNotification.training = false;
 }
 
 // --- Tutorial (simple modal chain) ---
