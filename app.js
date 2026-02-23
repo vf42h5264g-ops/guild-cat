@@ -625,13 +625,49 @@ el.btnSave.addEventListener("click", () => {
   addLog(SAVE, "system", "【保存】セーブしました");
   renderAll();
 });
-// --- Reset (danger) ---
-el.btnReset.addEventListener("click", () => {
-  const ok = confirm("本当にデータを削除しますか？\n（ギルド/ネコ/Gold/進行がすべて初期化されます）");
-  if (!ok) return;
 
-  localStorage.removeItem(LS_SAVE);
-  location.reload();
+// --- Reset (safe double confirm) ---
+el.btnReset.addEventListener("click", () => {
+  const html = `
+    <div class="panelCard">
+      <div><b>⚠ データリセット</b></div>
+      <div class="dim" style="margin-top:6px;">
+        ギルド・ネコ・Gold・進行状況がすべて削除されます。
+      </div>
+      <div class="dim" style="margin-top:6px;">
+        実行するには <b>RESET</b> と入力してください。
+      </div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <input id="resetInput"
+        placeholder="RESET と入力"
+        style="width:100%;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;" />
+    </div>
+
+    <div class="row" style="margin-top:12px;">
+      <button class="ghost smallBtn" id="resetCancel">キャンセル</button>
+      <button class="primary smallBtn" id="resetConfirm" disabled>完全削除</button>
+    </div>
+  `;
+
+  openModal("データリセット確認", html);
+
+  const input = document.getElementById("resetInput");
+  const confirmBtn = document.getElementById("resetConfirm");
+  const cancelBtn = document.getElementById("resetCancel");
+
+  input.addEventListener("input", () => {
+    confirmBtn.disabled = input.value !== "RESET";
+  });
+
+  cancelBtn.addEventListener("click", closeModal);
+
+  confirmBtn.addEventListener("click", () => {
+    localStorage.removeItem(LS_SAVE);
+    closeModal();
+    location.reload();
+  });
 });
 // --- Rank Up (with celebration modal) ---
 el.btnRankUp.addEventListener("click", () => {
