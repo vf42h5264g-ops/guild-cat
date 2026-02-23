@@ -133,3 +133,77 @@ html, body {
 .modalItem.disabled { opacity: .5; cursor: not-allowed; }
 
 input { outline: none; }
+/* =========================
+   UI Fix Patch (iOS Safari)
+   - 横スクロール根絶
+   - HUDバッジ文字消え対策
+   ========================= */
+
+/* 1) まずは全体のボックス計算を安定化 */
+* { box-sizing: border-box; }
+
+/* 2) 横スクロールを発生させない（hiddenよりclipが安定） */
+html, body {
+  overflow-x: clip;
+}
+
+/* 3) コンテナを必ず画面内に収める（左右余白も確保） */
+.container {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 12px;     /* ← 端切れ防止。これ重要 */
+  overflow-x: clip;    /* ← はみ出しても横スクロールさせない */
+}
+
+/* 4) ヘッダー/本文も横はみ出しを抑える */
+.header, .content {
+  overflow-x: clip;
+}
+
+/* 5) HUDの2列グリッド：子が縮めるように */
+.statsGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+/* 6) バッジ：space-betweenをやめて、右側だけ縮むようにする
+      （iOSでテキストが0幅になって「丸だけ」になるのを防ぐ） */
+.badge {
+  background: #151a22;
+  border: 1px solid #232a36;
+  border-radius: 14px;
+  padding: 8px 10px;
+  font-size: 12px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  min-width: 0;
+}
+
+/* 左ラベルは縮まない */
+.badge .k {
+  flex: 0 0 auto;
+  opacity: .8;
+  white-space: nowrap;
+}
+
+/* 右の値だけが縮んで…になる */
+.badge .v {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: right;
+
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 7) もしどこかが viewport を押し広げてた場合の最終保険 */
+img, svg, canvas {
+  max-width: 100%;
+}
