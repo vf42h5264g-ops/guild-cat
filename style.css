@@ -366,3 +366,93 @@ img, svg, canvas {
   max-width: 100%;
   height: auto;
 }
+/* =========================================================
+   NUCLEAR PATCH: Header forced normal flow (iOS)
+   Put this at the VERY END of style.css
+   ========================================================= */
+
+/* 1) ヘッダー自体を画面幅で固定＆変な横移動を殺す */
+.header {
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  transform: none !important;
+  margin: 0 !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 12px !important;
+
+  overflow: hidden !important;
+}
+
+/* 2) ヘッダー配下の“位置決め系”を強制解除（重なりの元を殺す） */
+.header .headerRow,
+.header .statsGrid,
+.header .rankRow,
+.header .logHeader,
+.header .logPanel,
+.header .pendingBar,
+.header .badge {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  top: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  float: none !important;
+}
+
+/* 3) HUDグリッドを確実に2列に固定（縮められるように） */
+.header .statsGrid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+/* 4) badge内テキストが縦に割れる・消える問題を潰す */
+.header .badge {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+}
+.header .badge .k {
+  white-space: nowrap !important;
+  flex: 0 0 auto !important;
+}
+.header .badge .v {
+  white-space: nowrap !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  text-align: right !important;
+  flex: 1 1 auto !important;
+}
+
+/* 5) 保存/リセットのボタンが縦書きみたいに割れるのを防ぐ */
+.header button,
+.header .ghost {
+  white-space: nowrap !important;
+  width: auto !important;
+}
+
+/* 6) RankRowが横にはみ出して重なるのを防ぐ */
+.header .rankRow {
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+}
+
+/* 7) コンテナ側の横ズレも同時に殺す */
+.container, .content {
+  overflow-x: hidden !important;
+}
+html, body {
+  overflow-x: hidden !important;
+}
