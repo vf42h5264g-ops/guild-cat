@@ -450,6 +450,7 @@ const el = {
 
   hud: document.getElementById("hud"),
   btnSave: document.getElementById("btnSave"),
+  btnReset: document.getElementById("btnReset"),
 
   rankRow: document.getElementById("rankRow"),
   rankInfo: document.getElementById("rankInfo"),
@@ -624,7 +625,14 @@ el.btnSave.addEventListener("click", () => {
   addLog(SAVE, "system", "【保存】セーブしました");
   renderAll();
 });
+// --- Reset (danger) ---
+el.btnReset.addEventListener("click", () => {
+  const ok = confirm("本当にデータを削除しますか？\n（ギルド/ネコ/Gold/進行がすべて初期化されます）");
+  if (!ok) return;
 
+  localStorage.removeItem(LS_SAVE);
+  location.reload();
+});
 // --- Rank Up (with celebration modal) ---
 el.btnRankUp.addEventListener("click", () => {
   const g = SAVE.guild;
