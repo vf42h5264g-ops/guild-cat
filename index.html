@@ -26,14 +26,14 @@
       </p>
 
       <button id="btnStart" class="primary">タップして開始</button>
-      <div class="small">Version 0.1</div>
+      <div class="small">Version 0.2</div>
     </div>
   </section>
 
   <!-- Main Screen -->
-  <section id="mainScreen" class="screen hidden">
+  <section id="mainScreen" class="screen hidden mainScreen">
     <div class="container">
-      <header class="header">
+      <header class="header" id="header">
         <div class="headerRow">
           <div class="brand">Cozy Cat Guild</div>
           <button id="btnSave" class="ghost">保存</button>
@@ -65,7 +65,7 @@
         </div>
       </header>
 
-      <main class="content">
+      <main class="content" id="content">
         <!-- Tabs -->
         <nav class="tabs">
           <button class="tab active" data-tab="quest">
