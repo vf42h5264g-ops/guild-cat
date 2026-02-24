@@ -8,13 +8,11 @@
 </head>
 <body>
 
-  <!-- =========================
-       Start Screen
-       ========================= -->
+  <!-- Start Screen -->
   <section id="startScreen" class="screen">
     <div class="card">
       <h1 class="title">Cozy Cat Guild</h1>
-      <p class="subtitle" id="startSubtitle">ねこの小さなギルド経営記</p>
+      <p class="subtitle">ねこの小さなギルド経営記</p>
 
       <div class="tip">
         <div class="tipLabel">🐾 今日のひとこと</div>
@@ -22,37 +20,30 @@
       </div>
 
       <p class="bodyText">
-        街の片隅に、小さなギルドができました。<br>
-        依頼をこなし、訓練で育てて、<br>
-        あなただけのギルドを大きくしよう。
+        依頼をこなし、訓練で育てて、ギルドを大きくしよう。<br>
+        クエスト/訓練は両立不可、完了は受取式です。
       </p>
 
       <button id="btnStart" class="primary">タップして開始</button>
-      <div class="small">Version 0.2</div>
+      <div class="small">Version 0.3</div>
     </div>
   </section>
 
-  <!-- =========================
-       Main Screen
-       ========================= -->
+  <!-- Main Screen -->
   <section id="mainScreen" class="screen hidden mainScreen">
     <div class="container">
 
-      <!-- ===== Header (sticky) ===== -->
       <header class="header" id="header">
         <div class="headerRow">
           <div class="brand">Cozy Cat Guild</div>
-
           <div class="headerBtns">
             <button id="btnReset" class="ghost">リセット</button>
             <button id="btnSave" class="ghost">保存</button>
           </div>
         </div>
 
-        <!-- HUD -->
         <div class="statsGrid" id="hud"></div>
 
-        <!-- Rank Up -->
         <div class="rankRow" id="rankRow">
           <div class="rankText">
             <div><b>ランクアップ</b> <span class="dim" id="rankInfo">Rank 1 → 2</span></div>
@@ -61,7 +52,6 @@
           <button id="btnRankUp" class="primary smallBtn">昇格</button>
         </div>
 
-        <!-- Logs -->
         <div class="logHeader" id="logHeader">
           <span id="logChevron">▶</span>
           <span>ログ</span>
@@ -69,16 +59,13 @@
         </div>
         <div class="logPanel hidden" id="logPanel"></div>
 
-        <!-- Pending -->
         <div class="pendingBar hidden" id="pendingBar">
           <span id="pendingText">受取待ち: 0</span>
           <button id="btnCollectAll" class="primary smallBtn">まとめて受取</button>
         </div>
       </header>
 
-      <!-- ===== Content ===== -->
       <main class="content" id="content">
-        <!-- Tabs -->
         <nav class="tabs" aria-label="tabs">
           <button class="tab active" data-tab="quest" type="button">
             クエスト <span class="dot hidden" id="dotQuest">●</span>
@@ -91,20 +78,15 @@
           </button>
         </nav>
 
-        <!-- Tab Panels -->
         <section id="tab-quest" class="tabPanel"></section>
         <section id="tab-cats" class="tabPanel hidden"></section>
         <section id="tab-training" class="tabPanel hidden"></section>
       </main>
-
     </div>
   </section>
 
-  <!-- =========================
-       Modal
-       ========================= -->
+  <!-- Modal -->
   <div id="modalBackdrop" class="backdrop hidden"></div>
-
   <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modalHeader">
       <div id="modalTitle">Modal</div>
