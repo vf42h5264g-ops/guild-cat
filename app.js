@@ -1117,8 +1117,7 @@ function renderCatsTab() {
     <div class="panelCard catCard">
       <div class="catSpriteWrap">
         <img src="img/cat.png" class="catSprite colorized" style="--hue:${c.hue}deg;" />
-        <span class="eyeDot left" style="--eye:${c.eyeColor};"></span>
-        <span class="eyeDot right" style="--eye:${c.eyeColor};"></span>
+       
         ${getWeaponImageByPersonality(c.personality) ? `<img src="${getWeaponImageByPersonality(c.personality)}" class="catWeapon" />` : ""}
       </div>
       <div style="min-width:0;flex:1;">
