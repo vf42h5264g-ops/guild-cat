@@ -326,17 +326,6 @@ html, body {
   filter: hue-rotate(var(--hue)) saturate(1.35);
 }
 
-/* 目：画像を増やさず、上に小さな点を重ねる方式 */
-.eyeDot {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  border-radius: 2px;
-  background: var(--eye);
-  top: 26px;
-}
-.eyeDot.left { left: 22px; }
-.eyeDot.right { left: 36px; }
 
 .catWeapon {
   position: absolute;
