@@ -1,6 +1,13 @@
-// Cozy Cat Guild - app.js (v0.3)
+// Cozy Cat Guild - app.js (v0.5)
+// - AUTO SAVE（保存ボタン不要）
+// - Tutorial復活：ギルド名入力 → 無料スカウトで1匹選択 → 残り2匹は性格被りなしで自動加入
+// - いつでもギルド名変更
+// - 雇用は「スカウトする」ボタンで候補モーダル表示（費用支払い）
+// - 訓練モーダル：本文スクロール＋フッター固定（ボタン見切れ防止） ※CSS側で対応済想定
+// - 訓練枠2以降：開放費＋使用料＋EXP倍率
+// - 目は素体のまま（ランダム目なし）／毛色はhueでランダム／武器は性格で表示／訓練中はjim1/jim2でアニメ
 
-const LS_SAVE = "ccg_save_v1";
+const LS_SAVE = "ccg_save_v2";
 
 /* =========================
    Economy / Rules
@@ -24,57 +31,44 @@ const RANK = {
     return 1 + Math.floor((rank - 1) / 2);
   },
   dispatchSlots(rank) {
-    // 今は固定1（UI一致優先）
-    return 1;
+    return 1; // 今は固定
   },
 };
 
 const TRAINING = {
   BASE_EXP_PER_MIN: 1,
-  DURATIONS_MIN: [60, 120, 240, 480],
-  // 枠2以降の開放費（1回）
-  UNLOCK_BASE: 40000, // 40,000 × (slotNo-1)^2
-  // 枠2以降の使用料（毎回）
-  USE_COST_PER_MIN: 8,     // 調整しやすい：1分あたりのGold
-  // 枠2以降のEXP倍率
-  MULT_PER_PAID_SLOT: 0.5, // slot2=1.5x, slot3=2.0x ...
+  DURATIONS_MIN: [60, 120, 240, 480], // 1/2/4/8h
+  UNLOCK_BASE: 40000,      // 40,000 × (slotNo-1)^2
+  USE_COST_PER_MIN: 8,     // 毎分の使用料（slot2以降）
+  MULT_PER_PAID_SLOT: 0.5, // slot2=1.5x, slot3=2.0x...
 };
 
+// 雇用：候補更新（スカウト費）を「ランクごとの固定額」
 const HIRING = {
   hireCost(rank) {
     return rank * 5000;
   },
   refreshCost(rank) {
-    return rank * 3000;
+    const TABLE = {
+      1: 3000, 2: 6000, 3: 9000, 4: 12000, 5: 15000,
+      6: 18000, 7: 21000, 8: 24000, 9: 27000, 10: 30000,
+    };
+    return TABLE[rank] ?? TABLE[10];
   },
-  initialFreeCats: 3,
 };
 
 const LEVEL = {
   expToNext(level) {
-    // ざっくり曲線（後で調整OK）
-    return 60 * level * level;
+    return 60 * level * level; // ゆるめ曲線
   },
 };
 
 /* =========================
-   Random appearance
+   Random appearance (fur only)
    ========================= */
 const CAT_HUES = [0, 25, 45, 80, 160, 210, 260, 320];
-const EYE_COLORS = [
-  "#1f1f1f", // 黒
-  "#2e8b57", // 緑
-  "#3b82f6", // 青
-  "#a855f7", // 紫
-  "#f59e0b", // オレンジ
-  "#ef4444", // 赤
-];
-
 function randomHue() {
   return CAT_HUES[Math.floor(Math.random() * CAT_HUES.length)];
-}
-function randomEyeColor() {
-  return EYE_COLORS[Math.floor(Math.random() * EYE_COLORS.length)];
 }
 
 /* =========================
@@ -99,8 +93,10 @@ const el = {
   btnStart: document.getElementById("btnStart"),
   dailyTip: document.getElementById("dailyTip"),
 
+  guildTitle: document.getElementById("guildTitle"),
+  btnGuildName: document.getElementById("btnGuildName"),
+
   hud: document.getElementById("hud"),
-  btnSave: document.getElementById("btnSave"),
   btnReset: document.getElementById("btnReset"),
   btnRankUp: document.getElementById("btnRankUp"),
   rankInfo: document.getElementById("rankInfo"),
@@ -152,17 +148,21 @@ el.modalBackdrop.addEventListener("click", closeModal);
 el.modalClose.addEventListener("click", closeModal);
 
 /* =========================
-   Save/Load
+   Save/Load (AUTO SAVE)
    ========================= */
 function save() {
-  localStorage.setItem(LS_SAVE, JSON.stringify(state));
-  pushLog("保存しました");
+  try {
+    localStorage.setItem(LS_SAVE, JSON.stringify(state));
+  } catch (e) {
+    console.warn("save failed", e);
+  }
 }
 function load() {
   const raw = localStorage.getItem(LS_SAVE);
   if (!raw) return null;
   try { return JSON.parse(raw); } catch { return null; }
 }
+window.addEventListener("beforeunload", () => save());
 
 /* =========================
    Logs
@@ -174,15 +174,14 @@ function nowStr() {
   const ss = String(d.getSeconds()).padStart(2, "0");
   return `${hh}:${mm}:${ss}`;
 }
-
 function pushLog(text) {
   if (!Array.isArray(state.logs)) state.logs = [];
   state.logs.unshift({ t: nowStr(), text });
   logUnread++;
   renderHeaderBadges();
   renderLogs();
+  save();
 }
-
 function renderLogs() {
   const open = !el.logPanel.classList.contains("hidden");
   el.logUnreadPill.textContent = String(logUnread);
@@ -194,7 +193,6 @@ function renderLogs() {
   }).join("");
   el.logPanel.innerHTML = items || `<div class="dim">ログはまだありません</div>`;
 }
-
 el.logHeader.addEventListener("click", () => {
   const isHidden = el.logPanel.classList.contains("hidden");
   if (isHidden) {
@@ -209,16 +207,50 @@ el.logHeader.addEventListener("click", () => {
 });
 
 /* =========================
-   State helpers
+   Helpers
    ========================= */
 function uid() {
   return Math.random().toString(16).slice(2) + Date.now().toString(16);
 }
+function clamp(min, max, v) {
+  return Math.max(min, Math.min(max, v));
+}
+function formatRemain(ms) {
+  const sec = Math.floor(ms / 1000);
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  return `${m}:${String(s).padStart(2,"0")}`;
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[c]));
+}
+function escapeAttr(s){ return escapeHtml(s).replace(/"/g, "&quot;"); }
 
 function totalPower() {
   return (state.cats || []).reduce((sum, c) => sum + c.str + c.agi + c.int, 0);
 }
+function catById(id) {
+  return (state.cats || []).find(c => c.id === id);
+}
 
+function randomName() {
+  const names = ["モモ","ハル","ルナ","コハク","ソラ","ミント","サクラ","マロン","ユズ","コテツ"];
+  return names[Math.floor(Math.random() * names.length)];
+}
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+/* =========================
+   Training slot economy
+   ========================= */
 function getTrainingSlotMeta(slotNo) {
   const unlockCost = TRAINING.UNLOCK_BASE * Math.pow(slotNo - 1, 2);
   const expMult = 1 + TRAINING.MULT_PER_PAID_SLOT * (slotNo - 1);
@@ -229,9 +261,11 @@ function calcTrainingUseCost(slotNo, durationMin) {
   return TRAINING.USE_COST_PER_MIN * durationMin * (slotNo - 1);
 }
 
+/* =========================
+   State ensure
+   ========================= */
 function ensureTrainingState() {
   const slotCount = RANK.trainingSlots(state.guildRank);
-
   if (!Array.isArray(state.trainingSlots)) state.trainingSlots = [];
   if (!Array.isArray(state.trainingJobs)) state.trainingJobs = [];
 
@@ -243,20 +277,27 @@ function ensureTrainingState() {
     state.trainingJobs.push(null);
   }
 }
-
 function ensureQuestState() {
   const slots = RANK.dispatchSlots(state.guildRank);
   if (!Array.isArray(state.questJobs)) state.questJobs = [];
   while (state.questJobs.length < slots) state.questJobs.push(null);
 }
+function ensurePending() {
+  if (!Array.isArray(state.pendingResults)) state.pendingResults = [];
+}
+function ensureHire() {
+  if (!state.hire) state.hire = { candidates: [], lastRefreshAt: 0 };
+  if (!Array.isArray(state.hire.candidates)) state.hire.candidates = [];
+}
 
+/* =========================
+   Busy check (quest/training)
+   ========================= */
 function isCatBusy(catId) {
-  // quest
   for (const q of (state.questJobs || [])) {
     if (!q) continue;
     if (q.partyIds?.includes(catId)) return "quest";
   }
-  // training
   for (const j of (state.trainingJobs || [])) {
     if (!j) continue;
     if (j.catId === catId) return "training";
@@ -264,26 +305,9 @@ function isCatBusy(catId) {
   return null;
 }
 
-function catById(id) {
-  return (state.cats || []).find(c => c.id === id);
-}
-
-function addExp(cat, amount) {
-  cat.exp = (cat.exp || 0) + amount;
-  while (cat.exp >= LEVEL.expToNext(cat.level)) {
-    cat.exp -= LEVEL.expToNext(cat.level);
-    cat.level += 1;
-    // レベルアップ：性格寄り+ランダム少し
-    const main = getMainStat(cat.personality);
-    const gainBase = 1;
-    const gainMain = 2;
-    if (main === "STR") cat.str += gainMain; else cat.str += gainBase;
-    if (main === "AGI") cat.agi += gainMain; else cat.agi += gainBase;
-    if (main === "INT") cat.int += gainMain; else cat.int += gainBase;
-    pushLog(`${cat.name} が Lv${cat.level} に成長！`);
-  }
-}
-
+/* =========================
+   Leveling
+   ========================= */
 function getMainStat(personality) {
   switch (personality) {
     case "ツンデレ": return "STR";
@@ -293,13 +317,29 @@ function getMainStat(personality) {
     default: return "STR";
   }
 }
+function addExp(cat, amount) {
+  cat.exp = (cat.exp || 0) + amount;
+  while (cat.exp >= LEVEL.expToNext(cat.level)) {
+    cat.exp -= LEVEL.expToNext(cat.level);
+    cat.level += 1;
+
+    const main = getMainStat(cat.personality);
+    const gainBase = 1;
+    const gainMain = 2;
+
+    cat.str += (main === "STR") ? gainMain : gainBase;
+    cat.agi += (main === "AGI") ? gainMain : gainBase;
+    cat.int += (main === "INT") ? gainMain : gainBase;
+
+    pushLog(`${cat.name} が Lv${cat.level} に成長！`);
+  }
+}
 
 /* =========================
-   Boot / New game
+   Create cats
    ========================= */
 function makeCat(personality, name) {
-  // 初期値ざっくり
-  const base = 5 + Math.floor(Math.random() * 3); // 5-7
+  const base = 5 + Math.floor(Math.random() * 3);
   let str = base, agi = base, intv = base;
   const main = getMainStat(personality);
   if (main === "STR") str += 2;
@@ -316,33 +356,29 @@ function makeCat(personality, name) {
     agi,
     int: intv,
     hue: randomHue(),
-    eyeColor: randomEyeColor(),
   };
 }
 
+/* =========================
+   New game / Boot
+   ========================= */
 function newGame() {
-  const starters = [
-    makeCat("あまえんぼ", "ミケ"),
-    makeCat("ツンデレ", "キナコ"),
-    makeCat("やんちゃ", "サクラ"),
-  ];
-
+  // 初期ネコは「チュートリアルで 1匹選択 + 2匹自動加入」にするため、ここでは空
   return {
-    version: 3,
-    gold: 12000,
+    version: 5,
     guildRank: 1,
-    cats: starters,
+    gold: 12000,
+
+    guildName: "Cozy Cat Guild",
+    tutorialDone: false,
+
+    cats: [],
 
     logs: [],
     pendingResults: [],
 
-    // hiring
-    hire: {
-      candidates: [],
-      lastRefreshAt: 0,
-    },
+    hire: { candidates: [], lastRefreshAt: 0 },
 
-    // quest/training
     questJobs: [],
     trainingSlots: [],
     trainingJobs: [],
@@ -351,82 +387,257 @@ function newGame() {
 
 function boot() {
   state = load() || newGame();
-  // backward compat safe
-  if (!Array.isArray(state.cats)) state.cats = [];
-  if (typeof state.gold !== "number") state.gold = 0;
+
+  // Backward-safe defaults
   if (typeof state.guildRank !== "number") state.guildRank = 1;
+  if (typeof state.gold !== "number") state.gold = 0;
+  if (!Array.isArray(state.cats)) state.cats = [];
+  if (typeof state.guildName !== "string") state.guildName = "Cozy Cat Guild";
+  if (typeof state.tutorialDone !== "boolean") state.tutorialDone = false;
 
   ensureQuestState();
   ensureTrainingState();
-  ensureCandidates();
+  ensurePending();
+  ensureHire();
 
-  // daily tip (simple)
-  const tips = ["やる気はあるにゃ。", "急がば回れ、にゃ。", "訓練は裏切らないにゃ。", "Goldは正義にゃ。"];
-  el.dailyTip.textContent = tips[Math.floor(Math.random() * tips.length)];
+  // daily tip
+  const tips = ["やる気はあるにゃ。","急がば回れ、にゃ。","訓練は裏切らないにゃ。","Goldは正義にゃ。"];
+  if (el.dailyTip) el.dailyTip.textContent = tips[Math.floor(Math.random() * tips.length)];
 
-  // UI events
   bindUI();
 
-  // show main directly if already played (save exists)
   const hasSave = !!localStorage.getItem(LS_SAVE);
-  if (hasSave) {
+  if (!hasSave || !state.tutorialDone) {
+    el.startScreen.classList.remove("hidden");
+    el.mainScreen.classList.add("hidden");
+  } else {
     el.startScreen.classList.add("hidden");
     el.mainScreen.classList.remove("hidden");
   }
 
   renderAll();
 
-  // main tick
   setInterval(tick, 1000);
-
-  // dumbbell animation
   setInterval(toggleDumbbells, 500);
 }
 
-function bindUI() {
-  el.btnStart.addEventListener("click", () => {
+/* =========================
+   Tutorial + Guild name
+   ========================= */
+function startTutorialFlow() {
+  const html = `
+    <div class="panelCard">
+      <div><b>ようこそ！ギルド名を決めよう</b></div>
+      <div class="dim" style="margin-top:6px;">あとからいつでも変更できます。</div>
+      <input id="guildNameInput"
+        placeholder="例：もふもふギルド"
+        value="${escapeAttr(state.guildName || "")}"
+        style="width:100%;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;margin-top:10px;" />
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div><b>最初の仲間を選ぼう（無料）</b></div>
+      <div class="dim">スカウト→候補から1匹選択。残り2匹は性格が被らないように自動で合流します。</div>
+      <button class="primary" id="tutScout" style="margin-top:10px;">スカウトする</button>
+    </div>
+
+    <div class="modalFooter">
+      <button class="ghost" id="tutClose">閉じる</button>
+      <button class="primary" id="tutStart" disabled>開始</button>
+    </div>
+  `;
+  openModal("チュートリアル", html);
+
+  const input = document.getElementById("guildNameInput");
+  const btnStart = document.getElementById("tutStart");
+  document.getElementById("tutClose").addEventListener("click", closeModal);
+
+  const update = () => {
+    const v = input.value.trim();
+    btnStart.disabled = (v.length === 0);
+  };
+  input.addEventListener("input", update);
+  update();
+
+  // ギルド名が空欄でも開始できる方がいいなら、ここは disabled 条件を消してOK
+  btnStart.addEventListener("click", () => {
+    const v = input.value.trim();
+    state.guildName = v || "Cozy Cat Guild";
+    // 次へ誘導（スカウトを促す）
+    openTutorialScoutModal();
+  });
+
+  document.getElementById("tutScout").addEventListener("click", () => {
+    const v = input.value.trim();
+    state.guildName = v || "Cozy Cat Guild";
+    openTutorialScoutModal();
+  });
+}
+
+function openTutorialScoutModal() {
+  // チュートリアル用：無料スカウト（支払いなし）
+  const candidates = generateCandidates();
+
+  const html = `
+    <div class="panelCard">
+      <div><b>最初の仲間を選択（無料）</b></div>
+      <div class="dim">この1匹はあなたが選びます。</div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div class="modalList">
+        ${candidates.map(c => {
+          const weapon = getWeaponImageByPersonality(c.personality);
+          return `
+            <div class="modalItem" data-pick="${c.id}">
+              <div style="display:flex;gap:10px;align-items:center;">
+                <div style="width:56px;height:56px;position:relative;flex:0 0 56px;">
+                  <img src="img/cat.png" class="catSprite colorized"
+                    style="--hue:${c.hue}deg;width:56px;height:56px;" />
+                  ${weapon ? `<img src="${weapon}" style="position:absolute;right:-4px;bottom:4px;width:22px;image-rendering:pixelated;">` : ""}
+                </div>
+                <div style="min-width:0;">
+                  <b>${escapeHtml(c.name)}</b> <span class="dim">Lv${c.level}</span>
+                  <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} AGI ${c.agi} INT ${c.int}</div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="ghost" id="tutBack">戻る</button>
+      <button class="primary" id="tutPickHint" disabled>候補をタップして選択</button>
+    </div>
+  `;
+
+  openModal("スカウト", html);
+
+  document.getElementById("tutBack").addEventListener("click", () => {
+    closeModal();
+    startTutorialFlow();
+  });
+
+  document.querySelectorAll("[data-pick]").forEach(item => {
+    item.addEventListener("click", () => {
+      const picked = candidates.find(c => c.id === item.dataset.pick);
+      if (picked) finishTutorial(picked);
+    });
+  });
+}
+
+function finishTutorial(firstCat) {
+  closeModal();
+
+  // 既に猫がいる（古いセーブ等）場合は、チュートリアル猫追加をしない
+  if ((state.cats || []).length > 0) {
+    state.tutorialDone = true;
+    save();
     el.startScreen.classList.add("hidden");
     el.mainScreen.classList.remove("hidden");
-    pushLog("ギルド運営を開始！");
+    renderAll();
+    return;
+  }
+
+  state.cats.push(firstCat);
+
+  // 残り2匹：性格被りなし（firstCat以外から2つ選ぶ）
+  const personalities = ["あまえんぼ","ツンデレ","クール","やんちゃ"];
+  const remain = personalities.filter(p => p !== firstCat.personality);
+  shuffleArray(remain);
+  const extra1 = makeCat(remain[0], randomName());
+  const extra2 = makeCat(remain[1], randomName());
+
+  state.cats.push(extra1, extra2);
+
+  state.tutorialDone = true;
+
+  pushLog(`ギルド「${state.guildName}」設立！`);
+  pushLog(`${firstCat.name} が最初の仲間に！`);
+  pushLog(`${extra1.name} が合流！`);
+  pushLog(`${extra2.name} が合流！`);
+
+  save();
+
+  el.startScreen.classList.add("hidden");
+  el.mainScreen.classList.remove("hidden");
+  renderAll();
+}
+
+function openGuildRenameModal() {
+  const html = `
+    <div class="panelCard">
+      <div class="dim">新しいギルド名</div>
+      <input id="renameGuildInput"
+        value="${escapeAttr(state.guildName || "")}"
+        style="width:100%;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;margin-top:8px;" />
+    </div>
+    <div class="modalFooter">
+      <button class="ghost" id="rgCancel">キャンセル</button>
+      <button class="primary" id="rgOk">変更</button>
+    </div>
+  `;
+  openModal("ギルド名変更", html);
+
+  document.getElementById("rgCancel").addEventListener("click", closeModal);
+  document.getElementById("rgOk").addEventListener("click", () => {
+    const v = document.getElementById("renameGuildInput").value.trim();
+    if (v) {
+      state.guildName = v;
+      pushLog(`ギルド名を「${v}」に変更`);
+      renderAll();
+      save();
+    }
+    closeModal();
+  });
+}
+
+/* =========================
+   UI Bindings
+   ========================= */
+function bindUI() {
+  el.btnStart.addEventListener("click", () => {
+    if (!state.tutorialDone) {
+      startTutorialFlow();
+      return;
+    }
+    el.startScreen.classList.add("hidden");
+    el.mainScreen.classList.remove("hidden");
     renderAll();
   });
 
-  el.btnSave.addEventListener("click", () => save());
+  if (el.btnGuildName) el.btnGuildName.addEventListener("click", () => openGuildRenameModal());
 
   // safe reset (type RESET)
   el.btnReset.addEventListener("click", () => {
     const html = `
       <div class="panelCard">
         <div><b>⚠ データリセット</b></div>
-        <div class="dim" style="margin-top:6px;">
-          ギルド・ネコ・Gold・進行状況がすべて削除されます。
-        </div>
-        <div class="dim" style="margin-top:6px;">
-          実行するには <b>RESET</b> と入力してください。
-        </div>
+        <div class="dim" style="margin-top:6px;">ギルド・ネコ・Gold・進行状況がすべて削除されます。</div>
+        <div class="dim" style="margin-top:6px;">実行するには <b>RESET</b> と入力してください。</div>
       </div>
 
       <div class="panelCard" style="margin-top:10px;">
-        <input id="resetInput"
-          placeholder="RESET と入力"
+        <input id="resetInput" placeholder="RESET と入力"
           style="width:100%;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;" />
       </div>
 
-      <div class="row" style="margin-top:12px;">
-        <button class="ghost smallBtn" id="resetCancel">キャンセル</button>
-        <button class="primary smallBtn" id="resetConfirm" disabled>完全削除</button>
+      <div class="modalFooter">
+        <button class="ghost" id="resetCancel">キャンセル</button>
+        <button class="primary" id="resetConfirm" disabled>完全削除</button>
       </div>
     `;
     openModal("データリセット確認", html);
 
     const input = document.getElementById("resetInput");
     const confirmBtn = document.getElementById("resetConfirm");
-    const cancelBtn = document.getElementById("resetCancel");
+    document.getElementById("resetCancel").addEventListener("click", closeModal);
 
     input.addEventListener("input", () => {
       confirmBtn.disabled = input.value !== "RESET";
     });
-    cancelBtn.addEventListener("click", closeModal);
     confirmBtn.addEventListener("click", () => {
       localStorage.removeItem(LS_SAVE);
       closeModal();
@@ -435,7 +646,6 @@ function bindUI() {
   });
 
   el.btnRankUp.addEventListener("click", () => doRankUp());
-
   el.btnCollectAll.addEventListener("click", () => collectAll());
 
   // tabs
@@ -455,66 +665,6 @@ function bindUI() {
 }
 
 /* =========================
-   Candidates / Hiring
-   ========================= */
-function ensureCandidates() {
-  if (!state.hire) state.hire = { candidates: [], lastRefreshAt: 0 };
-  if (!Array.isArray(state.hire.candidates)) state.hire.candidates = [];
-
-  // if empty, generate
-  if (state.hire.candidates.length === 0) {
-    refreshCandidates(true);
-  }
-}
-
-function refreshCandidates(free = false) {
-  const cost = HIRING.refreshCost(state.guildRank);
-  if (!free) {
-    if (state.gold < cost) {
-      pushLog(`Gold不足：候補更新に ${cost.toLocaleString()}G 必要`);
-      return;
-    }
-    state.gold -= cost;
-  }
-
-  const personalities = ["あまえんぼ","ツンデレ","クール","やんちゃ"];
-  const names = ["ミケ","タマ","モモ","コテツ","マロン","ユズ","コハク","ルナ","ソラ","ハル"];
-  const list = [];
-  for (let i = 0; i < 3; i++) {
-    const p = personalities[Math.floor(Math.random() * personalities.length)];
-    const nm = names[Math.floor(Math.random() * names.length)] + (Math.random()<0.35 ? String(Math.floor(Math.random()*9)+1) : "");
-    list.push(makeCat(p, nm));
-  }
-  state.hire.candidates = list;
-  state.hire.lastRefreshAt = Date.now();
-  pushLog(free ? "雇用候補が更新されました" : `雇用候補を更新（${cost.toLocaleString()}G）`);
-  renderAll();
-}
-
-function hireCat(catId) {
-  const slots = RANK.hireSlots(state.guildRank);
-  if (state.cats.length >= slots) {
-    pushLog("雇用枠が満杯です");
-    return;
-  }
-
-  const idx = state.hire.candidates.findIndex(c => c.id === catId);
-  if (idx < 0) return;
-
-  const cost = HIRING.hireCost(state.guildRank);
-  if (state.gold < cost) {
-    pushLog(`Gold不足：雇用に ${cost.toLocaleString()}G 必要`);
-    return;
-  }
-  state.gold -= cost;
-
-  const hired = state.hire.candidates.splice(idx, 1)[0];
-  state.cats.push(hired);
-  pushLog(`${hired.name} を雇用！（${cost.toLocaleString()}G）`);
-  renderAll();
-}
-
-/* =========================
    Rank Up
    ========================= */
 function doRankUp() {
@@ -527,37 +677,33 @@ function doRankUp() {
   state.gold -= cost;
   state.guildRank = nextRank;
 
-  // unlock changes
   ensureQuestState();
   ensureTrainingState();
 
   const hs = RANK.hireSlots(state.guildRank);
   const ts = RANK.trainingSlots(state.guildRank);
+
   pushLog(`🎉 ギルドランク ${state.guildRank} に昇格！`);
   pushLog(`アンロック：雇用枠 ${hs} / 訓練枠 ${ts}`);
   renderAll();
+  save();
 }
 
 /* =========================
    Quests
    ========================= */
 function getQuestList() {
-  // rankに応じて少し強く
   const r = state.guildRank;
   const base = [
     { id:"battle", icon:"🗡", name:"戦闘", main:"STR" },
     { id:"search", icon:"⚡", name:"探索", main:"AGI" },
     { id:"invest", icon:"🧠", name:"調査", main:"INT" },
   ];
-
-  // duration: 10/30/60 で雰囲気
   const options = [
     { diff:"E", min:10, gold:1200 },
     { diff:"D", min:30, gold:4000 },
     { diff:"C", min:60, gold:9000 },
   ];
-
-  // rankが上がると上側が出やすい
   const pick = (i) => options[Math.min(options.length-1, Math.floor((r-1)/2) + i) % options.length];
 
   return base.map((b, i) => {
@@ -567,7 +713,6 @@ function getQuestList() {
       diff: o.diff,
       durationMin: o.min,
       baseGold: o.gold,
-      // target scaling
       target: 12 + (r-1) * 6 + i * 2,
     };
   });
@@ -581,7 +726,6 @@ function startQuest(questDef) {
     return;
   }
 
-  // select up to 3 cats (idle only)
   const idle = state.cats.filter(c => !isCatBusy(c.id));
   if (idle.length === 0) {
     pushLog("待機中のネコがいません");
@@ -592,7 +736,7 @@ function startQuest(questDef) {
     <div class="panelCard">
       <div><b>${questDef.icon} ${questDef.name} ${questDef.diff}</b></div>
       <div class="dim">時間: ${questDef.durationMin}分 / 基準Gold: ${questDef.baseGold.toLocaleString()}G</div>
-      <div class="dim">最大3匹まで選択（クエスト/訓練と両立不可）</div>
+      <div class="dim">最大3匹まで選択（訓練と両立不可 / キャンセル不可）</div>
     </div>
 
     <div class="panelCard" style="margin-top:10px;">
@@ -600,9 +744,9 @@ function startQuest(questDef) {
       <div id="partyList" class="modalList"></div>
     </div>
 
-    <div class="row" style="margin-top:12px;">
-      <button class="ghost smallBtn" id="qCancel">キャンセル</button>
-      <button class="primary smallBtn" id="qStart" disabled>受注</button>
+    <div class="modalFooter">
+      <button class="ghost" id="qCancel">戻る</button>
+      <button class="primary" id="qStart" disabled>受注</button>
     </div>
   `;
   openModal("クエスト受注", html);
@@ -618,7 +762,7 @@ function startQuest(questDef) {
   `).join("");
 
   const btnStart = document.getElementById("qStart");
-  const btnCancel = document.getElementById("qCancel");
+  document.getElementById("qCancel").addEventListener("click", closeModal);
 
   partyList.addEventListener("click", (e) => {
     const item = e.target.closest(".modalItem");
@@ -635,8 +779,6 @@ function startQuest(questDef) {
     btnStart.disabled = selected.size === 0;
   });
 
-  btnCancel.addEventListener("click", closeModal);
-
   btnStart.addEventListener("click", () => {
     closeModal();
 
@@ -646,7 +788,6 @@ function startQuest(questDef) {
       return s + (questDef.main === "STR" ? c.str : questDef.main === "AGI" ? c.agi : c.int);
     }, 0);
 
-    // success prob (displayed-ish): clamp 20~85
     const p = clamp(20, 85, Math.floor(50 + (score - questDef.target) * 3));
     const goldMult = RANK.goldMult(state.guildRank);
 
@@ -666,6 +807,7 @@ function startQuest(questDef) {
 
     pushLog(`受注：${questDef.name}${questDef.diff}（${questDef.durationMin}分 / 成功率 ${p}%）`);
     renderAll();
+    save();
   });
 }
 
@@ -681,7 +823,6 @@ function finishQuestsIfDone() {
     let gold = 0;
     let exp = 0;
 
-    // great success when roll <= p*0.2 (and success)
     if (roll <= job.pSuccess) {
       if (roll <= job.pSuccess * 0.2) {
         result = "大成功";
@@ -698,7 +839,7 @@ function finishQuestsIfDone() {
       exp = Math.floor(job.def.durationMin * 0.4);
     }
 
-    if (!Array.isArray(state.pendingResults)) state.pendingResults = [];
+    ensurePending();
     state.pendingResults.push({
       type: "quest",
       finishedAt: now,
@@ -732,6 +873,7 @@ function unlockTrainingSlot(slotNo) {
   slot.unlocked = true;
   pushLog(`訓練枠${slotNo}を開放（EXP倍率 x${expMult.toFixed(1)}）`);
   renderAll();
+  save();
 }
 
 function openTrainingStartModal(slotNo) {
@@ -739,7 +881,7 @@ function openTrainingStartModal(slotNo) {
 
   const slot = state.trainingSlots[slotNo - 1];
   const job = state.trainingJobs[slotNo - 1];
-  if (job) return; // 念のため
+  if (job) return;
   if (!slot?.unlocked) return;
 
   const idle = state.cats.filter(c => !isCatBusy(c.id));
@@ -766,9 +908,9 @@ function openTrainingStartModal(slotNo) {
       <div id="tDur" class="modalList"></div>
     </div>
 
-    <div class="row" style="margin-top:12px;">
-      <button class="ghost smallBtn" id="tCancel">キャンセル</button>
-      <button class="primary smallBtn" id="tStart" disabled>開始</button>
+    <div class="modalFooter">
+      <button class="ghost" id="tCancel">戻る</button>
+      <button class="primary" id="tStart" disabled>開始</button>
     </div>
   `;
   openModal("訓練開始", html);
@@ -776,7 +918,7 @@ function openTrainingStartModal(slotNo) {
   const tCats = document.getElementById("tCats");
   const tDur = document.getElementById("tDur");
   const btnStart = document.getElementById("tStart");
-  const btnCancel = document.getElementById("tCancel");
+  document.getElementById("tCancel").addEventListener("click", closeModal);
 
   let pickCat = null;
   let pickMin = null;
@@ -799,9 +941,7 @@ function openTrainingStartModal(slotNo) {
     `;
   }).join("");
 
-  const updateBtn = () => {
-    btnStart.disabled = !(pickCat && pickMin);
-  };
+  const updateBtn = () => { btnStart.disabled = !(pickCat && pickMin); };
 
   tCats.addEventListener("click", (e) => {
     const item = e.target.closest(".modalItem");
@@ -821,7 +961,6 @@ function openTrainingStartModal(slotNo) {
     updateBtn();
   });
 
-  btnCancel.addEventListener("click", closeModal);
   btnStart.addEventListener("click", () => {
     closeModal();
     startTraining(slotNo, pickCat, pickMin);
@@ -831,13 +970,10 @@ function openTrainingStartModal(slotNo) {
 function startTraining(slotNo, catId, durationMin) {
   ensureTrainingState();
 
-  // slot busy?
   if (state.trainingJobs[slotNo - 1]) {
     pushLog("訓練枠が使用中です");
     return;
   }
-
-  // cat busy?
   if (isCatBusy(catId)) {
     pushLog("そのネコは待機中ではありません");
     return;
@@ -874,6 +1010,7 @@ function startTraining(slotNo, catId, durationMin) {
 
   pushLog(`訓練開始：枠${slotNo} / ${durationMin}分 / 使用料 ${useCost.toLocaleString()}G / EXP ${expGain}`);
   renderAll();
+  save();
 }
 
 function finishTrainingIfDone() {
@@ -885,7 +1022,7 @@ function finishTrainingIfDone() {
     if (!job) continue;
     if (job.endAt > now) continue;
 
-    if (!Array.isArray(state.pendingResults)) state.pendingResults = [];
+    ensurePending();
     state.pendingResults.push({
       type: "training",
       finishedAt: now,
@@ -902,37 +1039,164 @@ function finishTrainingIfDone() {
 }
 
 /* =========================
+   Hiring (Scout)
+   ========================= */
+function generateCandidates() {
+  const personalities = ["あまえんぼ","ツンデレ","クール","やんちゃ"];
+  const names = ["ミケ","タマ","モモ","コテツ","マロン","ユズ","コハク","ルナ","ソラ","ハル"];
+  const list = [];
+  for (let i = 0; i < 3; i++) {
+    const p = personalities[Math.floor(Math.random() * personalities.length)];
+    const nm = names[Math.floor(Math.random() * names.length)] + (Math.random()<0.35 ? String(Math.floor(Math.random()*9)+1) : "");
+    list.push(makeCat(p, nm));
+  }
+  return list;
+}
+
+function scoutPayAndOpen() {
+  ensureHire();
+  const cost = HIRING.refreshCost(state.guildRank);
+  if (state.gold < cost) {
+    pushLog(`Gold不足：スカウトに ${cost.toLocaleString()}G 必要`);
+    return;
+  }
+  state.gold -= cost;
+  state.hire.candidates = generateCandidates();
+  state.hire.lastRefreshAt = Date.now();
+  pushLog(`スカウト実行（${cost.toLocaleString()}G）`);
+  openScoutModal(true);
+  renderAll();
+  save();
+}
+
+function openScoutModal(fromPaidScout) {
+  ensureHire();
+  const hs = RANK.hireSlots(state.guildRank);
+  const hireCost = HIRING.hireCost(state.guildRank);
+  const scoutCost = HIRING.refreshCost(state.guildRank);
+
+  const canHireMore = state.cats.length < hs;
+  const list = state.hire.candidates || [];
+
+  const html = `
+    <div class="panelCard">
+      <div><b>スカウト候補</b></div>
+      <div class="dim">雇用枠 ${state.cats.length}/${hs} / 雇用費 ${hireCost.toLocaleString()}G</div>
+      <div class="dim">再スカウト: ${scoutCost.toLocaleString()}G</div>
+      ${fromPaidScout ? `<div class="dim" style="margin-top:6px;">候補を確認して雇用できます</div>` : ""}
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div class="row">
+        <div class="dim">候補リスト</div>
+        <button class="ghost smallBtn" id="btnRescout">再スカウト</button>
+      </div>
+      <div class="modalList" style="margin-top:10px;">
+        ${
+          list.length === 0
+            ? `<div class="dim">候補がありません。スカウトしてください</div>`
+            : list.map(c => {
+                const weapon = getWeaponImageByPersonality(c.personality);
+                return `
+                  <div class="modalItem" style="display:flex; gap:10px; align-items:center;">
+                    <div style="width:56px;height:56px;position:relative;flex:0 0 56px;">
+                      <img src="img/cat.png" class="catSprite colorized"
+                        style="--hue:${c.hue}deg; width:56px; height:56px;" />
+                      ${weapon ? `<img src="${weapon}" style="position:absolute;right:-4px;bottom:4px;width:22px;image-rendering:pixelated;">` : ""}
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                      <div><b>${escapeHtml(c.name)}</b> <span class="dim">Lv${c.level}</span></div>
+                      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} AGI ${c.agi} INT ${c.int}</div>
+                    </div>
+                    <button class="primary smallBtn" data-hire="${c.id}" ${canHireMore ? "" : "disabled"}
+                      style="${canHireMore ? "" : "opacity:.6;"}">雇用</button>
+                  </div>
+                `;
+              }).join("")
+        }
+      </div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="ghost" id="scoutClose">閉じる</button>
+      <button class="primary" id="scoutGoCats">ネコへ戻る</button>
+    </div>
+  `;
+  openModal("スカウト", html);
+
+  document.getElementById("btnRescout").addEventListener("click", () => {
+    closeModal();
+    scoutPayAndOpen();
+  });
+
+  document.querySelectorAll("[data-hire]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      hireCat(btn.dataset.hire);
+      closeModal();
+      openScoutModal(false);
+      renderAll();
+    });
+  });
+
+  document.getElementById("scoutClose").addEventListener("click", closeModal);
+  document.getElementById("scoutGoCats").addEventListener("click", () => {
+    closeModal();
+    switchTab("cats");
+  });
+}
+
+function hireCat(catId) {
+  ensureHire();
+  const slots = RANK.hireSlots(state.guildRank);
+  if (state.cats.length >= slots) {
+    pushLog("雇用枠が満杯です");
+    return;
+  }
+
+  const idx = state.hire.candidates.findIndex(c => c.id === catId);
+  if (idx < 0) return;
+
+  const cost = HIRING.hireCost(state.guildRank);
+  if (state.gold < cost) {
+    pushLog(`Gold不足：雇用に ${cost.toLocaleString()}G 必要`);
+    return;
+  }
+  state.gold -= cost;
+
+  const hired = state.hire.candidates.splice(idx, 1)[0];
+  state.cats.push(hired);
+  pushLog(`${hired.name} を雇用！（${cost.toLocaleString()}G）`);
+  renderAll();
+  save();
+}
+
+/* =========================
    Pending / Collect
    ========================= */
 function collectAll() {
-  const list = state.pendingResults || [];
+  ensurePending();
+  const list = state.pendingResults;
   if (list.length === 0) return;
-
-  let totalGold = 0;
-  let totalExp = 0;
 
   for (const r of list) {
     if (r.type === "quest") {
       state.gold += r.gold;
-      totalGold += r.gold;
       for (const id of r.partyIds) {
         const c = catById(id);
         if (c) addExp(c, r.expEach);
       }
-      totalExp += (r.expEach * r.partyIds.length);
       pushLog(`受取：${r.questName}${r.diff} ${r.result} / +${r.gold.toLocaleString()}G / EXP+${r.expEach}×${r.partyIds.length}`);
     }
     if (r.type === "training") {
       const c = catById(r.catId);
       if (c) addExp(c, r.exp);
-      totalExp += r.exp;
       pushLog(`受取：訓練 枠${r.slotNo} / EXP+${r.exp}`);
     }
   }
 
   state.pendingResults = [];
-  el.dotTraining.classList.add("hidden");
   renderAll();
+  save();
 }
 
 /* =========================
@@ -941,12 +1205,19 @@ function collectAll() {
 function renderAll() {
   ensureQuestState();
   ensureTrainingState();
+  ensurePending();
+  ensureHire();
 
+  renderGuildTitle();
   renderHeaderBadges();
   renderRankUp();
   renderPending();
   renderTabs();
   renderLogs();
+}
+
+function renderGuildTitle() {
+  if (el.guildTitle) el.guildTitle.textContent = state.guildName || "Cozy Cat Guild";
 }
 
 function renderHeaderBadges() {
@@ -992,7 +1263,6 @@ function renderPending() {
     el.pendingText.textContent = `受取待ち: ${n}`;
   }
 
-  // notifications
   const hasTrainingDone = (state.pendingResults || []).some(r => r.type === "training");
   const hasQuestDone = (state.pendingResults || []).some(r => r.type === "quest");
   el.dotTraining.classList.toggle("hidden", !hasTrainingDone);
@@ -1005,6 +1275,18 @@ function renderTabs() {
   if (currentTab === "training") renderTrainingTab();
 }
 
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+  document.querySelector(`.tab[data-tab="${tab}"]`)?.classList.add("active");
+
+  el.tabQuest.classList.toggle("hidden", tab !== "quest");
+  el.tabCats.classList.toggle("hidden", tab !== "cats");
+  el.tabTraining.classList.toggle("hidden", tab !== "training");
+
+  renderTabs();
+}
+
 function renderQuestTab() {
   const list = getQuestList();
   const ds = RANK.dispatchSlots(state.guildRank);
@@ -1015,7 +1297,7 @@ function renderQuestTab() {
       <div class="row">
         <div>
           <div><b>現在の依頼</b> <span class="dim">(STR/AGI/INT)</span></div>
-          <div class="dim">受注で即補充 / キャンセル不可 / 訓練と両立不可</div>
+          <div class="dim">受注で即補充 / 訓練と両立不可 / キャンセル不可</div>
         </div>
         <div class="mono">派遣枠 ${used}/${ds}</div>
       </div>
@@ -1036,12 +1318,10 @@ function renderQuestTab() {
     ${renderQuestRunning()}
   `;
 
-  // bind
   el.tabQuest.querySelectorAll("[data-quest]").forEach(btn => {
     btn.addEventListener("click", () => {
       const q = list.find(x => x.id === btn.dataset.quest);
-      if (!q) return;
-      startQuest(q);
+      if (q) startQuest(q);
     });
   });
 }
@@ -1069,9 +1349,10 @@ function renderQuestRunning() {
 function renderCatsTab() {
   const hs = RANK.hireSlots(state.guildRank);
   const hireCost = HIRING.hireCost(state.guildRank);
-  const refreshCost = HIRING.refreshCost(state.guildRank);
+  const scoutCost = HIRING.refreshCost(state.guildRank);
+  const hasCandidates = (state.hire?.candidates?.length || 0) > 0;
 
-  const catsHtml = state.cats.map(c => {
+  const catsHtml = (state.cats || []).map(c => {
     const busy = isCatBusy(c.id);
     const statusText = busy === "quest" ? "クエスト" : busy === "training" ? "訓練" : "待機";
     const dotClass = busy === "quest" ? "quest" : busy === "training" ? "training" : "";
@@ -1082,11 +1363,7 @@ function renderCatsTab() {
     return `
       <div class="panelCard catCard">
         <div class="catSpriteWrap">
-          <img src="img/cat.png" class="catSprite colorized"
-               style="--hue:${c.hue}deg;" />
-          <span class="eyeDot left" style="--eye:${c.eyeColor};"></span>
-          <span class="eyeDot right" style="--eye:${c.eyeColor};"></span>
-
+          <img src="img/cat.png" class="catSprite colorized" style="--hue:${c.hue}deg;" />
           ${
             training
               ? `<img src="img/jim1.png" class="catDumbbell" data-jim="${c.id}" />`
@@ -1113,83 +1390,68 @@ function renderCatsTab() {
     `;
   }).join("");
 
-  const candHtml = state.hire.candidates.map(c => `
-    <div class="panelCard catCard">
-      <div class="catSpriteWrap">
-        <img src="img/cat.png" class="catSprite colorized" style="--hue:${c.hue}deg;" />
-       
-        ${getWeaponImageByPersonality(c.personality) ? `<img src="${getWeaponImageByPersonality(c.personality)}" class="catWeapon" />` : ""}
-      </div>
-      <div style="min-width:0;flex:1;">
-        <div><b>${escapeHtml(c.name)}</b> <span class="dim">Lv${c.level}</span></div>
-        <div class="dim">${escapeHtml(c.personality)}（${getMainStat(c.personality)}寄り）</div>
-        <div class="mono">STR ${c.str} / AGI ${c.agi} / INT ${c.int}</div>
-      </div>
-      <button class="primary smallBtn" data-hire="${c.id}">雇用</button>
-    </div>
-  `).join("");
-
   el.tabCats.innerHTML = `
     <div class="panelCard">
       <div class="row">
         <div>
           <div><b>ギルド戦力</b></div>
-          <div class="dim">待機→クエスト→訓練 の順に表示</div>
+          <div class="dim">待機→クエスト→訓練（両立不可）</div>
         </div>
         <div class="mono">${totalPower()}</div>
       </div>
     </div>
 
-    ${catsHtml}
+    ${catsHtml || `<div class="panelCard"><div class="dim">ネコがいません。チュートリアルから開始してください。</div></div>`}
 
     <div class="panelCard">
-      <div class="row">
-        <div>
-          <div><b>雇用</b> <span class="dim">雇用枠 ${state.cats.length}/${hs}</span></div>
-          <div class="dim">雇用費: ${hireCost.toLocaleString()}G（Rank×5,000）</div>
-        </div>
-        <button class="ghost smallBtn" id="btnRefresh">候補更新 ${refreshCost.toLocaleString()}G</button>
+      <div><b>雇用</b> <span class="dim">雇用枠 ${state.cats.length}/${hs}</span></div>
+      <div class="dim">雇用費: ${hireCost.toLocaleString()}G</div>
+      <div class="dim">候補は「スカウト」で確認できます</div>
+
+      <div class="row" style="margin-top:10px;">
+        <button class="primary smallBtn" id="btnScout">スカウトする ${scoutCost.toLocaleString()}G</button>
+        <button class="ghost smallBtn" id="btnViewCandidates" ${hasCandidates ? "" : "disabled"} style="${hasCandidates ? "" : "opacity:.6;"}">
+          候補を見る
+        </button>
       </div>
     </div>
-
-    ${candHtml || `<div class="panelCard dim">候補がありません</div>`}
   `;
 
   el.tabCats.querySelectorAll("[data-rename]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const id = btn.dataset.rename;
-      const c = catById(id);
-      if (!c) return;
-      const html = `
-        <div class="panelCard">
-          <div class="dim">新しい名前を入力</div>
-          <input id="nameInput" value="${escapeAttr(c.name)}"
-            style="width:100%;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;margin-top:8px;" />
-        </div>
-        <div class="row" style="margin-top:12px;">
-          <button class="ghost smallBtn" id="nCancel">キャンセル</button>
-          <button class="primary smallBtn" id="nOk">変更</button>
-        </div>
-      `;
-      openModal("名前変更", html);
-      document.getElementById("nCancel").addEventListener("click", closeModal);
-      document.getElementById("nOk").addEventListener("click", () => {
-        const v = document.getElementById("nameInput").value.trim();
-        if (v) {
-          c.name = v;
-          pushLog(`名前変更：${v}`);
-        }
-        closeModal();
-        renderAll();
-      });
-    });
+    btn.addEventListener("click", () => openRenameCatModal(btn.dataset.rename));
   });
 
-  const btnRefresh = document.getElementById("btnRefresh");
-  btnRefresh?.addEventListener("click", () => refreshCandidates(false));
+  document.getElementById("btnScout")?.addEventListener("click", () => scoutPayAndOpen());
+  document.getElementById("btnViewCandidates")?.addEventListener("click", () => openScoutModal(false));
+}
 
-  el.tabCats.querySelectorAll("[data-hire]").forEach(btn => {
-    btn.addEventListener("click", () => hireCat(btn.dataset.hire));
+function openRenameCatModal(catId) {
+  const c = catById(catId);
+  if (!c) return;
+
+  const html = `
+    <div class="panelCard">
+      <div class="dim">新しい名前を入力</div>
+      <input id="nameInput" value="${escapeAttr(c.name)}"
+        style="width:100%;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;margin-top:8px;" />
+    </div>
+    <div class="modalFooter">
+      <button class="ghost" id="nCancel">キャンセル</button>
+      <button class="primary" id="nOk">変更</button>
+    </div>
+  `;
+  openModal("名前変更", html);
+
+  document.getElementById("nCancel").addEventListener("click", closeModal);
+  document.getElementById("nOk").addEventListener("click", () => {
+    const v = document.getElementById("nameInput").value.trim();
+    if (v) {
+      c.name = v;
+      pushLog(`名前変更：${v}`);
+      renderAll();
+      save();
+    }
+    closeModal();
   });
 }
 
@@ -1198,14 +1460,6 @@ function renderTrainingTab() {
 
   const slotCount = state.trainingJobs.length;
   const usedTraining = state.trainingJobs.filter(Boolean).length;
-
-  const info = `
-    <div class="panelCard">
-      <div><b>訓練</b> <span class="dim">1EXP/分 / 両立不可 / 受取式</span></div>
-      <div class="dim">開放費: 40,000×(枠番号-1)^2 / 空き: ${(slotCount - usedTraining)}/${slotCount}</div>
-      <div class="dim">有料枠は使用料が発生し、EXP倍率が上がります</div>
-    </div>
-  `;
 
   const cards = [];
   for (let slotNo = 1; slotNo <= slotCount; slotNo++) {
@@ -1220,8 +1474,7 @@ function renderTrainingTab() {
           <div class="row">
             <div>
               <div><b>訓練枠 ${slotNo}</b> <span class="dim">（訓練中）</span></div>
-              <div class="dim">EXP: ${job.expGain} / 使用料: ${job.useCost.toLocaleString()}G</div>
-              <div class="dim">倍率: x${expMult.toFixed(1)}</div>
+              <div class="dim">EXP: ${job.expGain} / 使用料: ${job.useCost.toLocaleString()}G / 倍率: x${expMult.toFixed(1)}</div>
             </div>
             <div class="mono">${formatRemain(remain)}</div>
           </div>
@@ -1236,8 +1489,7 @@ function renderTrainingTab() {
           <div class="row">
             <div>
               <div><b>訓練枠 ${slotNo}</b> <span class="dim">（未開放）</span></div>
-              <div class="dim">開放費: ${unlockCost.toLocaleString()}G</div>
-              <div class="dim">倍率: x${expMult.toFixed(1)}</div>
+              <div class="dim">開放費: ${unlockCost.toLocaleString()}G / 倍率: x${expMult.toFixed(1)}</div>
             </div>
             <button class="primary smallBtn" data-unlock-slot="${slotNo}">開放</button>
           </div>
@@ -1251,8 +1503,7 @@ function renderTrainingTab() {
         <div class="row">
           <div>
             <div><b>訓練枠 ${slotNo}</b> <span class="dim">（使用可）</span></div>
-            <div class="dim">倍率: x${expMult.toFixed(1)}</div>
-            <div class="dim">${slotNo === 1 ? "使用料: 0G" : "使用料: 時間に応じて発生"}</div>
+            <div class="dim">倍率: x${expMult.toFixed(1)} / ${slotNo === 1 ? "使用料: 0G" : "使用料: 時間に応じて発生"}</div>
           </div>
           <button class="primary smallBtn" data-start-slot="${slotNo}">訓練する</button>
         </div>
@@ -1260,26 +1511,14 @@ function renderTrainingTab() {
     `);
   }
 
-  // running summary (training jobs already shown above, but keep)
-  const running = state.trainingJobs.filter(Boolean);
-  const runningCards = running.map(job => {
-    const remain = Math.max(0, job.endAt - Date.now());
-    return `
-      <div class="panelCard">
-        <div class="row">
-          <div>
-            <div><span class="statusDot training"></span><b>訓練中</b></div>
-            <div class="dim">訓練 ${job.durationMin}分 / 枠${job.slotNo}</div>
-          </div>
-          <div class="mono">${formatRemain(remain)}</div>
-        </div>
-      </div>
-    `;
-  }).join("");
+  el.tabTraining.innerHTML = `
+    <div class="panelCard">
+      <div><b>訓練</b> <span class="dim">1EXP/分 / 受取式 / クエストと両立不可</span></div>
+      <div class="dim">空き: ${(slotCount - usedTraining)}/${slotCount}（枠2以降は開放費＋使用料あり）</div>
+    </div>
+    ${cards.join("")}
+  `;
 
-  el.tabTraining.innerHTML = info + cards.join("") + (runningCards ? runningCards : "");
-
-  // bind
   el.tabTraining.querySelectorAll("[data-unlock-slot]").forEach(btn => {
     btn.addEventListener("click", () => unlockTrainingSlot(Number(btn.dataset.unlockSlot)));
   });
@@ -1294,21 +1533,18 @@ function renderTrainingTab() {
 function tick() {
   finishTrainingIfDone();
   finishQuestsIfDone();
-
-  // pending show
   renderPending();
 
-  // update timers in visible tab
   if (currentTab === "quest") renderQuestTab();
   if (currentTab === "training") renderTrainingTab();
 
-  // iOS weird scroll-left stuck (保険)
+  // iOS横ズレ保険
   document.documentElement.scrollLeft = 0;
   document.body.scrollLeft = 0;
 }
 
+/* Training dumbbell animation */
 function toggleDumbbells() {
-  // 訓練中の猫だけ jim1/jim2 を切替
   const jobs = state.trainingJobs || [];
   for (const job of jobs) {
     if (!job) continue;
@@ -1317,27 +1553,6 @@ function toggleDumbbells() {
     img.src = img.src.includes("jim1") ? "img/jim2.png" : "img/jim1.png";
   }
 }
-
-/* =========================
-   Utils
-   ========================= */
-function clamp(min, max, v) {
-  return Math.max(min, Math.min(max, v));
-}
-function formatRemain(ms) {
-  const sec = Math.floor(ms / 1000);
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = sec % 60;
-  if (h > 0) return `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
-  return `${m}:${String(s).padStart(2,"0")}`;
-}
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, (c) => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-  }[c]));
-}
-function escapeAttr(s){ return escapeHtml(s).replace(/"/g, "&quot;"); }
 
 /* =========================
    Start
