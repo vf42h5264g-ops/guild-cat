@@ -335,50 +335,67 @@ html,body{
   width:48%;
 }
 
-/* Cat sprites */
+/* ===== Cat card（v0.5寄せ：枠だけ広げてテキスト潰れ防止） ===== */
 .catCard{
+  position:relative;
   display:flex;
   align-items:center;
-  gap:14px;
+  gap:12px;
 }
 
-/* スプライト領域（64px表示） */
-.catCard .catSpriteWrap{
+/* 左の“席”は広げる（テキスト領域を確保） */
+.catSpriteWrap{
   position:relative;
-  width:64px;
-  height:64px;
-  flex:0 0 64px;
+  width:88px;          /* ←席 */
+  height:88px;
+  flex:0 0 88px;
 }
 
-/* ネコ素体 */
-.catCard .catSprite{
+/* 画像は64px固定（= 32px素材をx2表示） */
+.catSprite{
   position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
+  left:50%;
+  top:50%;
+  width:64px;          /* ←中身は固定 */
+  height:64px;
+  transform:translate(-50%,-50%);
   image-rendering:pixelated;
 }
-/* 武器・ダンベル（ネコと完全一致） */
-.catCard .catWeapon,
-.catCard .catDumbbell{
+
+.catSprite.colorized{
+  filter:hue-rotate(var(--hue)) saturate(1.35);
+}
+
+/* 武器・ダンベル：ネコと“同じ64px”で完全重ね */
+.catWeapon,
+.catDumbbell{
   position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
+  left:50%;
+  top:50%;
+  width:64px;
+  height:64px;
+  transform:translate(-50%,-50%);
   image-rendering:pixelated;
   pointer-events:none;
 }
 
-/* ステータス改行防止 */
+/* テキスト側が縮められるように */
+.catCard > div{
+  min-width:0;
+}
+
+/* ステータス行は1行固定（縦に伸びない） */
 .catCard .catStats{
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
+  line-height:1.2;
 }
 
-/* 状態表示改行防止 */
+/* 右上の「●クエスト」等は改行させない */
 .catCard .row > div:last-child{
   white-space:nowrap;
+  flex:0 0 auto;
 }
 
 /* 毛色ランダム（cat.pngが白〜薄グレー素体だと綺麗） */
