@@ -2330,19 +2330,23 @@ function renderCatsTab() {
     const statusText = busy === "quest" ? "クエスト" : busy === "training" ? "訓練" : "待機";
     const dotClass = busy === "quest" ? "quest" : busy === "training" ? "training" : "";
 
-    const weaponImg = getWeaponImageByPersonality(c.personality);
-    const training = busy === "training";
+  const weaponImg = getWeaponImageByPersonality(c.personality);
+　　const training = busy === "training";
+　　const onQuest = busy === "quest";
 
-    return `
-      <div class="panelCard catCard">
-        <div class="catSpriteWrap">
-          <img src="img/cat.png" class="catSprite colorized" style="--hue:${c.hue}deg;" />
-          ${
-            training
-              ? `<img src="img/jim1.png" class="catDumbbell" data-jim="${c.id}" />`
-              : weaponImg ? `<img src="${weaponImg}" class="catWeapon" />` : ""
-          }
-        </div>
+　　return `
+ 　　 <div class="panelCard catCard">
+   　　 <div class="catSpriteWrap">
+     　　 <img src="img/cat.png" class="catSprite colorized" style="--hue:${c.hue}deg;" />
+   　　   ${
+      　　  training
+      　　    ? `<img src="img/jim1.png" class="catDumbbell" data-jim="${c.id}" />`
+      　　    : (onQuest && weaponImg)
+        　　      ? `<img src="${weaponImg}" class="catWeapon" />`
+        　　      : ""
+ 　　     }
+  　　  </div>
+
 
         <div style="min-width:0;flex:1;">
           <div class="row">
