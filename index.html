@@ -8,9 +8,10 @@
 </head>
 <body>
 
-  <!-- =========================
-       Start Screen
-  ========================== -->
+  <!-- Confetti root (RankUp演出) -->
+  <div id="confetti" aria-hidden="true"></div>
+
+  <!-- Start Screen -->
   <section id="startScreen" class="screen">
     <div class="card">
       <h1 class="title">Cozy Cat Guild</h1>
@@ -22,45 +23,48 @@
       </div>
 
       <p class="bodyText">
-        クエストと訓練は両立不可。<br>
-        完了は受取式です。
+        クエストと訓練は両立不可。完了は受取式です。<br>
+        まずはチュートリアルでギルド名を決めよう。
       </p>
 
+      <!-- セーブ無し/初回：これで開始（JSがチュートリアルへ誘導） -->
       <button id="btnStart" class="primary">タップして開始</button>
-      <div class="small">Version 0.5</div>
+
+      <!-- セーブ有り：メタ表示＋続きから/新規 -->
+      <div id="startMeta" class="small" style="margin-top:10px; text-align:center;"></div>
+
+      <div style="display:flex; gap:10px; margin-top:12px;">
+        <button id="btnContinue" class="primary hidden" style="width:50%;">続きから</button>
+        <button id="btnNew" class="ghost hidden" style="width:50%;">新しく始める</button>
+      </div>
+
+      <div class="small">Version 0.5+</div>
     </div>
   </section>
 
-  <!-- =========================
-       Main Screen
-  ========================== -->
+  <!-- Main Screen -->
   <section id="mainScreen" class="screen hidden mainScreen">
     <div class="container">
 
-      <header class="header">
-
-        <!-- 上段 -->
+      <header class="header" id="header">
         <div class="headerRow">
           <div class="brand" id="guildTitle">Cozy Cat Guild</div>
           <div class="headerBtns">
-            <button id="btnGuildName" class="ghost">ギルド名</button>
-            <button id="btnReset" class="ghost">リセット</button>
+            <button id="btnGuildName" class="ghost" type="button">ギルド名</button>
+            <button id="btnReset" class="ghost" type="button">リセット</button>
           </div>
         </div>
 
-        <!-- HUD -->
         <div class="statsGrid" id="hud"></div>
 
-        <!-- ランク -->
-        <div class="rankRow">
-          <div>
-            <div><b>ランクアップ</b> <span id="rankInfo" class="dim"></span></div>
-            <div class="dim" id="rankCostText"></div>
+        <div class="rankRow" id="rankRow">
+          <div class="rankText">
+            <div><b>ランクアップ</b> <span class="dim" id="rankInfo">Rank 1 → 2</span></div>
+            <div class="dim" id="rankCostText">必要: 5,000G</div>
           </div>
-          <button id="btnRankUp" class="primary smallBtn">昇格</button>
+          <button id="btnRankUp" class="primary smallBtn" type="button">昇格</button>
         </div>
 
-        <!-- ログ -->
         <div class="logHeader" id="logHeader">
           <span id="logChevron">▶</span>
           <span>ログ</span>
@@ -68,30 +72,26 @@
         </div>
         <div class="logPanel hidden" id="logPanel"></div>
 
-        <!-- 受取待ち -->
         <div class="pendingBar hidden" id="pendingBar">
           <span id="pendingText">受取待ち: 0</span>
-          <button id="btnCollectAll" class="primary smallBtn">まとめて受取</button>
+          <button id="btnCollectAll" class="primary smallBtn" type="button">まとめて受取</button>
         </div>
-
       </header>
 
-      <!-- =========================
-           Main Content
-      ========================== -->
-      <main class="content">
-
-        <nav class="tabs">
-          <button class="tab active" data-tab="quest">
+      <main class="content" id="content">
+        <nav class="tabs" aria-label="tabs">
+          <button class="tab active" data-tab="quest" type="button">
             クエスト <span class="dot hidden" id="dotQuest">●</span>
           </button>
-          <button class="tab" data-tab="cats">
+          <button class="tab" data-tab="cats" type="button">
             ネコ <span class="dot hidden" id="dotCats">●</span>
           </button>
-          <button class="tab" data-tab="training">
+          <button class="tab" data-tab="training" type="button">
             訓練 <span class="dot hidden" id="dotTraining">●</span>
           </button>
-          <button class="tab hidden" data-tab="invest" id="tabInvestBtn">
+
+          <!-- 投資（Rank10でJSが表示制御） -->
+          <button class="tab hidden" data-tab="invest" type="button">
             投資 <span class="dot hidden" id="dotInvest">●</span>
           </button>
         </nav>
@@ -100,27 +100,19 @@
         <section id="tab-cats" class="tabPanel hidden"></section>
         <section id="tab-training" class="tabPanel hidden"></section>
         <section id="tab-invest" class="tabPanel hidden"></section>
-
       </main>
     </div>
   </section>
 
-  <!-- =========================
-       Modal
-  ========================== -->
+  <!-- Modal -->
   <div id="modalBackdrop" class="backdrop hidden"></div>
-  <div id="modal" class="modal hidden">
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modalHeader">
       <div id="modalTitle">Modal</div>
-      <button id="modalClose" class="ghost">×</button>
+      <button id="modalClose" class="ghost" type="button">×</button>
     </div>
     <div id="modalBody" class="modalBody"></div>
   </div>
-
-  <!-- =========================
-       Confetti Layer
-  ========================== -->
-  <div id="confetti"></div>
 
   <script type="module" src="app.js"></script>
 </body>
