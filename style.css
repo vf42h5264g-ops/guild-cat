@@ -436,31 +436,60 @@ img,svg,canvas{ max-width:100%; height:auto; }
   line-height: 1.2;
 }
 
-/* ===== Cat card layout fix: 右寄り解消（2カラム固定） ===== */
+/* ===== Cat Card: レイアウト安定版（潰れ・武器ズレ防止） ===== */
 .catCard{
   display:flex;
   align-items:center;
-  gap:14px;                 /* 左右の間隔 */
+  gap:14px;
 }
 
-/* 左：スプライト枠を固定幅にして中央に */
+/* 左カラム：固定サイズ + absolute基準 */
 .catCard .catSpriteWrap{
-  flex:0 0 86px;            /* ←ここで左カラム幅を決める（80〜92で好み） */
-  width:86px;
+  position:relative;
+  flex:0 0 96px;      /* 左の占有幅（好みで 88〜104） */
+  width:96px;
+  height:96px;        /* ←これが重要。高さ固定で潰れ防止＆基準安定 */
   display:flex;
   align-items:center;
-  justify-content:center;   /* スプライトを枠の中央に */
+  justify-content:center;
 }
 
-/* 右：テキスト側は残り全部 */
-.catCard > div:last-child{
-  flex:1;
-  min-width:0;              /* ellipsisを効かせるため */
+/* ネコ素体：固定サイズで潰れ防止（32px素材を拡大表示） */
+.catCard .catSprite{
+  width:72px;         /* ←このへんが「昔の見た目」に近い倍率 */
+  height:72px;
+  object-fit:contain;
+  image-rendering:pixelated;
 }
 
-/* ステータスは1行維持（前の対策を維持） */
-.catCard .catStats{
+/* 武器：catSpriteWrap基準で配置 */
+.catCard .catWeapon{
+  position:absolute;
+  right:10px;
+  bottom:18px;
+  width:28px;
+  height:auto;
+  image-rendering:pixelated;
+}
+
+/* ダンベル：中央寄せでブレにくくする */
+.catCard .catDumbbell{
+  position:absolute;
+  left:50%;
+  bottom:10px;
+  transform:translateX(-50%);
+  width:72px;
+  height:auto;
+  image-rendering:pixelated;
+}
+
+/* 右側：詰まり＆改行防止 */
+.catCard > div{
+  min-width:0; /* 省略記号を効かせるため */
+}
+
+/* ステータス（右上：待機/クエスト/訓練）を改行させない */
+.catCard .row > div:last-child{
   white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  flex:0 0 auto;
 }
