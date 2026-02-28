@@ -349,27 +349,31 @@ html,body{
   width:64px;
   height:64px;
   flex:0 0 64px;
-  overflow:visible; /* 右にはみ出しても切れない */
+  overflow:visible;
 }
 
+/* 武器 */
 .catWeapon{
   position:absolute;
-  right:-2px;
-  bottom:10px;
-  width:22px;            /* ←小さく */
+  left:18px;          /* ←右固定やめて左基準 */
+  bottom:16px;        /* ←中央寄りに上げる */
+  width:34px;         /* ←大きく */
   height:auto;
   image-rendering:pixelated;
-  transform:translateZ(0);
+  transform:translateX(-50%);
+  pointer-events:none;
 }
 
+/* 訓練中ダンベル */
 .catDumbbell{
   position:absolute;
-  right:-1px;
-  bottom:9px;
-  width:24px;            /* ←小さく */
+  left:20px;
+  bottom:18px;
+  width:36px;         /* ←少し大きめ */
   height:auto;
   image-rendering:pixelated;
-  transform:translateZ(0);
+  transform:translateX(-50%);
+  pointer-events:none;
 }
 
 .statusDot{
