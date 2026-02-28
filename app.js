@@ -941,7 +941,40 @@ function doRankUp() {
   };
 
   pushLog(`🎉 ギルドランク ${state.guildRank} に昇格！`);
+　function burstConfetti() {
+  const root = document.getElementById("confetti");
+  if (!root) return;
 
+  // 既存を掃除
+  root.innerHTML = "";
+
+  const count = 70;
+  const colors = ["#ffffff", "#2b6cff", "#9bd1ff", "#ffd28a", "#caa6ff"];
+
+  for (let i = 0; i < count; i++) {
+    const d = document.createElement("div");
+    d.className = "confettiPiece";
+
+    const x = Math.random() * 100;
+    const dx = (Math.random() * 2 - 1) * 120 + "px";
+    const rot = (Math.random() * 720 - 360) + "deg";
+    const delay = Math.random() * 120;      // 少しバラけて落ちる
+    const dur = 750 + Math.random() * 450;  // 0.75〜1.2秒
+
+    d.style.left = x + "vw";
+    d.style.top = (-10 - Math.random() * 20) + "px";
+    d.style.background = colors[Math.floor(Math.random() * colors.length)];
+    d.style.setProperty("--dx", dx);
+    d.style.setProperty("--rot", rot);
+    d.style.animationDuration = dur + "ms";
+    d.style.animationDelay = delay + "ms";
+
+    root.appendChild(d);
+  }
+
+  // 終了後に片付け
+  setTimeout(() => { root.innerHTML = ""; }, 1600);
+}
   // ランクアップポップアップ（紙吹雪はCSS/DOM演出に任せる想定 → ここでは内容表示）
   openRankUpPopup(prev, now);
 
