@@ -213,7 +213,7 @@ html,body{
 /* Tabs */
 .tabs{
   display:grid;
-  grid-template-columns:1fr 1fr 1fr 1fr;
+  grid-template-columns:1fr 1fr 1fr 1fr; /* 投資タブも入る */
   gap:10px;
   width:100%;
   margin:8px 0 10px;
@@ -324,7 +324,9 @@ html,body{
   width:48%;
 }
 
-/* Cat sprites */
+/* =========================
+   Cat sprites
+   ========================= */
 .catCard{
   position:relative;
   display:flex;
@@ -332,6 +334,13 @@ html,body{
   align-items:center;
 }
 
+.catSpriteWrap{
+  position:relative;
+  width:64px;
+  height:64px;
+  flex:0 0 64px;
+  overflow:visible;
+}
 
 .catSprite{
   width:100%;
@@ -344,32 +353,24 @@ html,body{
   filter:hue-rotate(var(--hue)) saturate(1.35);
 }
 
-.catSpriteWrap{
-  position:relative;
-  width:64px;
-  height:64px;
-  flex:0 0 64px;
-  overflow:visible;
-}
-
-/* 武器 */
+/* ★武器：大きめ＋左寄り（ネコ中央へ） */
 .catWeapon{
   position:absolute;
-  left:18px;          /* ←右固定やめて左基準 */
-  bottom:16px;        /* ←中央寄りに上げる */
-  width:34px;         /* ←大きく */
+  left:18px;
+  bottom:16px;
+  width:34px;
   height:auto;
   image-rendering:pixelated;
   transform:translateX(-50%);
   pointer-events:none;
 }
 
-/* 訓練中ダンベル */
+/* ★訓練中ダンベル：大きめ＋左寄り */
 .catDumbbell{
   position:absolute;
   left:20px;
   bottom:18px;
-  width:36px;         /* ←少し大きめ */
+  width:36px;
   height:auto;
   image-rendering:pixelated;
   transform:translateX(-50%);
@@ -389,11 +390,14 @@ html,body{
 
 img,svg,canvas{ max-width:100%; height:auto; }
 
+/* =========================
+   Confetti
+   ========================= */
 #confetti{
   position:fixed;
   inset:0;
   pointer-events:none;
-  z-index:140; /* modalより上でもクリック邪魔しない */
+  z-index:140;
   overflow:hidden;
 }
 
