@@ -356,21 +356,20 @@ html,body{
 /* ★武器：大きめ＋左寄り（ネコ中央へ） */
 .catWeapon{
   position:absolute;
-  left:18px;
-  bottom:16px;
-  width:34px;
+  left:34px;          /* ←中央寄り（64px幅の真ん中付近） */
+  bottom:14px;        /* ←少し下げて“持ってる感” */
+  width:46px;         /* ←大きく（まずこれで試す） */
   height:auto;
   image-rendering:pixelated;
   transform:translateX(-50%);
   pointer-events:none;
 }
 
-/* ★訓練中ダンベル：大きめ＋左寄り */
 .catDumbbell{
   position:absolute;
-  left:20px;
-  bottom:18px;
-  width:36px;
+  left:34px;
+  bottom:14px;
+  width:48px;         /* ←ダンベルは少しだけ大きめでも映える */
   height:auto;
   image-rendering:pixelated;
   transform:translateX(-50%);
