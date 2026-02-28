@@ -343,23 +343,22 @@ html,body{
   align-items:center;
 }
 
-/* Cat sprites（バランス安定版） */
+/* ===== Cat sprite：同一キャンバス重ね（推奨） ===== */
+
 .catSpriteWrap{
-  position:relative;
-  width:72px;          /* 少し広げて“余白”を確保 */
-  height:72px;
-  flex:0 0 72px;
+  position: relative;
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
 }
 
-/* 素体は常に中央固定 */
+/* 素体 */
 .catSprite{
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:64px;
-  height:64px;
-  transform:translate(-50%,-50%);
-  image-rendering:pixelated;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
 }
 
 /* 毛色ランダム（cat.pngが白〜薄グレー素体だと綺麗） */
@@ -367,26 +366,15 @@ html,body{
   filter:hue-rotate(var(--hue)) saturate(1.35);
 }
 
-/* 装備：中央基準で重ねる（はみ出しても左右のブレが減る） */
-.catWeapon{
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:44px; /* ←大きめにしたいならここ */
-  transform:translate(-35%,-35%); /* ちょい右下に持たせる */
-  image-rendering:pixelated;
-  pointer-events:none;
-}
-
-/* 鉄アレイ：中央基準で下寄せ */
+/* 武器・ダンベル：ネコと完全一致で重ねる */
+.catWeapon,
 .catDumbbell{
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:46px; /* ←大きめにしたいならここ */
-  transform:translate(-50%,-20%);
-  image-rendering:pixelated;
-  pointer-events:none;
+  position: absolute;
+  inset: 0;            /* top:0; right:0; bottom:0; left:0; と同じ */
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
 }
 
 /* 状態ドット */
