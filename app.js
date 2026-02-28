@@ -927,7 +927,7 @@ function doRankUp() {
 
   state.gold -= cost;
   state.guildRank = nextRank;
-
+　burstConfetti();
   ensureQuestState();
   ensureTrainingState();
 
