@@ -337,28 +337,48 @@ html,body{
 
 /* Cat sprites */
 .catCard{
-  position:relative;
   display:flex;
-  gap:12px;
   align-items:center;
+  gap:14px;
 }
 
-/* ===== Cat sprite：同一キャンバス重ね（推奨） ===== */
-
-.catSpriteWrap{
-  position: relative;
-  width: 64px;
-  height: 64px;
-  flex: 0 0 64px;
+/* スプライト領域（64px表示） */
+.catCard .catSpriteWrap{
+  position:relative;
+  width:64px;
+  height:64px;
+  flex:0 0 64px;
 }
 
-/* 素体 */
-.catSprite{
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  image-rendering: pixelated;
+/* ネコ素体 */
+.catCard .catSprite{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  image-rendering:pixelated;
+}
+/* 武器・ダンベル（ネコと完全一致） */
+.catCard .catWeapon,
+.catCard .catDumbbell{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  image-rendering:pixelated;
+  pointer-events:none;
+}
+
+/* ステータス改行防止 */
+.catCard .catStats{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* 状態表示改行防止 */
+.catCard .row > div:last-child{
+  white-space:nowrap;
 }
 
 /* 毛色ランダム（cat.pngが白〜薄グレー素体だと綺麗） */
@@ -366,16 +386,7 @@ html,body{
   filter:hue-rotate(var(--hue)) saturate(1.35);
 }
 
-/* 武器・ダンベル：ネコと完全一致で重ねる */
-.catWeapon,
-.catDumbbell{
-  position: absolute;
-  inset: 0;            /* top:0; right:0; bottom:0; left:0; と同じ */
-  width: 64px;
-  height: 64px;
-  image-rendering: pixelated;
-  pointer-events: none;
-}
+
 
 /* 状態ドット */
 .statusDot{
@@ -436,60 +447,3 @@ img,svg,canvas{ max-width:100%; height:auto; }
   line-height: 1.2;
 }
 
-/* ===== Cat Card: レイアウト安定版（潰れ・武器ズレ防止） ===== */
-.catCard{
-  display:flex;
-  align-items:center;
-  gap:14px;
-}
-
-/* 左カラム：固定サイズ + absolute基準 */
-.catCard .catSpriteWrap{
-  position:relative;
-  flex:0 0 96px;      /* 左の占有幅（好みで 88〜104） */
-  width:96px;
-  height:96px;        /* ←これが重要。高さ固定で潰れ防止＆基準安定 */
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-/* ネコ素体：固定サイズで潰れ防止（32px素材を拡大表示） */
-.catCard .catSprite{
-  width:72px;         /* ←このへんが「昔の見た目」に近い倍率 */
-  height:72px;
-  object-fit:contain;
-  image-rendering:pixelated;
-}
-
-/* 武器：catSpriteWrap基準で配置 */
-.catCard .catWeapon{
-  position:absolute;
-  right:10px;
-  bottom:18px;
-  width:28px;
-  height:auto;
-  image-rendering:pixelated;
-}
-
-/* ダンベル：中央寄せでブレにくくする */
-.catCard .catDumbbell{
-  position:absolute;
-  left:50%;
-  bottom:10px;
-  transform:translateX(-50%);
-  width:72px;
-  height:auto;
-  image-rendering:pixelated;
-}
-
-/* 右側：詰まり＆改行防止 */
-.catCard > div{
-  min-width:0; /* 省略記号を効かせるため */
-}
-
-/* ステータス（右上：待機/クエスト/訓練）を改行させない */
-.catCard .row > div:last-child{
-  white-space:nowrap;
-  flex:0 0 auto;
-}
