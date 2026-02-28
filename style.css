@@ -435,3 +435,32 @@ img,svg,canvas{ max-width:100%; height:auto; }
 .catCard .catStats {
   line-height: 1.2;
 }
+
+/* ===== Cat card layout fix: 右寄り解消（2カラム固定） ===== */
+.catCard{
+  display:flex;
+  align-items:center;
+  gap:14px;                 /* 左右の間隔 */
+}
+
+/* 左：スプライト枠を固定幅にして中央に */
+.catCard .catSpriteWrap{
+  flex:0 0 86px;            /* ←ここで左カラム幅を決める（80〜92で好み） */
+  width:86px;
+  display:flex;
+  align-items:center;
+  justify-content:center;   /* スプライトを枠の中央に */
+}
+
+/* 右：テキスト側は残り全部 */
+.catCard > div:last-child{
+  flex:1;
+  min-width:0;              /* ellipsisを効かせるため */
+}
+
+/* ステータスは1行維持（前の対策を維持） */
+.catCard .catStats{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
