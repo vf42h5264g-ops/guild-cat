@@ -384,3 +384,28 @@ html,body{
 .statusDot.training{ background:#b65cff; }
 
 img,svg,canvas{ max-width:100%; height:auto; }
+
+#confetti{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:140; /* modalより上でもクリック邪魔しない */
+  overflow:hidden;
+}
+
+.confettiPiece{
+  position:absolute;
+  width:8px;
+  height:12px;
+  border-radius:2px;
+  opacity:.9;
+  transform:translate3d(0,-10px,0) rotate(0deg);
+  animation:confettiFall 900ms linear forwards;
+}
+
+@keyframes confettiFall{
+  to{
+    transform:translate3d(var(--dx), 110vh, 0) rotate(var(--rot));
+    opacity:0.95;
+  }
+}
