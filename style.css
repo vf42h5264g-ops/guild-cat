@@ -332,12 +332,6 @@ html,body{
   align-items:center;
 }
 
-.catSpriteWrap{
-  position:relative;
-  width:64px;
-  height:64px;
-  flex:0 0 64px;
-}
 
 .catSprite{
   width:100%;
@@ -350,20 +344,32 @@ html,body{
   filter:hue-rotate(var(--hue)) saturate(1.35);
 }
 
+.catSpriteWrap{
+  position:relative;
+  width:64px;
+  height:64px;
+  flex:0 0 64px;
+  overflow:visible; /* 右にはみ出しても切れない */
+}
+
 .catWeapon{
   position:absolute;
-  right:-4px;
-  bottom:6px;
-  width:28px;
+  right:-2px;
+  bottom:10px;
+  width:22px;            /* ←小さく */
+  height:auto;
   image-rendering:pixelated;
+  transform:translateZ(0);
 }
 
 .catDumbbell{
   position:absolute;
-  right:-6px;
-  bottom:6px;
-  width:30px;
+  right:-1px;
+  bottom:9px;
+  width:24px;            /* ←小さく */
+  height:auto;
   image-rendering:pixelated;
+  transform:translateZ(0);
 }
 
 .statusDot{
