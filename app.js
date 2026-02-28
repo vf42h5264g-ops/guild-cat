@@ -2356,7 +2356,7 @@ function renderCatsTab() {
             <div><span class="statusDot ${dotClass}"></span>${statusText}</div>
           </div>
           <div class="dim">${escapeHtml(c.personality)}</div>
-          <div class="mono">STR ${c.str} / AGI ${c.agi} / INT ${c.int}</div>
+          <div class="mono catStats">STR ${c.str} / AGI ${c.agi} / INT ${c.int}</div>
 
           <div class="row" style="margin-top:8px;">
             <div class="dim">EXP ${c.exp}/${LEVEL.expToNext(c.level)}</div>
