@@ -423,3 +423,15 @@ img,svg,canvas{ max-width:100%; height:auto; }
     opacity:0.9;
   }
 }
+
+/* ===== Cat card: ステータス行が折り返されて縦に伸びるのを防ぐ ===== */
+.catCard .catStats {
+  white-space: nowrap;      /* 改行禁止 */
+  overflow: hidden;         /* はみ出し隠す */
+  text-overflow: ellipsis;  /* 万一はみ出したら … */
+}
+
+/* ついでに行間で縦が伸びるのを抑える（任意） */
+.catCard .catStats {
+  line-height: 1.2;
+}
