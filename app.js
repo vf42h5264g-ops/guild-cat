@@ -989,7 +989,32 @@ function startTutorialQuest(partyIds, slotIdx) {
   renderAll();
   save();
 }
-
+ 
+/* =========================
+   Safe wrapper (show errors)
+   ========================= */
+function safe(fn) {
+  return (...args) => {
+    try {
+      return fn(...args);
+    } catch (e) {
+      console.error(e);
+      // 画面内で見えるように出す（iPhone対策）
+      openModal("⚠ エラー", `
+        <div class="panelCard">
+          <div class="dim">タップした直後に例外が出て処理が止まりました。</div>
+          <div class="mono" style="white-space:pre-wrap;margin-top:8px;">
+${escapeHtml(String(e && (e.stack || e.message || e)))}
+          </div>
+        </div>
+        <div class="modalFooter">
+          <button class="primary" id="errClose">閉じる</button>
+        </div>
+      `);
+      document.getElementById("errClose")?.addEventListener("click", closeModal);
+    }
+  };
+}
 /* =========================
    UI Bindings
    ========================= */
@@ -1032,31 +1057,7 @@ function bindUI() {
     });
   });
 
-  /* =========================
-   Safe wrapper (show errors)
-   ========================= */
-function safe(fn) {
-  return (...args) => {
-    try {
-      return fn(...args);
-    } catch (e) {
-      console.error(e);
-      // 画面内で見えるように出す（iPhone対策）
-      openModal("⚠ エラー", `
-        <div class="panelCard">
-          <div class="dim">タップした直後に例外が出て処理が止まりました。</div>
-          <div class="mono" style="white-space:pre-wrap;margin-top:8px;">
-${escapeHtml(String(e && (e.stack || e.message || e)))}
-          </div>
-        </div>
-        <div class="modalFooter">
-          <button class="primary" id="errClose">閉じる</button>
-        </div>
-      `);
-      document.getElementById("errClose")?.addEventListener("click", closeModal);
-    }
-  };
-}
+
   if (el.btnGuildName) el.btnGuildName.addEventListener("click", () => openGuildRenameModal());
 
   el.btnReset.addEventListener("click", () => {
