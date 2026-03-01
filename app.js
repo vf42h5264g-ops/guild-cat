@@ -864,9 +864,15 @@ function openTutorialQuestSetupModal() {
       <div id="partyList" class="modalList"></div>
     </div>
 
-    <div class="panelCard" style="margin-top:10px;">
-      <div class="dim" style="margin-bottom:8px;">② 難易度Lv</div>
-      <div id="lvList" class="modalList"></div>
+        <div class="panelCard" style="margin-top:10px;">
+      <div class="dim" style="margin-bottom:8px;">② 難易度Lv（自動）</div>
+      <div class="row">
+        <div><b>Lv${fixedLv}</b></div>
+        <div class="dim">必要総戦力: ${QUEST.NEED_TOTAL[fixedLv - 1]}</div>
+      </div>
+      <div class="dim" style="margin-top:6px;">
+        難易度は受注ごとに再抽選（Rank上限Lv${maxLv}の「上限-2〜上限」から）
+      </div>
     </div>
 
     <div class="panelCard" style="margin-top:10px;">
@@ -882,7 +888,7 @@ function openTutorialQuestSetupModal() {
   openModal("クエスト受注（チュートリアル）", html);
 
   const partyList = document.getElementById("partyList");
-  const lvList = document.getElementById("lvList");
+  
   const qPreview = document.getElementById("qPreview");
   const btnStart = document.getElementById("qStart");
 
@@ -1276,9 +1282,15 @@ function openQuestSetupModal(type) {
       <div id="partyList" class="modalList"></div>
     </div>
 
-    <div class="panelCard" style="margin-top:10px;">
-      <div class="dim" style="margin-bottom:8px;">難易度Lv</div>
-      <div id="lvList" class="modalList"></div>
+        <div class="panelCard" style="margin-top:10px;">
+      <div class="dim" style="margin-bottom:8px;">難易度Lv（自動）</div>
+      <div class="row">
+        <div><b>Lv${fixedLv}</b></div>
+        <div class="dim">必要総戦力: ${QUEST.NEED_TOTAL[fixedLv - 1]}</div>
+      </div>
+      <div class="dim" style="margin-top:6px;">
+        難易度は受注ごとに再抽選（Rank上限Lv${maxLv}の「上限-2〜上限」から）
+      </div>
     </div>
 
     <div class="panelCard" style="margin-top:10px;">
@@ -1299,7 +1311,7 @@ function openQuestSetupModal(type) {
   openModal("クエスト受注", html);
 
   const partyList = document.getElementById("partyList");
-  const lvList = document.getElementById("lvList");
+  
   const timeList = document.getElementById("timeList");
   const qPreview = document.getElementById("qPreview");
   const btnStart = document.getElementById("qStart");
@@ -1329,21 +1341,11 @@ function openQuestSetupModal(type) {
     updatePreview();
   });
 
-  let pickLv = null;
-  lvList.innerHTML = Array.from({ length: maxLv }, (_, i) => i + 1).map(lv => `
-    <div class="modalItem" data-lv="${lv}">
-      <b>Lv${lv}</b>
-      <div class="dim">必要総戦力: ${QUEST.NEED_TOTAL[lv-1]}</div>
-    </div>
-  `).join("");
-  lvList.addEventListener("click", (e) => {
-    const item = e.target.closest(".modalItem");
-    if (!item) return;
-    lvList.querySelectorAll(".modalItem").forEach(x => x.style.outline = "");
-    item.style.outline = "2px solid var(--blue)";
-    pickLv = Number(item.dataset.lv);
-    updatePreview();
-  });
+    // 難易度は固定（提示Lv）
+  // 固定Lvが範囲外にならないようにクランプ（安全策）
+  let pickLv = Math.max(1, Math.min(maxLv, Number(fixedLv || 1)));
+
+  // ここでlvList生成・クリックリスナーは不要なので丸ごと削除
 
   let pickTime = null;
   timeList.innerHTML = QUEST.TIME_TYPES.map(t => `
@@ -1367,10 +1369,12 @@ function openQuestSetupModal(type) {
     const offerLv = state.questOffers?.[type];   // ←この属性の提示Lv（抽選結果）
 
     const ok = partyIds.length > 0 && !!pickTime && !!offerLv;
-    btnStart.disabled = !ok;
+    btnStart.disabled = !(selected.size > 0 && pickTime);
 
     if (!ok) {
-      qPreview.innerHTML = "【${type}】推奨Lv ${offerLv} / ${pickTime}分";
+      qPreview.innerHTML = `
+  <div class="dim">【${type}】 推奨Lv ${offerLv} / ${pickTime}分</div>
+`;
       return;
     }
 
