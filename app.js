@@ -1363,20 +1363,22 @@ function openQuestSetupModal(type) {
     updatePreview();
   });
 
-  function updatePreview() {
-    const partyIds = Array.from(selected);
-    // 事前に ensureQuestOffers(); が走ってる前提
-    const offerLv = state.questOffers?.[type];   // ←この属性の提示Lv（抽選結果）
+ function updatePreview() {
+  const partyIds = Array.from(selected);
 
-    const ok = partyIds.length > 0 && !!pickTime && !!offerLv;
-    btnStart.disabled = !(selected.size > 0 && pickTime);
+  const offerLv = fixedLv; // ←固定
 
-    if (!ok) {
-      qPreview.innerHTML = `
-  <div class="dim">【${type}】 推奨Lv ${offerLv} / ${pickTime}分</div>
-`;
-      return;
-    }
+  const ok = partyIds.length > 0 && !!pickTime;
+  btnStart.disabled = !ok;
+
+  qPreview.innerHTML = `
+    <div class="dim">【${type.icon ?? ""} ${type.name}】 推奨Lv ${offerLv} / ${pickTime ?? "?"}分</div>
+  `;
+
+  if (!ok) return;
+
+  // ↓ここから成功率計算（既存の計算ロジックを続ける）
+}
 
     const def = makeQuestDef(type, offerLv, pickTime);
     const calc = calcQuestChance(def, partyIds);
