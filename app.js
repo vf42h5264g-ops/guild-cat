@@ -1176,12 +1176,15 @@ function makeQuestDef(type, level, timeKey) {
 /* =========================
    Invest (dividends)
    ========================= */
+
 function isShopUnlocked(key) {
-  return state.guildRank >= INVEST.unlockRank[key];
+  return state.guildRank >= (INVEST.unlockRank[key] || 999);
 }
+
 function shopCap(key) {
   return state.guildRank * (INVEST.capPerRank[key] || 0);
 }
+
 function randDividendRate(key) {
   const s = INVEST.shops[key];
   const r = (Math.random() * 2 - 1) * s.var;
@@ -1228,6 +1231,7 @@ function maybeGenerateDividendsOnLogin() {
   if (totalGold > 0) {
     ensurePending();
     const summary = makeDividendSummary(breakdown);
+
     state.pendingResults.push({
       type: "dividend",
       finishedAt: Date.now(),
@@ -1238,7 +1242,6 @@ function maybeGenerateDividendsOnLogin() {
 
     pushLog(`配当が届いた（受取待ち） +${totalGold.toLocaleString()}G`);
     save();
-
     openDividendPopup(totalGold, breakdown);
   } else {
     save();
@@ -1255,141 +1258,10 @@ function makeDividendSummary(breakdown) {
   return `${INVEST.shops[bestKey].name}中心`;
 }
 
-function dividendFlavor(breakdown) {
-  if (!breakdown.length) return "今日は静かな相場だ。";
-
-  const best = breakdown.reduce((p,c)=> (c.rate > p.rate ? c : p), breakdown[0]);
-  const worst = breakdown.reduce((p,c)=> (c.rate < p.rate ? c : p), breakdown[0]);
-
-  const bestShop = INVEST.shops[best.key];
-  const worstShop = INVEST.shops[worst.key];
-
-  const up = (best.rate / bestShop.base) - 1;
-  const down = 1 - (worst.rate / worstShop.base);
-
-  if (up >= 0.30 && best.key === "magic") return "🔮 新魔法の特許が成立！研究成果が爆発！";
-  if (up >= 0.15 && best.key === "trade") return "🚢 交易路が大当たり！商人たちが賑わっている。";
-  if (up >= 0.08 && best.key === "arms") return "🗡 武具の需要が堅調だ。戦の気配か？";
-  if (up >= 0.03 && best.key === "insure") return "🛡 堅実な運営が実を結んでいる。";
-
-  if (down >= 0.30 && worst.key === "magic") return "🔮 実験は難航しているようだ…";
-  if (down >= 0.15 && worst.key === "trade") return "🚢 風向きが悪い日もある。";
-  if (down >= 0.08 && worst.key === "arms") return "🗡 鍛冶場は静かだが、安定している。";
-  if (down >= 0.03 && worst.key === "insure") return "🛡 今日も静かな黒字だ。";
-
-  return "街の経済は穏やかに動いている。";
-}
-
-function openDividendPopup(totalGold, breakdown) {
-  const sumByKey = {};
-  const rateByKey = {};
-  for (const b of breakdown) {
-    sumByKey[b.key] = (sumByKey[b.key] || 0) + b.gold;
-    rateByKey[b.key] = b.rate;
-  }
-
-  const lines = Object.keys(INVEST.shops)
-    .filter(k => (sumByKey[k] || 0) > 0)
-    .map(k => {
-      const s = INVEST.shops[k];
-      const amt = state.invest.holdings[k] || 0;
-      const g = sumByKey[k];
-      const r = rateByKey[k] || s.base;
-      return `・${s.icon} ${s.name}：出資 ${amt.toLocaleString()}G / 配当率 ${(r*100).toFixed(2)}% → +${g.toLocaleString()}G`;
-    }).join("<br>");
-
-  const flavor = dividendFlavor(breakdown);
-
-  const html = `
-    <div class="panelCard">
-      <div style="font-size:16px;font-weight:900;">📈 本日の配当が届いた！</div>
-      <div class="dim" style="margin-top:6px;">合計：<b>+${totalGold.toLocaleString()}G</b>（受取待ちに追加）</div>
-    </div>
-    <div class="panelCard" style="margin-top:10px;">
-      <div class="dim">${lines || "（配当なし）"}</div>
-    </div>
-    <div class="panelCard" style="margin-top:10px;">
-      <div class="dim">${escapeHtml(flavor)}</div>
-    </div>
-    <div class="modalFooter">
-      <button class="ghost" id="dvClose">閉じる</button>
-      <button class="primary" id="dvGo">受取待ちを見る</button>
-    </div>
-  `;
-  openModal("配当", html);
-  document.getElementById("dvClose").addEventListener("click", closeModal);
-  document.getElementById("dvGo").addEventListener("click", () => {
-    closeModal();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  });
-}
-
-function openInvestDepositModal(key) {
-  const s = INVEST.shops[key];
-  if (!isShopUnlocked(key)) return;
-
-  const cap = shopCap(key);
-  const cur = state.invest.holdings[key] || 0;
-  const remain = Math.max(0, cap - cur);
-
-  const html = `
-    <div class="panelCard">
-      <div><b>${s.icon} ${escapeHtml(s.name)}</b></div>
-      <div class="dim" style="margin-top:6px;">
-        出資は <b>${INVEST.STEP.toLocaleString()}G</b> 単位 / 売却不可 / 価格変動なし
-      </div>
-    </div>
-    <div class="panelCard" style="margin-top:10px;">
-      <div class="dim">出資額：${cur.toLocaleString()}G / 上限：${cap.toLocaleString()}G</div>
-      <div class="dim">追加できる残り：${remain.toLocaleString()}G</div>
-    </div>
-    <div class="panelCard" style="margin-top:10px;">
-      <div class="dim">追加出資額（${INVEST.STEP.toLocaleString()}G単位）</div>
-      <input id="depInput" inputmode="numeric" placeholder="例：5000"
-        style="width:100%;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;margin-top:8px;" />
-      <div class="dim" style="margin-top:6px;">所持Gold：${state.gold.toLocaleString()}G</div>
-    </div>
-    <div class="modalFooter">
-      <button class="ghost" id="depCancel">キャンセル</button>
-      <button class="primary" id="depOk">出資する</button>
-    </div>
-  `;
-  openModal("追加出資", html);
-
-  document.getElementById("depCancel").addEventListener("click", closeModal);
-  document.getElementById("depOk").addEventListener("click", () => {
-    const raw = document.getElementById("depInput").value.trim();
-    const val = Number(raw);
-    if (!Number.isFinite(val) || val <= 0) { closeModal(); return; }
-
-    const amt = Math.floor(val / INVEST.STEP) * INVEST.STEP;
-    if (amt <= 0) { closeModal(); return; }
-
-    const cap2 = shopCap(key);
-    const cur2 = state.invest.holdings[key] || 0;
-    if (cur2 + amt > cap2) {
-      pushLog("出資上限を超えています");
-      closeModal();
-      return;
-    }
-    if (state.gold < amt) {
-      pushLog("Goldが足りません");
-      closeModal();
-      return;
-    }
-
-    state.gold -= amt;
-    state.invest.holdings[key] = cur2 + amt;
-    pushLog(`${s.name} に出資 +${amt.toLocaleString()}G`);
-    save();
-    renderAll();
-    closeModal();
-  });
-}
-
 /* =========================
    Rendering
    ========================= */
+
 function renderAll() {
   ensureQuestState();
   ensureTrainingState();
@@ -1398,7 +1270,7 @@ function renderAll() {
   ensureTutorial();
   ensureInvest();
   ensureQuestOffers();
-   
+
   renderGuildTitle();
   renderHeaderBadges();
   renderRankUp();
@@ -1407,12 +1279,15 @@ function renderAll() {
   renderLogs();
 
   const investUnlocked = RANK.canInvest(state.guildRank);
-  document.querySelector(`.tab[data-tab="invest"]`)?.classList.toggle("hidden", !investUnlocked);
-  el.tabInvest?.classList.toggle("hidden", currentTab !== "invest");
-}
 
-function renderGuildTitle() {
-  if (el.guildTitle) el.guildTitle.textContent = state.guildName || "Cozy Cat Guild";
+  const investTabBtn = document.querySelector(`.tab[data-tab="invest"]`);
+  if (investTabBtn) {
+    investTabBtn.classList.toggle("hidden", !investUnlocked);
+  }
+
+  if (el.tabInvest) {
+    el.tabInvest.classList.toggle("hidden", currentTab !== "invest");
+  }
 }
 
 function renderHeaderBadges() {
@@ -1420,7 +1295,7 @@ function renderHeaderBadges() {
   const mult = RANK.goldMult(rank);
   const hs = RANK.hireSlots(rank);
   const ts = RANK.trainingSlots(rank);
-  const ds = RANK.dispatchSlots(rank);
+  const ds = RANK.dispatchSlots ? RANK.dispatchSlots(rank) : 1;
 
   const usedDispatch = (state.questJobs || []).filter(Boolean).length;
   const usedTraining = (state.trainingJobs || []).filter(Boolean).length;
@@ -1435,367 +1310,20 @@ function renderHeaderBadges() {
     ["雇用枠", `${state.cats.length}/${hs}`],
   ];
 
-  el.hud.innerHTML = badges.map(([k,v]) => `
-    <div class="badge"><span class="k">${escapeHtml(k)}</span><span class="v">${escapeHtml(v)}</span></div>
-  `).join("");
-}
-
-function renderRankUp() {
-  const next = state.guildRank + 1;
-  const cost = RANK.cost(next);
-  el.rankInfo.textContent = `Rank ${state.guildRank} → ${next}`;
-  el.rankCostText.textContent = `必要: ${cost.toLocaleString()}G`;
-  el.btnRankUp.disabled = state.gold < cost;
-  el.btnRankUp.style.opacity = state.gold < cost ? "0.6" : "1";
-}
-
-function renderPending() {
-  const n = (state.pendingResults || []).length;
-  if (n <= 0) el.pendingBar.classList.add("hidden");
-  else {
-    el.pendingBar.classList.remove("hidden");
-    el.pendingText.textContent = `受取待ち: ${n}`;
+  if (el.hud) {
+    el.hud.innerHTML = badges.map(([k,v]) => `
+      <div class="badge">
+        <span class="k">${escapeHtml(k)}</span>
+        <span class="v">${escapeHtml(v)}</span>
+      </div>
+    `).join("");
   }
-
-  const hasTrainingDone = (state.pendingResults || []).some(r => r.type === "training");
-  const hasQuestDone = (state.pendingResults || []).some(r => r.type === "quest");
-  const hasDividend = (state.pendingResults || []).some(r => r.type === "dividend");
-
-  el.dotTraining?.classList.toggle("hidden", !hasTrainingDone);
-  el.dotQuest?.classList.toggle("hidden", !hasQuestDone);
-  el.dotInvest?.classList.toggle("hidden", !hasDividend);
-}
-
-function renderTabs() {
-  if (currentTab === "quest") renderQuestTab();
-  if (currentTab === "cats") renderCatsTab();
-  if (currentTab === "training") renderTrainingTab();
-  if (currentTab === "invest") renderInvestTab();
-}
-
-function switchTab(tab) {
-  currentTab = tab;
-  document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
-  document.querySelector(`.tab[data-tab="${tab}"]`)?.classList.add("active");
-
-  el.tabQuest.classList.toggle("hidden", tab !== "quest");
-  el.tabCats.classList.toggle("hidden", tab !== "cats");
-  el.tabTraining.classList.toggle("hidden", tab !== "training");
-  el.tabInvest.classList.toggle("hidden", tab !== "invest");
-
-  renderTabs();
-}
-
-function renderQuestTab() {
-  ensureQuestOffers();
-  if (!state.questOffers) rollQuestOffers();
-  const types = questTypes();
-  const ds = RANK.dispatchSlots(state.guildRank);
-  const used = (state.questJobs || []).filter(Boolean).length;
-  const maxLv = RANK.maxQuestLevel(state.guildRank);
-
-  el.tabQuest.innerHTML = `
-    <div class="panelCard">
-      <div class="row">
-        <div>
-          <div><b>クエスト</b> <span class="dim">(Lv1〜${maxLv} 解放中)</span></div>
-          <div class="dim">S/M/Lで時間選択（Sが最効率）。訓練と両立不可 / キャンセル不可</div>
-        </div>
-        <div class="mono">派遣枠 ${used}/${ds}</div>
-      </div>
-    </div>
-
-    ${types.map(t => `
-      <div class="panelCard">
-        <div class="row">
-          <div>
-            <div><b>${t.icon} ${t.name}</b></div>
-            <div class="dim">属性：${t.main} / 今日の提示：<b>Lv${state.questOffers[t.id]}</b>（受注ごと再抽選）</div>
-          </div>
-          <button class="primary smallBtn" data-qtype="${t.id}">受注</button>
-        </div>
-      </div>
-    `).join("")}
-
-    ${renderQuestRunning()}
-  `;
-
-  el.tabQuest.querySelectorAll("[data-qtype]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const t = types.find(x => x.id === btn.dataset.qtype);
-      if (t) openQuestSetupModal(t);
-    });
-  });
-}
-
-function renderQuestRunning() {
-  const running = (state.questJobs || []).filter(Boolean);
-  if (running.length === 0) return "";
-
-  return running.map(job => {
-    const remain = Math.max(0, job.endAt - Date.now());
-    const label = job.tutorial
-      ? `チュートリアル（1分）`
-      : `${job.def.name} Lv${job.def.level}${job.def.timeType} / ${job.def.durationMin}分`;
-    return `
-      <div class="panelCard">
-        <div class="row">
-          <div>
-            <div><span class="statusDot quest"></span><b>クエスト中</b></div>
-            <div class="dim">${escapeHtml(label)}</div>
-          </div>
-          <div class="mono">${formatRemain(remain)}</div>
-        </div>
-      </div>
-    `;
-  }).join("");
-}
-
-function renderCatsTab() {
-  const hs = RANK.hireSlots(state.guildRank);
-  const hireCost = HIRING.hireCost(state.guildRank);
-  const scoutCost = HIRING.refreshCost(state.guildRank);
-  const hasCandidates = (state.hire?.candidates?.length || 0) > 0;
-  const canFire = RANK.canFire(state.guildRank);
-
-  const catsHtml = (state.cats || []).map(c => {
-    const busy = isCatBusy(c.id);
-    const statusText = busy === "quest" ? "クエスト" : busy === "training" ? "訓練" : "待機";
-    const dotClass = busy === "quest" ? "quest" : busy === "training" ? "training" : "";
-
-  const weaponImg = getWeaponImageByPersonality(c.personality);
-　　const training = busy === "training";
-　　const onQuest = busy === "quest";
-
-　　return `
- 　　 <div class="panelCard catCard" style="display:flex;align-items:center;gap:12px;">
-  <div class="catSpriteWrap" style="position:relative;width:64px;height:64px;flex:0 0 64px;">
-    <!-- 素体（32px素材を64px表示で固定） -->
-    <img
-      src="img/cat.png"
-      class="catSprite colorized"
-      style="--hue:${c.hue}deg;width:64px;height:64px;display:block;image-rendering:pixelated;"
-      alt=""
-    />
-
-    ${
-      training
-        ? `
-          <img
-            src="img/jim1.png"
-            class="catDumbbell"
-            data-jim="${c.id}"
-            style="position:absolute;inset:0;width:64px;height:64px;image-rendering:pixelated;pointer-events:none;"
-            alt=""
-          />
-        `
-        : (onQuest && weaponImg)
-          ? `
-            <img
-              src="${weaponImg}"
-              class="catWeapon"
-              style="position:absolute;inset:0;width:64px;height:64px;image-rendering:pixelated;pointer-events:none;"
-              alt=""
-            />
-          `
-          : ""
-    }
-  </div>
-
-        <div style="min-width:0;flex:1;">
-          <div class="row">
-            <div style="min-width:0;">
-              <b>${escapeHtml(c.name)}</b> <span class="dim">Lv${c.level}</span>
-            </div>
-            <div><span class="statusDot ${dotClass}"></span>${statusText}</div>
-          </div>
-          <div class="dim">${escapeHtml(c.personality)}</div>
-          <div class="mono catStats">STR ${c.str} / AGI ${c.agi} / INT ${c.int}</div>
-
-          <div class="row" style="margin-top:8px;">
-            <div class="dim">EXP ${c.exp}/${LEVEL.expToNext(c.level)}</div>
-            <div style="display:flex;gap:8px;">
-              <button class="ghost smallBtn" data-rename="${c.id}">名前変更</button>
-              ${canFire ? `<button class="ghost smallBtn" data-fire="${c.id}" ${busy ? "disabled" : ""} style="${busy ? "opacity:.6;" : ""}">解雇</button>` : ""}
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join("");
-
-  el.tabCats.innerHTML = `
-    <div class="panelCard">
-      <div class="row">
-        <div>
-          <div><b>ギルド戦力</b></div>
-          <div class="dim">待機→クエスト→訓練（両立不可）</div>
-        </div>
-        <div class="mono">${totalPower()}</div>
-      </div>
-    </div>
-
-    ${catsHtml || `<div class="panelCard"><div class="dim">ネコがいません。チュートリアルから開始してください。</div></div>`}
-
-    <div class="panelCard">
-      <div><b>雇用</b> <span class="dim">雇用枠 ${state.cats.length}/${hs}</span></div>
-      <div class="dim">雇用費: ${hireCost.toLocaleString()}G</div>
-      <div class="dim">候補は「スカウト」で確認できます</div>
-
-      <div class="row" style="margin-top:10px;">
-        <button class="primary smallBtn" id="btnScout">スカウトする ${scoutCost.toLocaleString()}G</button>
-        <button class="ghost smallBtn" id="btnViewCandidates" ${hasCandidates ? "" : "disabled"} style="${hasCandidates ? "" : "opacity:.6;"}">
-          候補を見る
-        </button>
-      </div>
-
-      ${canFire ? `<div class="dim" style="margin-top:10px;">解雇はRank5から可能（待機中のみ）</div>` : `<div class="dim" style="margin-top:10px;">解雇はRank5で解放</div>`}
-    </div>
-  `;
-
-  el.tabCats.querySelectorAll("[data-rename]").forEach(btn => {
-    btn.addEventListener("click", () => openRenameCatModal(btn.dataset.rename));
-  });
-  el.tabCats.querySelectorAll("[data-fire]").forEach(btn => {
-    btn.addEventListener("click", () => openFireCatModal(btn.dataset.fire));
-  });
-
-  document.getElementById("btnScout")?.addEventListener("click", () => scoutPayAndOpen());
-  document.getElementById("btnViewCandidates")?.addEventListener("click", () => openScoutModal(false));
-}
-
-function renderTrainingTab() {
-  ensureTrainingState();
-
-  const slotCount = state.trainingJobs.length;
-  const usedTraining = state.trainingJobs.filter(Boolean).length;
-
-  const cards = [];
-  for (let slotNo = 1; slotNo <= slotCount; slotNo++) {
-    const slot = state.trainingSlots[slotNo - 1];
-    const job = state.trainingJobs[slotNo - 1];
-    const { unlockCost, expMult } = getTrainingSlotMeta(slotNo);
-
-    if (job) {
-      const remain = Math.max(0, job.endAt - Date.now());
-      cards.push(`
-        <div class="panelCard">
-          <div class="row">
-            <div>
-              <div><b>訓練枠 ${slotNo}</b> <span class="dim">（訓練中）</span></div>
-              <div class="dim">EXP: ${job.expGain} / 使用料: ${job.useCost.toLocaleString()}G / 倍率: x${expMult.toFixed(1)}</div>
-            </div>
-            <div class="mono">${formatRemain(remain)}</div>
-          </div>
-        </div>
-      `);
-      continue;
-    }
-
-    if (!slot.unlocked) {
-      cards.push(`
-        <div class="panelCard">
-          <div class="row">
-            <div>
-              <div><b>訓練枠 ${slotNo}</b> <span class="dim">（未開放）</span></div>
-              <div class="dim">開放費: ${unlockCost.toLocaleString()}G / 倍率: x${expMult.toFixed(1)}</div>
-            </div>
-            <button class="primary smallBtn" data-unlock-slot="${slotNo}">開放</button>
-          </div>
-        </div>
-      `);
-      continue;
-    }
-
-    cards.push(`
-      <div class="panelCard">
-        <div class="row">
-          <div>
-            <div><b>訓練枠 ${slotNo}</b> <span class="dim">（使用可）</span></div>
-            <div class="dim">倍率: x${expMult.toFixed(1)} / ${slotNo === 1 ? "使用料: 0G" : "使用料: 時間に応じて発生"}</div>
-          </div>
-          <button class="primary smallBtn" data-start-slot="${slotNo}">訓練する</button>
-        </div>
-      </div>
-    `);
-  }
-
-  el.tabTraining.innerHTML = `
-    <div class="panelCard">
-      <div><b>訓練</b> <span class="dim">1EXP/分 / 受取式 / クエストと両立不可</span></div>
-      <div class="dim">空き: ${(slotCount - usedTraining)}/${slotCount}（枠2以降は開放費＋使用料あり）</div>
-    </div>
-    ${cards.join("")}
-  `;
-
-  el.tabTraining.querySelectorAll("[data-unlock-slot]").forEach(btn => {
-    btn.addEventListener("click", () => unlockTrainingSlot(Number(btn.dataset.unlockSlot)));
-  });
-  el.tabTraining.querySelectorAll("[data-start-slot]").forEach(btn => {
-    btn.addEventListener("click", () => openTrainingStartModal(Number(btn.dataset.startSlot)));
-  });
-}
-
-function renderInvestTab() {
-  ensureInvest();
-
-  if (!RANK.canInvest(state.guildRank)) {
-    el.tabInvest.innerHTML = `<div class="panelCard"><div class="dim">Rank10で解放</div></div>`;
-    return;
-  }
-
-  const today = dateKey(new Date());
-  const nextMidnight = (() => {
-    const d = new Date();
-    const n = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1, 0, 0, 0);
-    return n.getTime();
-  })();
-  const remain = nextMidnight - Date.now();
-
-  const cards = Object.keys(INVEST.shops).map(key => {
-    const s = INVEST.shops[key];
-    const unlocked = isShopUnlocked(key);
-    const cap = shopCap(key);
-    const cur = state.invest.holdings[key] || 0;
-    const lockedMsg = unlocked ? "" : `（Rank${INVEST.unlockRank[key]}で解放）`;
-
-    const basePct = (s.base * 100).toFixed(2);
-    const varPct = (s.var * 100).toFixed(0);
-
-    const canDeposit = unlocked && cur < cap;
-
-    return `
-      <div class="panelCard">
-        <div class="row">
-          <div style="min-width:0;">
-            <div><b>${s.icon} ${escapeHtml(s.name)}</b> <span class="dim">${escapeHtml(lockedMsg)}</span></div>
-            <div class="dim">配当：${basePct}% / 変動：±${varPct}%（価格変動なし・売却不可）</div>
-            <div class="dim">出資：${cur.toLocaleString()}G / 上限：${cap.toLocaleString()}G</div>
-          </div>
-          <button class="primary smallBtn" data-dep="${key}" ${canDeposit ? "" : "disabled"} style="${canDeposit ? "" : "opacity:.6;"}">出資</button>
-        </div>
-      </div>
-    `;
-  }).join("");
-
-  el.tabInvest.innerHTML = `
-    <div class="panelCard">
-      <div><b>投資</b> <span class="dim">（放置収入 / クエストが主役）</span></div>
-      <div class="dim">締め：毎日 0:00 / 次の配当まで：${formatRemain(remain)}</div>
-      <div class="dim">配当はログイン時に確定し、受取待ちに入ります。</div>
-      <div class="dim">今日：${today}</div>
-    </div>
-    ${cards}
-  `;
-
-  el.tabInvest.querySelectorAll("[data-dep]").forEach(btn => {
-    btn.addEventListener("click", () => openInvestDepositModal(btn.dataset.dep));
-  });
 }
 
 /* =========================
    Tick
    ========================= */
+
 function tick() {
   finishTrainingIfDone();
   finishQuestsIfDone();
@@ -1809,6 +1337,9 @@ function tick() {
 }
 
 /* Training dumbbell animation */
+
+let jimFlip = false;
+
 function toggleDumbbells() {
   jimFlip = !jimFlip;
   const jobs = state.trainingJobs || [];
@@ -1823,5 +1354,6 @@ function toggleDumbbells() {
 /* =========================
    Start
    ========================= */
+
 boot();
 console.log("END");
