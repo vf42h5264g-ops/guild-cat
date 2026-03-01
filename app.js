@@ -803,12 +803,11 @@ function openTutorialTrainingIntro() {
 }
 
 function openTutorialQuestFlowExplain(fromTraining = false) {
-  // クエスト操作の順番を明確に説明（あなたの指定の文章）
   const html = `
     <div class="panelCard">
       <div><b>📜 クエストの流れ</b></div>
       <div class="dim" style="margin-top:6px; line-height:1.6;">
-        ①ネコを選ぶ → ②難易度Lvを選ぶ → ③受注を押す<br>
+        ①ネコを選ぶ → ②難易度Lvを確認 → ③受注を押す<br>
         これでクエストが始まります。<br>
         （クエスト中はキャンセルできません）
       </div>
@@ -849,8 +848,7 @@ function openTutorialQuestSetupModal() {
     return;
   }
 
-  // チュート専用：Lv1のみ、時間は1分固定（確定成功）だが
-  // “難易度を選ぶ” 操作体験のため Lv1 を選択させる
+  const fixedLv = 1; // チュートはLv1固定（操作体験）
   const html = `
     <div class="panelCard">
       <div><b>📦 チュートリアルクエスト（1分）</b></div>
@@ -863,20 +861,17 @@ function openTutorialQuestSetupModal() {
       <div id="partyList" class="modalList"></div>
     </div>
 
-        <div class="panelCard" style="margin-top:10px;">
-      <div class="dim" style="margin-bottom:8px;">② 難易度Lv（自動）</div>
+    <div class="panelCard" style="margin-top:10px;">
+      <div class="dim" style="margin-bottom:8px;">② 難易度Lv（固定）</div>
       <div class="row">
         <div><b>Lv${fixedLv}</b></div>
-        <div class="dim">必要総戦力: ${QUEST.NEED_TOTAL[fixedLv - 1]}</div>
-      </div>
-      <div class="dim" style="margin-top:6px;">
-        難易度は受注ごとに再抽選（Rank上限Lv${maxLv}の「上限-2〜上限」から）
+        <div class="dim">（チュートリアル）</div>
       </div>
     </div>
 
     <div class="panelCard" style="margin-top:10px;">
       <div class="dim" style="margin-bottom:8px;">③ 受注</div>
-      <div class="dim" id="qPreview" style="margin-top:6px;">選択してください</div>
+      <div class="dim" id="qPreview" style="margin-top:6px;">ネコを選択してください</div>
     </div>
 
     <div class="modalFooter">
@@ -887,13 +882,13 @@ function openTutorialQuestSetupModal() {
   openModal("クエスト受注（チュートリアル）", html);
 
   const partyList = document.getElementById("partyList");
-  
   const qPreview = document.getElementById("qPreview");
   const btnStart = document.getElementById("qStart");
 
   document.getElementById("qCancel").addEventListener("click", closeModal);
 
   const selected = new Set();
+
   partyList.innerHTML = idle.map(c => `
     <div class="modalItem" data-cat="${c.id}">
       <b>${escapeHtml(c.name)}</b> Lv${c.level}
@@ -905,6 +900,7 @@ function openTutorialQuestSetupModal() {
     const item = e.target.closest(".modalItem");
     if (!item) return;
     const id = item.dataset.cat;
+
     if (selected.has(id)) {
       selected.delete(id);
       item.style.outline = "";
@@ -916,37 +912,21 @@ function openTutorialQuestSetupModal() {
     updatePreview();
   });
 
-  let pickLv = null;
-  lvList.innerHTML = `
-    <div class="modalItem" data-lv="1">
-      <b>Lv1</b>
-      <div class="dim">（チュートリアル固定）</div>
-    </div>
-  `;
-  lvList.addEventListener("click", (e) => {
-    const item = e.target.closest(".modalItem");
-    if (!item) return;
-    lvList.querySelectorAll(".modalItem").forEach(x => x.style.outline = "");
-    item.style.outline = "2px solid var(--blue)";
-    pickLv = Number(item.dataset.lv);
-    updatePreview();
-  });
-
   function updatePreview() {
     const partyIds = Array.from(selected);
-    const ok = partyIds.length > 0 && pickLv;
+    const ok = partyIds.length > 0;
     btnStart.disabled = !ok;
 
     if (!ok) {
-      qPreview.innerHTML = "選択してください";
+      qPreview.textContent = "ネコを選択してください";
       return;
     }
     qPreview.innerHTML = `時間: 1分 / 確定成功 / 受取待ちに入ります`;
   }
 
   btnStart.addEventListener("click", () => {
-    closeModal();
     const partyIds = Array.from(selected);
+    closeModal();
     startTutorialQuest(partyIds, slotIdx);
   });
 }
