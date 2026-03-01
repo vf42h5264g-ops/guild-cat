@@ -1390,7 +1390,7 @@ function openQuestSetupModal(type) {
 
   // ここでlvList生成・クリックリスナーは不要なので丸ごと削除
 
-  let pickTime = null;
+  
   timeList.innerHTML = QUEST.TIME_TYPES.map(t => `
     <div class="modalItem" data-time="${t.key}">
       <b>${t.key}（${t.label}）</b>
