@@ -825,7 +825,6 @@ function openTutorialQuestFlowExplain(fromTraining = false) {
   `;
   openModal("チュートリアル：クエスト", html);
 
-  document.getElementById("tqLater").addEventListener("click", () => closeModal);
   document.getElementById("tqLater").addEventListener("click", closeModal);
 
   document.getElementById("tqGo").addEventListener("click", () => {
