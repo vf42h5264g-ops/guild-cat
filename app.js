@@ -299,11 +299,7 @@ el.logHeader.addEventListener("click", () => {
   renderLogs();
 });
 
-function setTabGlow(tab, on) {
-  const btn = document.querySelector(`.tab[data-tab="${tab}"]`);
-  if (!btn) return;
-  btn.classList.toggle("glow", !!on);
-}
+
 
 /* =========================
    Helpers
