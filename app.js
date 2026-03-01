@@ -557,7 +557,95 @@ function newGame() {
     },
   };
 }
+/* =========================
+   UI Bindings
+   ========================= */
+function bindUI() {
+  el.btnStart?.addEventListener("click", () => {
+    openMain();
+    if (!state.tutorialDone) startTutorialFlow();
+  });
 
+  el.btnContinue?.addEventListener("click", () => {
+    openMain();
+    if (!state.tutorialDone) startTutorialFlow();
+  });
+
+  el.btnNew?.addEventListener("click", () => {
+    const html = `
+      <div class="panelCard">
+        <div><b>新しく始めますか？</b></div>
+        <div class="dim" style="margin-top:6px;">現在のデータは削除されます。</div>
+        <div class="dim" style="margin-top:6px;">実行するには <b>RESET</b> と入力してください。</div>
+      </div>
+      <div class="panelCard" style="margin-top:10px;">
+        <input id="resetInput2" placeholder="RESET と入力"
+          style="width:100%;padding:10px;border-radius:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;" />
+      </div>
+      <div class="modalFooter">
+        <button class="ghost" id="newCancel">キャンセル</button>
+        <button class="primary" id="newConfirm" disabled>新しく始める</button>
+      </div>
+    `;
+    openModal("確認", html);
+    const input = document.getElementById("resetInput2");
+    const btn = document.getElementById("newConfirm");
+    document.getElementById("newCancel").addEventListener("click", closeModal);
+    input.addEventListener("input", () => { btn.disabled = input.value !== "RESET"; });
+    btn.addEventListener("click", () => {
+      localStorage.removeItem(LS_SAVE);
+      closeModal();
+      location.reload();
+    });
+  });
+
+  el.btnGuildName?.addEventListener("click", () => openGuildRenameModal());
+
+  el.btnReset?.addEventListener("click", () => {
+    const html = `
+      <div class="panelCard">
+        <div><b>⚠ データリセット</b></div>
+        <div class="dim" style="margin-top:6px;">ギルド・ネコ・Gold・進行状況がすべて削除されます。</div>
+        <div class="dim" style="margin-top:6px;">実行するには <b>RESET</b> と入力してください。</div>
+      </div>
+
+      <div class="panelCard" style="margin-top:10px;">
+        <input id="resetInput" placeholder="RESET と入力"
+          style="width:100%;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;" />
+      </div>
+
+      <div class="modalFooter">
+        <button class="ghost" id="resetCancel">キャンセル</button>
+        <button class="primary" id="resetConfirm" disabled>完全削除</button>
+      </div>
+    `;
+    openModal("データリセット確認", html);
+
+    const input = document.getElementById("resetInput");
+    const confirmBtn = document.getElementById("resetConfirm");
+    document.getElementById("resetCancel").addEventListener("click", closeModal);
+
+    input.addEventListener("input", () => {
+      confirmBtn.disabled = input.value !== "RESET";
+    });
+    confirmBtn.addEventListener("click", () => {
+      localStorage.removeItem(LS_SAVE);
+      closeModal();
+      location.reload();
+    });
+  });
+
+  el.btnRankUp?.addEventListener("click", () => doRankUp());
+  el.btnCollectAll?.addEventListener("click", () => collectAll());
+
+  document.querySelectorAll(".tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tab = btn.dataset.tab;
+      if (tab === "invest" && !RANK.canInvest(state.guildRank)) return;
+      switchTab(tab);
+    });
+  });
+}
 function boot() {
   state = load() || newGame();
 
