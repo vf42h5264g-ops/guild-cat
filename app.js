@@ -1408,39 +1408,7 @@ function openQuestSetupModal(type) {
   });
 }
 
- function updatePreview() {
-  const partyIds = Array.from(selected);
 
-  const offerLv = fixedLv; // ←固定（チュートなら fixedLv を使う）
-
-  const ok = partyIds.length > 0 && !!pickTime;
-  btnStart.disabled = !ok;
-
-  // まずは常に上の案内を表示
-  qPreview.innerHTML = `
-    <div class="dim">【${type.icon ?? ""} ${type.name}】 推奨Lv ${offerLv} / ${pickTime ?? "?"}分</div>
-  `;
-
-  if (!ok) return;
-
-  // ↓ここから成功率計算（ok の時だけ上書き表示）
-  const def = makeQuestDef(type, offerLv, pickTime);
-  const calc = calcQuestChance(def, partyIds);
-
-  qPreview.innerHTML = `
-    時間: ${def.durationMin}分 / 基準Gold: ${def.baseGold.toLocaleString()}G<br>
-    成功率(概算): <b>${calc.p}%</b>（属性ボーナス ${calc.attrBonus >= 0 ? "+" : ""}${calc.attrBonus}%）
-  `;
-}
-
-btnStart.addEventListener("click", () => {
-  closeModal();
-  const partyIds = Array.from(selected);
-
-  // 難易度選択廃止なので pickLv は使わない
-  const def = makeQuestDef(type, fixedLv, pickTime);
-  startQuest(def, partyIds, slotIdx);
-});
 
 function makeQuestDef(type, level, timeKey) {
   const dur = QUEST.DUR_TABLE[level][timeKey];
