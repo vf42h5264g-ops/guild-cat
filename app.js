@@ -1335,6 +1335,30 @@ function openQuestSetupModal(type) {
   const qPreview = document.getElementById("qPreview");
   const btnStart = document.getElementById("qStart");
 
+  let pickTime = null;
+
+　timeList.innerHTML = `
+  <div class="modalItem" data-time="10">短時間（10分）</div>
+  <div class="modalItem" data-time="30">中時間（30分）</div>
+  <div class="modalItem" data-time="60">長時間（60分）</div>
+`;
+
+  timeList.addEventListener("click", (e) => {
+  const item = e.target.closest(".modalItem");
+  if (!item) return;
+
+  // 見た目リセット
+  timeList.querySelectorAll(".modalItem").forEach(x => x.style.outline = "");
+
+  // 選択表示
+  item.style.outline = "2px solid var(--blue)";
+
+  // 時間をセット
+  pickTime = Number(item.dataset.time);
+
+  updatePreview();
+});
+
   document.getElementById("qCancel").addEventListener("click", closeModal);
 
   const selected = new Set();
