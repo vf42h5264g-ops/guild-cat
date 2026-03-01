@@ -1245,6 +1245,9 @@ function questTypes() {
 }
 
 function openQuestSetupModal(type) {
+  ensureQuestOffers();
+  if (!state.questOffers) rollQuestOffers();
+  const fixedLv = state.questOffers[type.id]; // ←この属性の提示Lv
   ensureQuestState();
 
   const slotIdx = state.questJobs.findIndex(x => !x);
@@ -1360,15 +1363,18 @@ function openQuestSetupModal(type) {
 
   function updatePreview() {
     const partyIds = Array.from(selected);
-    const ok = partyIds.length > 0 && pickLv && pickTime;
+    // 事前に ensureQuestOffers(); が走ってる前提
+    const offerLv = state.questOffers?.[type];   // ←この属性の提示Lv（抽選結果）
+
+    const ok = partyIds.length > 0 && !!pickTime && !!offerLv;
     btnStart.disabled = !ok;
 
     if (!ok) {
-      qPreview.innerHTML = "選択してください";
+      qPreview.innerHTML = "【${type}】推奨Lv ${offerLv} / ${pickTime}分";
       return;
     }
 
-    const def = makeQuestDef(type, pickLv, pickTime);
+    const def = makeQuestDef(type, offerLv, pickTime);
     const calc = calcQuestChance(def, partyIds);
     qPreview.innerHTML = `
       時間: ${def.durationMin}分 / 基準Gold: ${def.baseGold.toLocaleString()}G<br>
@@ -1483,7 +1489,25 @@ function finishQuestsIfDone() {
       gold = effGold;
       expEach = effExp;
     }
+function rollQuestOffers() {
+  const cap = RANK.maxQuestLevel(state.guildRank); // 1..10
+  const minLv = Math.max(1, cap - 2);
 
+  // 候補Lv：minLv..cap を作ってシャッフル
+  const pool = [];
+  for (let lv = minLv; lv <= cap; lv++) pool.push(lv);
+  shuffleArray(pool);
+
+  // 3属性に「被りなし」で割り当て（候補が3未満なら循環するが cap>=3 なら基本OK）
+  const types = questTypes(); // battle/search/invest の3つ
+  const offers = {};
+  for (let i = 0; i < types.length; i++) {
+    const t = types[i];
+    offers[t.id] = pool[i % pool.length];
+  }
+  state.questOffers = offers;
+  save();
+}
     ensurePending();
     state.pendingResults.push({
       type: "quest",
@@ -2260,6 +2284,8 @@ function switchTab(tab) {
 }
 
 function renderQuestTab() {
+  ensureQuestOffers();
+  if (!state.questOffers) rollQuestOffers();
   const types = questTypes();
   const ds = RANK.dispatchSlots(state.guildRank);
   const used = (state.questJobs || []).filter(Boolean).length;
@@ -2281,7 +2307,7 @@ function renderQuestTab() {
         <div class="row">
           <div>
             <div><b>${t.icon} ${t.name}</b></div>
-            <div class="dim">属性：${t.main} / 難易度と時間を選んで受注</div>
+            <div class="dim">属性：${t.main} / 今日の提示：<b>Lv${state.questOffers[t.id]}</b>（受注ごと再抽選）</div>
           </div>
           <button class="primary smallBtn" data-qtype="${t.id}">受注</button>
         </div>
