@@ -1405,6 +1405,7 @@ function openQuestSetupModal(type) {
     pickTime = item.dataset.time;
     updatePreview();
   });
+}
 
  function updatePreview() {
   const partyIds = Array.from(selected);
