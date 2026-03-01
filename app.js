@@ -1489,25 +1489,7 @@ function finishQuestsIfDone() {
       gold = effGold;
       expEach = effExp;
     }
-function rollQuestOffers() {
-  const cap = RANK.maxQuestLevel(state.guildRank); // 1..10
-  const minLv = Math.max(1, cap - 2);
 
-  // 候補Lv：minLv..cap を作ってシャッフル
-  const pool = [];
-  for (let lv = minLv; lv <= cap; lv++) pool.push(lv);
-  shuffleArray(pool);
-
-  // 3属性に「被りなし」で割り当て（候補が3未満なら循環するが cap>=3 なら基本OK）
-  const types = questTypes(); // battle/search/invest の3つ
-  const offers = {};
-  for (let i = 0; i < types.length; i++) {
-    const t = types[i];
-    offers[t.id] = pool[i % pool.length];
-  }
-  state.questOffers = offers;
-  save();
-}
     ensurePending();
     state.pendingResults.push({
       type: "quest",
@@ -1525,6 +1507,31 @@ function rollQuestOffers() {
     pushLog(`クエスト完了：${job.def.name}${isTut ? "" : ` Lv${job.def.level}${job.def.timeType}`} → ${result}（受取待ち）`);
     state.questJobs[i] = null;
   }
+} // ← ここで finishQuestsIfDone を確実に閉じる
+
+
+// ===== ここから外側 =====
+function rollQuestOffers() {
+  const cap = RANK.maxQuestLevel(state.guildRank); // 1..10想定
+  let minLv = Math.max(1, cap - 2);
+
+  // 3つ確保できない時は範囲を広げる（被りなしを維持）
+  let low = minLv;
+  let high = cap;
+  while (high - low + 1 < 3 && low > 1) low--;
+  while (high - low + 1 < 3 && high < 10) high++;
+
+  const pool = [];
+  for (let lv = low; lv <= high; lv++) pool.push(lv);
+  shuffleArray(pool);
+
+  const types = questTypes(); // battle/search/invest
+  const offers = {};
+  for (let i = 0; i < types.length; i++) {
+    offers[types[i].id] = pool[i]; // ←3つ必ず別Lv
+  }
+  state.questOffers = offers;
+  save();
 }
 
 /* =========================
