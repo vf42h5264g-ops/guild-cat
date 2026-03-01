@@ -1426,7 +1426,7 @@ function tick() {
 
 /* Training dumbbell animation */
 
-let jimFlip = false;
+
 
 function toggleDumbbells() {
   jimFlip = !jimFlip;
