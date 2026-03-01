@@ -422,6 +422,9 @@ function ensureQuestState() {
   if (!Array.isArray(state.questJobs)) state.questJobs = [];
   while (state.questJobs.length < slots) state.questJobs.push(null);
 }
+function ensureQuestOffers() {
+  if (!state.questOffers) state.questOffers = null;
+}
 function ensurePending() {
   if (!Array.isArray(state.pendingResults)) state.pendingResults = [];
 }
@@ -2167,7 +2170,8 @@ function renderAll() {
   ensureHire();
   ensureTutorial();
   ensureInvest();
-
+  ensureQuestOffers();
+   
   renderGuildTitle();
   renderHeaderBadges();
   renderRankUp();
