@@ -632,30 +632,43 @@ function startTutorialFlow() {
 
     <div class="modalFooter">
       <button class="ghost" id="tutClose">閉じる</button>
-      <button class="primary" id="tutStart" disabled>開始</button>
+      <button class="primary" id="tutStart">開始</button>
     </div>
   `;
   openModal("チュートリアル", html);
 
   const input = document.getElementById("guildNameInput");
-  const btnStart = document.getElementById("tutStart");
-  document.getElementById("tutClose").addEventListener("click", closeModal);
+const btnStart = document.getElementById("tutStart");
+const btnScout = document.getElementById("tutScout");
 
-  const update = () => {
-    const v = input.value.trim();
-    btnStart.disabled = (v.length === 0);
-  };
-  input.addEventListener("input", update);
-  update();
+document.getElementById("tutClose").addEventListener("click", closeModal);
 
-  const go = () => {
-    const v = input.value.trim();
-    state.guildName = v || "Cozy Cat Guild";
-    openTutorialScoutModal();
-  };
+const setEnabled = (ok) => {
+  btnStart.style.opacity = ok ? "1" : "0.5";
+  btnStart.style.pointerEvents = "auto"; // ←disabledじゃないので常に押せる
+};
 
-  btnStart.addEventListener("click", safe(go));
-  document.getElementById("tutScout").addEventListener("click", safe(go));
+const update = () => {
+  const v = input.value.trim();
+  setEnabled(v.length > 0);
+};
+
+// iOS対策：inputだけじゃなく複数拾う
+["input", "change", "keyup", "blur"].forEach(ev => input.addEventListener(ev, update));
+update();
+
+const go = () => {
+  const v = input.value.trim();
+  if (!v) return;               // ←空なら何もしない（実質disabled）
+  state.guildName = v;
+  openTutorialScoutModal();
+};
+
+btnStart.addEventListener("click", go);
+btnScout.addEventListener("click", go);
+
+// iOSでフォーカス入れておくと change/blur も安定する
+setTimeout(() => input.focus(), 50);
 }
 
 function generateCandidates(isTutorial = false) {
