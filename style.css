@@ -335,74 +335,54 @@ html,body{
   width:48%;
 }
 
-/* ===== Cat card（v0.5寄せ：枠だけ広げてテキスト潰れ防止） ===== */
+/* =========================
+   Cat card / Sprite (v0.5準拠：64x64で完全重ね)
+   ========================= */
+
 .catCard{
   position:relative;
   display:flex;
-  align-items:center;
   gap:12px;
+  align-items:center;
 }
 
-/* 左の“席”は広げる（テキスト領域を確保） */
+/* 左：表示枠は 64x64 固定（v0.5の前提） */
 .catSpriteWrap{
   position:relative;
-  width:88px;          /* ←席 */
-  height:88px;
-  flex:0 0 88px;
-}
-
-/* 画像は64px固定（= 32px素材をx2表示） */
-.catSprite{
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:64px;          /* ←中身は固定 */
+  width:64px;
   height:64px;
-  transform:translate(-50%,-50%);
-  image-rendering:pixelated;
+  flex:0 0 64px;
 }
 
-.catSprite.colorized{
-  filter:hue-rotate(var(--hue)) saturate(1.35);
-}
-
-/* 武器・ダンベル：ネコと“同じ64px”で完全重ね */
+/* 画像は全部 64x64 で重ねる（位置調整しない） */
+.catSprite,
 .catWeapon,
 .catDumbbell{
   position:absolute;
-  left:50%;
-  top:50%;
+  inset:0;
   width:64px;
   height:64px;
-  transform:translate(-50%,-50%);
   image-rendering:pixelated;
   pointer-events:none;
 }
 
-/* テキスト側が縮められるように */
-.catCard > div{
-  min-width:0;
-}
-
-/* ステータス行は1行固定（縦に伸びない） */
-.catCard .catStats{
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  line-height:1.2;
-}
-
-/* 右上の「●クエスト」等は改行させない */
-.catCard .row > div:last-child{
-  white-space:nowrap;
-  flex:0 0 auto;
-}
-
-/* 毛色ランダム（cat.pngが白〜薄グレー素体だと綺麗） */
+/* 素体だけ色変え */
 .catSprite.colorized{
   filter:hue-rotate(var(--hue)) saturate(1.35);
 }
 
+/* ステータス行：折り返し防止（カードが縦に伸びるのを防ぐ） */
+.catCard .catStats{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* row右側（待機/クエスト/訓練）も改行させない */
+.catCard .row > div:last-child{
+  white-space:nowrap;
+  flex:0 0 auto;
+}
 
 
 /* 状態ドット */
