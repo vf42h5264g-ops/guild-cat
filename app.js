@@ -2335,18 +2335,39 @@ function renderCatsTab() {
 　　const onQuest = busy === "quest";
 
 　　return `
- 　　 <div class="panelCard catCard">
-   　　 <div class="catSpriteWrap">
-     　　 <img src="img/cat.png" class="catSprite colorized" style="--hue:${c.hue}deg;" />
-   　　   ${
-      　　  training
-      　　    ? `<img src="img/jim1.png" class="catDumbbell" data-jim="${c.id}" />`
-      　　    : (onQuest && weaponImg)
-        　　      ? `<img src="${weaponImg}" class="catWeapon" />`
-        　　      : ""
- 　　     }
-  　　  </div>
+ 　　 <div class="panelCard catCard" style="display:flex;align-items:center;gap:12px;">
+  <div class="catSpriteWrap" style="position:relative;width:64px;height:64px;flex:0 0 64px;">
+    <!-- 素体（32px素材を64px表示で固定） -->
+    <img
+      src="img/cat.png"
+      class="catSprite colorized"
+      style="--hue:${c.hue}deg;width:64px;height:64px;display:block;image-rendering:pixelated;"
+      alt=""
+    />
 
+    ${
+      training
+        ? `
+          <img
+            src="img/jim1.png"
+            class="catDumbbell"
+            data-jim="${c.id}"
+            style="position:absolute;inset:0;width:64px;height:64px;image-rendering:pixelated;pointer-events:none;"
+            alt=""
+          />
+        `
+        : (onQuest && weaponImg)
+          ? `
+            <img
+              src="${weaponImg}"
+              class="catWeapon"
+              style="position:absolute;inset:0;width:64px;height:64px;image-rendering:pixelated;pointer-events:none;"
+              alt=""
+            />
+          `
+          : ""
+    }
+  </div>
 
         <div style="min-width:0;flex:1;">
           <div class="row">
