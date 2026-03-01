@@ -989,279 +989,10 @@ function startTutorialQuest(partyIds, slotIdx) {
   renderAll();
   save();
 }
- 
-/* =========================
-   Safe wrapper (show errors)
-   ========================= */
-function safe(fn) {
-  return (...args) => {
-    try {
-      return fn(...args);
-    } catch (e) {
-      console.error(e);
-      // 画面内で見えるように出す（iPhone対策）
-      openModal("⚠ エラー", `
-        <div class="panelCard">
-          <div class="dim">タップした直後に例外が出て処理が止まりました。</div>
-          <div class="mono" style="white-space:pre-wrap;margin-top:8px;">
-${escapeHtml(String(e && (e.stack || e.message || e)))}
-          </div>
-        </div>
-        <div class="modalFooter">
-          <button class="primary" id="errClose">閉じる</button>
-        </div>
-      `);
-      document.getElementById("errClose")?.addEventListener("click", closeModal);
-    }
-  };
-}
-/* =========================
-   UI Bindings
-   ========================= */
-function bindUI() {
-  el.btnStart?.addEventListener("click", () => {
-    openMain();
-    if (!state.tutorialDone) startTutorialFlow();
-  });
-
-  el.btnContinue?.addEventListener("click", () => {
-    openMain();
-    if (!state.tutorialDone) startTutorialFlow();
-  });
-
-  el.btnNew?.addEventListener("click", () => {
-    const html = `
-      <div class="panelCard">
-        <div><b>新しく始めますか？</b></div>
-        <div class="dim" style="margin-top:6px;">現在のデータは削除されます。</div>
-        <div class="dim" style="margin-top:6px;">実行するには <b>RESET</b> と入力してください。</div>
-      </div>
-      <div class="panelCard" style="margin-top:10px;">
-        <input id="resetInput2" placeholder="RESET と入力"
-          style="width:100%;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;" />
-      </div>
-      <div class="modalFooter">
-        <button class="ghost" id="newCancel">キャンセル</button>
-        <button class="primary" id="newConfirm" disabled>新しく始める</button>
-      </div>
-    `;
-    openModal("確認", html);
-    const input = document.getElementById("resetInput2");
-    const btn = document.getElementById("newConfirm");
-    document.getElementById("newCancel").addEventListener("click", closeModal);
-    input.addEventListener("input", () => { btn.disabled = input.value !== "RESET"; });
-    btn.addEventListener("click", () => {
-      localStorage.removeItem(LS_SAVE);
-      closeModal();
-      location.reload();
-    });
-  });
-
-
-  if (el.btnGuildName) el.btnGuildName.addEventListener("click", () => openGuildRenameModal());
-
-  el.btnReset.addEventListener("click", () => {
-    const html = `
-      <div class="panelCard">
-        <div><b>⚠ データリセット</b></div>
-        <div class="dim" style="margin-top:6px;">ギルド・ネコ・Gold・進行状況がすべて削除されます。</div>
-        <div class="dim" style="margin-top:6px;">実行するには <b>RESET</b> と入力してください。</div>
-      </div>
-
-      <div class="panelCard" style="margin-top:10px;">
-        <input id="resetInput" placeholder="RESET と入力"
-          style="width:100%;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;" />
-      </div>
-
-      <div class="modalFooter">
-        <button class="ghost" id="resetCancel">キャンセル</button>
-        <button class="primary" id="resetConfirm" disabled>完全削除</button>
-      </div>
-    `;
-    openModal("データリセット確認", html);
-
-    const input = document.getElementById("resetInput");
-    const confirmBtn = document.getElementById("resetConfirm");
-    document.getElementById("resetCancel").addEventListener("click", closeModal);
-
-    input.addEventListener("input", () => {
-      confirmBtn.disabled = input.value !== "RESET";
-    });
-    confirmBtn.addEventListener("click", () => {
-      localStorage.removeItem(LS_SAVE);
-      closeModal();
-      location.reload();
-    });
-  });
-
-  el.btnRankUp.addEventListener("click", () => doRankUp());
-  el.btnCollectAll.addEventListener("click", () => collectAll());
-
-  document.querySelectorAll(".tab").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const tab = btn.dataset.tab;
-      if (tab === "invest" && !RANK.canInvest(state.guildRank)) return;
-      switchTab(tab);
-    });
-  });
-}
-
-function openMain() {
-  el.startScreen.classList.add("hidden");
-  el.mainScreen.classList.remove("hidden");
-  renderAll();
-}
-
-/* =========================
-   Rank Up
-   ========================= */
-function doRankUp() {
-  const nextRank = state.guildRank + 1;
-  const cost = RANK.cost(nextRank);
-  if (state.gold < cost) {
-    pushLog(`Gold不足：昇格に ${cost.toLocaleString()}G 必要`);
-    return;
-  }
-
-  const prev = {
-    rank: state.guildRank,
-    mult: RANK.goldMult(state.guildRank),
-    hs: RANK.hireSlots(state.guildRank),
-    ts: RANK.trainingSlots(state.guildRank),
-    maxQL: RANK.maxQuestLevel(state.guildRank),
-    invest: RANK.canInvest(state.guildRank),
-  };
-
-  state.gold -= cost;
-  state.guildRank = nextRank;
-
-  burstConfetti();
-
-  ensureQuestState();
-  ensureTrainingState();
-
-  const now = {
-    rank: state.guildRank,
-    mult: RANK.goldMult(state.guildRank),
-    hs: RANK.hireSlots(state.guildRank),
-    ts: RANK.trainingSlots(state.guildRank),
-    maxQL: RANK.maxQuestLevel(state.guildRank),
-    invest: RANK.canInvest(state.guildRank),
-  };
-
-  pushLog(`🎉 ギルドランク ${state.guildRank} に昇格！`);
-
-  openRankUpPopup(prev, now);
-
-  // Tutorial完了条件：チュートクエ受取済み＆Rank2到達
-  if (!state.tutorialDone && state.tutorialStage >= 4 && state.guildRank >= 2) {
-    state.tutorialStage = 5;
-    state.tutorialDone = true;
-    pushLog("チュートリアル完了！");
-  }
-
-  renderAll();
-  save();
-}
-
-function openRankUpPopup(prev, now) {
-  const changes = [];
-  if (now.mult !== prev.mult) changes.push(`Gold倍率：×${prev.mult.toFixed(1)} → ×${now.mult.toFixed(1)}`);
-  if (now.hs !== prev.hs) changes.push(`🐾 雇用枠：${prev.hs} → ${now.hs}`);
-  if (now.ts !== prev.ts) changes.push(`🏋 訓練枠：${prev.ts} → ${now.ts}`);
-  if (now.maxQL !== prev.maxQL) changes.push(`📜 クエストLv：${prev.maxQL} → ${now.maxQL}`);
-  if (!prev.invest && now.invest) changes.push(`📈 投資タブ解禁！`);
-
-  const flavor = pickRankUpFlavor(now.rank);
-  const rec = pickRankUpRecommend(prev, now);
-
-  const html = `
-    <div class="panelCard">
-      <div style="font-size:18px;font-weight:900;">Guild Rank ${now.rank}！</div>
-      <div class="dim" style="margin-top:6px;">${escapeHtml(flavor)}</div>
-    </div>
-
-    <div class="panelCard" style="margin-top:10px;">
-      <div><b>今回の解放</b></div>
-      <div class="dim" style="margin-top:6px;">
-        ${changes.length ? changes.map(x => `・${escapeHtml(x)}`).join("<br>") : "（変化なし）"}
-      </div>
-    </div>
-
-    <div class="modalFooter">
-      <button class="ghost" id="ruClose">閉じる</button>
-      <button class="primary" id="ruGo">${escapeHtml(rec.label)}</button>
-    </div>
-  `;
-  openModal("ランクアップ！", html);
-  document.getElementById("ruClose").addEventListener("click", closeModal);
-  document.getElementById("ruGo").addEventListener("click", () => {
-    closeModal();
-    switchTab(rec.tab);
-  });
-}
-
-function pickRankUpRecommend(prev, now) {
-  if (now.invest && !prev.invest) return { tab: "invest", label: "投資へ" };
-  if (now.hs > prev.hs) return { tab: "cats", label: "ネコへ" };
-  if (now.ts > prev.ts) return { tab: "training", label: "訓練へ" };
-  return { tab: "quest", label: "クエストへ" };
-}
-function pickRankUpFlavor(rank) {
-  const low = [
-    "街のねこ達の信頼が高まった！",
-    "依頼主が増えてきたようだ…",
-    "噂が広まり、評判が上がっている。",
-    "新しい仕事の話が舞い込んできた。",
-  ];
-  const mid = [
-    "遠方からの依頼が届き始めた。",
-    "ギルドの名が少しずつ知られてきた。",
-    "街の商会が注目している…",
-  ];
-  const high = [
-    "名の知れたギルドとなった！",
-    "街の経済にも影響を与えはじめている。",
-    "次は…さらに大きな舞台だ。",
-  ];
-  const pool = rank >= 10 ? mid.concat(high) : low.concat(mid);
-  return pool[Math.floor(Math.random() * pool.length)];
-}
-
-/* =========================
-   Guild rename
-   ========================= */
-function openGuildRenameModal() {
-  const html = `
-    <div class="panelCard">
-      <div class="dim">新しいギルド名</div>
-      <input id="renameGuildInput"
-        value="${escapeAttr(state.guildName || "")}"
-        style="width:100%;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;margin-top:8px;" />
-    </div>
-    <div class="modalFooter">
-      <button class="ghost" id="rgCancel">キャンセル</button>
-      <button class="primary" id="rgOk">変更</button>
-    </div>
-  `;
-  openModal("ギルド名変更", html);
-
-  document.getElementById("rgCancel").addEventListener("click", closeModal);
-  document.getElementById("rgOk").addEventListener("click", () => {
-    const v = document.getElementById("renameGuildInput").value.trim();
-    if (v) {
-      state.guildName = v;
-      pushLog(`ギルド名を「${v}」に変更`);
-      renderAll();
-      save();
-    }
-    closeModal();
-  });
-}
-
 /* =========================
    Quests (Lv1-10 / S M L)
    ========================= */
+
 function questTypes() {
   return [
     { id:"battle", icon:"🗡", name:"戦闘", main:"STR" },
@@ -1273,7 +1004,8 @@ function questTypes() {
 function openQuestSetupModal(type) {
   ensureQuestOffers();
   if (!state.questOffers) rollQuestOffers();
-  const fixedLv = state.questOffers[type.id]; // ←この属性の提示Lv
+
+  const fixedLv = state.questOffers[type.id];
   ensureQuestState();
 
   const slotIdx = state.questJobs.findIndex(x => !x);
@@ -1302,14 +1034,11 @@ function openQuestSetupModal(type) {
       <div id="partyList" class="modalList"></div>
     </div>
 
-        <div class="panelCard" style="margin-top:10px;">
+    <div class="panelCard" style="margin-top:10px;">
       <div class="dim" style="margin-bottom:8px;">難易度Lv（自動）</div>
       <div class="row">
         <div><b>Lv${fixedLv}</b></div>
         <div class="dim">必要総戦力: ${QUEST.NEED_TOTAL[fixedLv - 1]}</div>
-      </div>
-      <div class="dim" style="margin-top:6px;">
-        難易度は受注ごとに再抽選（Rank上限Lv${maxLv}の「上限-2〜上限」から）
       </div>
     </div>
 
@@ -1319,8 +1048,7 @@ function openQuestSetupModal(type) {
     </div>
 
     <div class="panelCard" style="margin-top:10px;">
-      <div class="dim">表示される成功率は概算です（総戦力＋属性ボーナス）。</div>
-      <div class="dim" id="qPreview" style="margin-top:6px;">選択してください</div>
+      <div class="dim" id="qPreview">ネコと時間を選択してください</div>
     </div>
 
     <div class="modalFooter">
@@ -1328,41 +1056,20 @@ function openQuestSetupModal(type) {
       <button class="primary" id="qStart" disabled>受注</button>
     </div>
   `;
+
   openModal("クエスト受注", html);
 
   const partyList = document.getElementById("partyList");
-  
   const timeList = document.getElementById("timeList");
   const qPreview = document.getElementById("qPreview");
   const btnStart = document.getElementById("qStart");
 
-  let pickTime = null;
-
-　timeList.innerHTML = `
-  <div class="modalItem" data-time="10">短時間（10分）</div>
-  <div class="modalItem" data-time="30">中時間（30分）</div>
-  <div class="modalItem" data-time="60">長時間（60分）</div>
-`;
-
-  timeList.addEventListener("click", (e) => {
-  const item = e.target.closest(".modalItem");
-  if (!item) return;
-
-  // 見た目リセット
-  timeList.querySelectorAll(".modalItem").forEach(x => x.style.outline = "");
-
-  // 選択表示
-  item.style.outline = "2px solid var(--blue)";
-
-  // 時間をセット
-  pickTime = Number(item.dataset.time);
-
-  updatePreview();
-});
-
   document.getElementById("qCancel").addEventListener("click", closeModal);
 
+  let pickTime = null;
   const selected = new Set();
+
+  // ===== ネコ選択 =====
   partyList.innerHTML = idle.map(c => `
     <div class="modalItem" data-cat="${c.id}">
       <b>${escapeHtml(c.name)}</b> Lv${c.level}
@@ -1373,7 +1080,9 @@ function openQuestSetupModal(type) {
   partyList.addEventListener("click", (e) => {
     const item = e.target.closest(".modalItem");
     if (!item) return;
+
     const id = item.dataset.cat;
+
     if (selected.has(id)) {
       selected.delete(id);
       item.style.outline = "";
@@ -1382,33 +1091,67 @@ function openQuestSetupModal(type) {
       selected.add(id);
       item.style.outline = "2px solid var(--blue)";
     }
+
     updatePreview();
   });
 
-    // 難易度は固定（提示Lv）
-  // 固定Lvが範囲外にならないようにクランプ（安全策）
-  let pickLv = Math.max(1, Math.min(maxLv, Number(fixedLv || 1)));
-
-  // ここでlvList生成・クリックリスナーは不要なので丸ごと削除
-
-  
+  // ===== 時間タイプ =====
   timeList.innerHTML = QUEST.TIME_TYPES.map(t => `
     <div class="modalItem" data-time="${t.key}">
       <b>${t.key}（${t.label}）</b>
-      <div class="dim">効率 ${Math.round(t.eff*100)}%</div>
+      <div class="dim">効率 ${Math.round(t.eff * 100)}%</div>
     </div>
   `).join("");
+
   timeList.addEventListener("click", (e) => {
     const item = e.target.closest(".modalItem");
     if (!item) return;
-    timeList.querySelectorAll(".modalItem").forEach(x => x.style.outline = "");
+
+    timeList.querySelectorAll(".modalItem")
+      .forEach(x => x.style.outline = "");
+
     item.style.outline = "2px solid var(--blue)";
     pickTime = item.dataset.time;
+
     updatePreview();
   });
+
+  // ===== プレビュー更新 =====
+  function updatePreview() {
+    const partyIds = Array.from(selected);
+    const ok = partyIds.length > 0 && !!pickTime;
+
+    btnStart.disabled = !ok;
+
+    qPreview.innerHTML = `
+      <div class="dim">
+        【${type.icon} ${type.name}】 Lv${fixedLv} / ${pickTime ?? "?"}
+      </div>
+    `;
+
+    if (!ok) return;
+
+    const def = makeQuestDef(type, fixedLv, pickTime);
+    const calc = calcQuestChance(def, partyIds);
+
+    qPreview.innerHTML = `
+      時間: ${def.durationMin}分 /
+      基準Gold: ${def.baseGold.toLocaleString()}G<br>
+      成功率(概算):
+      <b>${calc.p}%</b>
+      （属性ボーナス ${calc.attrBonus >= 0 ? "+" : ""}${calc.attrBonus}%）
+    `;
+  }
+
+  // ===== 受注 =====
+  btnStart.addEventListener("click", () => {
+    const partyIds = Array.from(selected);
+    const def = makeQuestDef(type, fixedLv, pickTime);
+
+    closeModal();
+    startQuest(def, partyIds, slotIdx);
+  });
 }
-
-
 
 function makeQuestDef(type, level, timeKey) {
   const dur = QUEST.DUR_TABLE[level][timeKey];
@@ -1428,573 +1171,6 @@ function makeQuestDef(type, level, timeKey) {
     baseGold,
     target,
   };
-}
-
-function calcQuestChance(def, partyIds) {
-  const party = partyIds.map(catById).filter(Boolean);
-
-  const total = party.reduce((s,c)=> s + c.str + c.agi + c.int, 0);
-  const mainSum = party.reduce((s,c)=> s + (def.main==="STR"?c.str:def.main==="AGI"?c.agi:c.int), 0);
-  const ratio = total > 0 ? (mainSum / total) : 0;
-
-  const need = def.target;
-  const pBase = 60 + (total - need) * 1.0;
-
-  const pAttrRaw = (ratio - 1/3) * 30;
-  const attrBonus = clamp(-5, 10, Math.round(pAttrRaw));
-
-  const p = clamp(40, 90, Math.round(pBase + attrBonus));
-  return { p, attrBonus };
-}
-
-function startQuest(def, partyIds, slotIdx) {
-  ensureQuestState();
-
-  for (const id of partyIds) {
-    if (isCatBusy(id)) {
-      pushLog("パーティに待機中でないネコがいます");
-      return;
-    }
-  }
-
-  const calc = calcQuestChance(def, partyIds);
-  const goldMult = RANK.goldMult(state.guildRank);
-
-  const now = Date.now();
-  const endAt = now + def.durationMin * 60 * 1000;
-
-  state.questJobs[slotIdx] = {
-    slotNo: slotIdx + 1,
-    def,
-    partyIds,
-    pSuccess: calc.p,
-    goldMult,
-    startAt: now,
-    endAt,
-  };
-
-  pushLog(`受注：${def.name} Lv${def.level}${def.timeType}（${def.durationMin}分 / 成功率 ${calc.p}%）`);
-  renderAll();
-  save();
-}
-
-function finishQuestsIfDone() {
-  const now = Date.now();
-  for (let i = 0; i < state.questJobs.length; i++) {
-    const job = state.questJobs[i];
-    if (!job) continue;
-    if (job.endAt > now) continue;
-
-    const isTut = !!job.tutorial;
-
-    let result = "失敗";
-    let gold = 0;
-    let expEach = 0;
-
-    if (isTut) {
-      result = "成功";
-      gold = job.def.baseGold;
-      expEach = 20;
-    } else {
-      const roll = Math.random() * 100;
-      if (roll <= job.pSuccess) {
-        if (roll <= job.pSuccess * 0.2) result = "大成功";
-        else result = "成功";
-      } else {
-        result = "失敗";
-      }
-
-      const effGold = Math.floor(job.def.baseGold * QUEST.resultMult(result) * job.goldMult);
-      const effExp = Math.floor(job.def.durationMin * QUEST.expPerMin(result) * (job.def.timeType==="S"?1.0:job.def.timeType==="M"?0.96:0.92));
-      gold = effGold;
-      expEach = effExp;
-    }
-
-    ensurePending();
-    state.pendingResults.push({
-      type: "quest",
-      finishedAt: now,
-      questName: job.def.name,
-      level: job.def.level,
-      timeType: job.def.timeType,
-      result,
-      gold,
-      expEach,
-      partyIds: job.partyIds,
-      tutorial: isTut,
-    });
-
-    pushLog(`クエスト完了：${job.def.name}${isTut ? "" : ` Lv${job.def.level}${job.def.timeType}`} → ${result}（受取待ち）`);
-    state.questJobs[i] = null;
-  }
-} // ← ここで finishQuestsIfDone を確実に閉じる
-
-
-// ===== ここから外側 =====
-function rollQuestOffers() {
-  const cap = RANK.maxQuestLevel(state.guildRank); // 1..10想定
-  let minLv = Math.max(1, cap - 2);
-
-  // 3つ確保できない時は範囲を広げる（被りなしを維持）
-  let low = minLv;
-  let high = cap;
-  while (high - low + 1 < 3 && low > 1) low--;
-  while (high - low + 1 < 3 && high < 10) high++;
-
-  const pool = [];
-  for (let lv = low; lv <= high; lv++) pool.push(lv);
-  shuffleArray(pool);
-
-  const types = questTypes(); // battle/search/invest
-  const offers = {};
-  for (let i = 0; i < types.length; i++) {
-    offers[types[i].id] = pool[i]; // ←3つ必ず別Lv
-  }
-  state.questOffers = offers;
-  save();
-}
-
-/* =========================
-   Training
-   ========================= */
-function unlockTrainingSlot(slotNo) {
-  ensureTrainingState();
-  const slot = state.trainingSlots[slotNo - 1];
-  if (!slot || slot.unlocked) return;
-
-  const { unlockCost, expMult } = getTrainingSlotMeta(slotNo);
-  if (state.gold < unlockCost) {
-    pushLog(`Gold不足：開放に ${unlockCost.toLocaleString()}G 必要`);
-    return;
-  }
-  state.gold -= unlockCost;
-  slot.unlocked = true;
-  pushLog(`訓練枠${slotNo}を開放（EXP倍率 x${expMult.toFixed(1)}）`);
-  renderAll();
-  save();
-}
-
-function openTrainingStartModal(slotNo) {
-  ensureTrainingState();
-
-  const slot = state.trainingSlots[slotNo - 1];
-  const job = state.trainingJobs[slotNo - 1];
-  if (job) return;
-  if (!slot?.unlocked) return;
-
-  const idle = state.cats.filter(c => !isCatBusy(c.id));
-  if (idle.length === 0) {
-    pushLog("待機中のネコがいません");
-    return;
-  }
-
-  const { expMult } = getTrainingSlotMeta(slotNo);
-
-  const html = `
-    <div class="panelCard">
-      <div><b>訓練枠 ${slotNo}</b></div>
-      <div class="dim">EXP: 1/分 × 倍率 x${expMult.toFixed(1)}（受取式 / 両立不可）</div>
-    </div>
-
-    <div class="panelCard" style="margin-top:10px;">
-      <div class="dim" style="margin-bottom:8px;">ネコを選択</div>
-      <div id="tCats" class="modalList"></div>
-    </div>
-
-    <div class="panelCard" style="margin-top:10px;">
-      <div class="dim" style="margin-bottom:8px;">時間を選択</div>
-      <div id="tDur" class="modalList"></div>
-    </div>
-
-    <div class="modalFooter">
-      <button class="ghost" id="tCancel">戻る</button>
-      <button class="primary" id="tStart" disabled>開始</button>
-    </div>
-  `;
-  openModal("訓練開始", html);
-
-  const tCats = document.getElementById("tCats");
-  const tDur = document.getElementById("tDur");
-  const btnStart = document.getElementById("tStart");
-  document.getElementById("tCancel").addEventListener("click", closeModal);
-
-  let pickCat = null;
-  let pickMin = null;
-
-  tCats.innerHTML = idle.map(c => `
-    <div class="modalItem" data-cat="${c.id}">
-      <b>${escapeHtml(c.name)}</b> Lv${c.level}
-      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} AGI ${c.agi} INT ${c.int}</div>
-    </div>
-  `).join("");
-
-  tDur.innerHTML = TRAINING.DURATIONS_MIN.map(min => {
-    const useCost = calcTrainingUseCost(slotNo, min);
-    const expGain = Math.floor(min * TRAINING.BASE_EXP_PER_MIN * expMult);
-    return `
-      <div class="modalItem" data-min="${min}">
-        <b>${min}分</b>
-        <div class="dim">使用料: ${useCost.toLocaleString()}G / EXP: ${expGain}</div>
-      </div>
-    `;
-  }).join("");
-
-  const updateBtn = () => { btnStart.disabled = !(pickCat && pickMin); };
-
-  tCats.addEventListener("click", (e) => {
-    const item = e.target.closest(".modalItem");
-    if (!item) return;
-    tCats.querySelectorAll(".modalItem").forEach(x => x.style.outline = "");
-    item.style.outline = "2px solid var(--blue)";
-    pickCat = item.dataset.cat;
-    updateBtn();
-  });
-
-  tDur.addEventListener("click", (e) => {
-    const item = e.target.closest(".modalItem");
-    if (!item) return;
-    tDur.querySelectorAll(".modalItem").forEach(x => x.style.outline = "");
-    item.style.outline = "2px solid var(--blue)";
-    pickMin = Number(item.dataset.min);
-    updateBtn();
-  });
-
-  btnStart.addEventListener("click", () => {
-    closeModal();
-    startTraining(slotNo, pickCat, pickMin);
-  });
-}
-
-function startTraining(slotNo, catId, durationMin) {
-  ensureTrainingState();
-
-  if (state.trainingJobs[slotNo - 1]) {
-    pushLog("訓練枠が使用中です");
-    return;
-  }
-  if (isCatBusy(catId)) {
-    pushLog("そのネコは待機中ではありません");
-    return;
-  }
-
-  const slot = state.trainingSlots[slotNo - 1];
-  if (!slot?.unlocked) {
-    pushLog("この訓練枠は未開放です");
-    return;
-  }
-
-  const useCost = calcTrainingUseCost(slotNo, durationMin);
-  if (state.gold < useCost) {
-    pushLog(`Gold不足：訓練に ${useCost.toLocaleString()}G 必要`);
-    return;
-  }
-  state.gold -= useCost;
-
-  const { expMult } = getTrainingSlotMeta(slotNo);
-  const expGain = Math.floor(durationMin * TRAINING.BASE_EXP_PER_MIN * expMult);
-
-  const now = Date.now();
-  const endAt = now + durationMin * 60 * 1000;
-
-  state.trainingJobs[slotNo - 1] = {
-    slotNo,
-    catId,
-    durationMin,
-    useCost,
-    expGain,
-    startAt: now,
-    endAt,
-  };
-
-  pushLog(`訓練開始：枠${slotNo} / ${durationMin}分 / 使用料 ${useCost.toLocaleString()}G / EXP ${expGain}`);
-  renderAll();
-  save();
-}
-
-function finishTrainingIfDone() {
-  ensureTrainingState();
-  const now = Date.now();
-
-  for (let i = 0; i < state.trainingJobs.length; i++) {
-    const job = state.trainingJobs[i];
-    if (!job) continue;
-    if (job.endAt > now) continue;
-
-    ensurePending();
-    state.pendingResults.push({
-      type: "training",
-      finishedAt: now,
-      slotNo: job.slotNo,
-      catId: job.catId,
-      durationMin: job.durationMin,
-      useCost: job.useCost,
-      exp: job.expGain,
-    });
-
-    pushLog(`訓練完了：枠${job.slotNo} / EXP ${job.expGain}（受取待ち）`);
-    state.trainingJobs[i] = null;
-  }
-}
-
-/* =========================
-   Hiring (Scout) - normal play
-   ========================= */
-function scoutPayAndOpen() {
-  ensureHire();
-  const cost = HIRING.refreshCost(state.guildRank);
-  if (state.gold < cost) {
-    pushLog(`Gold不足：スカウトに ${cost.toLocaleString()}G 必要`);
-    return;
-  }
-  state.gold -= cost;
-  state.hire.candidates = generateCandidates(false);
-  state.hire.lastRefreshAt = Date.now();
-  pushLog(`スカウト実行（${cost.toLocaleString()}G）`);
-  openScoutModal(true);
-  renderAll();
-  save();
-}
-
-function openScoutModal(fromPaidScout) {
-  ensureHire();
-  const hs = RANK.hireSlots(state.guildRank);
-  const hireCost = HIRING.hireCost(state.guildRank);
-  const scoutCost = HIRING.refreshCost(state.guildRank);
-
-  const canHireMore = state.cats.length < hs;
-  const list = state.hire.candidates || [];
-
-  const html = `
-    <div class="panelCard">
-      <div><b>スカウト候補</b></div>
-      <div class="dim">雇用枠 ${state.cats.length}/${hs} / 雇用費 ${hireCost.toLocaleString()}G</div>
-      <div class="dim">再スカウト: ${scoutCost.toLocaleString()}G</div>
-      ${fromPaidScout ? `<div class="dim" style="margin-top:6px;">候補を確認して雇用できます</div>` : ""}
-    </div>
-
-    <div class="panelCard" style="margin-top:10px;">
-      <div class="row">
-        <div class="dim">候補リスト</div>
-        <button class="ghost smallBtn" id="btnRescout">再スカウト</button>
-      </div>
-      <div class="modalList" style="margin-top:10px;">
-        ${
-          list.length === 0
-            ? `<div class="dim">候補がありません。スカウトしてください</div>`
-            : list.map(c => {
-                const weapon = getWeaponImageByPersonality(c.personality);
-                return `
-                  <div class="modalItem" style="display:flex; gap:10px; align-items:center;">
-                    <div style="width:56px;height:56px;position:relative;flex:0 0 56px;">
-                      <img src="img/cat.png" class="catSprite colorized"
-                        style="--hue:${c.hue}deg; width:56px; height:56px;" />
-                      ${weapon ? `<img src="${weapon}" style="position:absolute;left:0;top:0;width:56px;height:56px;image-rendering:pixelated;">` : ""}
-                    </div>
-                    <div style="flex:1;min-width:0;">
-                      <div><b>${escapeHtml(c.name)}</b> <span class="dim">Lv${c.level}</span></div>
-                      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} AGI ${c.agi} INT ${c.int}</div>
-                    </div>
-                    <button class="primary smallBtn" data-hire="${c.id}" ${canHireMore ? "" : "disabled"}
-                      style="${canHireMore ? "" : "opacity:.6;"}">雇用</button>
-                  </div>
-                `;
-              }).join("")
-        }
-      </div>
-    </div>
-
-    <div class="modalFooter">
-      <button class="ghost" id="scoutClose">閉じる</button>
-      <button class="primary" id="scoutGoCats">ネコへ戻る</button>
-    </div>
-  `;
-  openModal("スカウト", html);
-
-  document.getElementById("btnRescout").addEventListener("click", () => {
-    closeModal();
-    scoutPayAndOpen();
-  });
-
-  document.querySelectorAll("[data-hire]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      hireCat(btn.dataset.hire);
-      closeModal();
-      openScoutModal(false);
-      renderAll();
-    });
-  });
-
-  document.getElementById("scoutClose").addEventListener("click", closeModal);
-  document.getElementById("scoutGoCats").addEventListener("click", () => {
-    closeModal();
-    switchTab("cats");
-  });
-}
-
-function hireCat(catId) {
-  ensureHire();
-  const slots = RANK.hireSlots(state.guildRank);
-  if (state.cats.length >= slots) {
-    pushLog("雇用枠が満杯です");
-    return;
-  }
-
-  const idx = state.hire.candidates.findIndex(c => c.id === catId);
-  if (idx < 0) return;
-
-  const cost = HIRING.hireCost(state.guildRank);
-  if (state.gold < cost) {
-    pushLog(`Gold不足：雇用に ${cost.toLocaleString()}G 必要`);
-    return;
-  }
-  state.gold -= cost;
-
-  const hired = state.hire.candidates.splice(idx, 1)[0];
-  state.cats.push(hired);
-  pushLog(`${hired.name} を雇用！（${cost.toLocaleString()}G）`);
-  renderAll();
-  save();
-}
-
-/* =========================
-   Cat rename / Fire
-   ========================= */
-function openRenameCatModal(catId) {
-  const c = catById(catId);
-  if (!c) return;
-
-  const html = `
-    <div class="panelCard">
-      <div class="dim">新しい名前を入力</div>
-      <input id="nameInput" value="${escapeAttr(c.name)}"
-        style="width:100%;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;margin-top:8px;" />
-    </div>
-    <div class="modalFooter">
-      <button class="ghost" id="nCancel">キャンセル</button>
-      <button class="primary" id="nOk">変更</button>
-    </div>
-  `;
-  openModal("名前変更", html);
-
-  document.getElementById("nCancel").addEventListener("click", closeModal);
-  document.getElementById("nOk").addEventListener("click", () => {
-    const v = document.getElementById("nameInput").value.trim();
-    if (v) {
-      c.name = v;
-      pushLog(`名前変更：${v}`);
-      renderAll();
-      save();
-    }
-    closeModal();
-  });
-}
-
-function openFireCatModal(catId) {
-  const c = catById(catId);
-  if (!c) return;
-  if (!RANK.canFire(state.guildRank)) return;
-
-  const busy = isCatBusy(catId);
-  if (busy) {
-    pushLog("そのネコは待機中ではありません");
-    return;
-  }
-
-  const refund = c.level * 500;
-
-  const html = `
-    <div class="panelCard">
-      <div><b>本当に解雇しますか？</b></div>
-      <div class="dim" style="margin-top:6px;">
-        ${escapeHtml(c.name)}（Lv${c.level} / ${escapeHtml(c.personality)}）
-      </div>
-      <div class="dim" style="margin-top:6px;">
-        街へ戻ります。<br>
-        解雇報酬：<b>${refund.toLocaleString()}G</b>
-      </div>
-    </div>
-    <div class="modalFooter">
-      <button class="ghost" id="fCancel">キャンセル</button>
-      <button class="primary" id="fOk" style="background:#c94b4b;">解雇する</button>
-    </div>
-  `;
-  openModal("解雇確認", html);
-
-  document.getElementById("fCancel").addEventListener("click", closeModal);
-  document.getElementById("fOk").addEventListener("click", () => {
-    closeModal();
-    state.gold += refund;
-    state.cats = state.cats.filter(x => x.id !== catId);
-    pushLog(`${c.name} は街へ戻った。+${refund.toLocaleString()}G`);
-    renderAll();
-    save();
-  });
-}
-
-/* =========================
-   Pending / Collect
-   ========================= */
-function collectAll() {
-  ensurePending();
-  const list = state.pendingResults;
-  if (list.length === 0) return;
-
-  for (const r of list) {
-    if (r.type === "quest") {
-      state.gold += r.gold;
-      for (const id of r.partyIds) {
-        const c = catById(id);
-        if (c) addExp(c, r.expEach);
-      }
-      pushLog(`受取：${r.questName}${r.tutorial ? "" : ` Lv${r.level}${r.timeType}`} ${r.result} / +${r.gold.toLocaleString()}G / EXP+${r.expEach}×${r.partyIds.length}`);
-
-      if (!state.tutorialDone && r.tutorial) {
-        state.tutorialStage = Math.max(state.tutorialStage, 4); // 受取済み
-      }
-    }
-    if (r.type === "training") {
-      const c = catById(r.catId);
-      if (c) addExp(c, r.exp);
-      pushLog(`受取：訓練 枠${r.slotNo} / EXP+${r.exp}`);
-    }
-    if (r.type === "dividend") {
-      state.gold += r.gold;
-      pushLog(`配当受取：+${r.gold.toLocaleString()}G（${escapeHtml(r.summary)}）`);
-    }
-  }
-
-  state.pendingResults = [];
-  renderAll();
-  save();
-
-  maybeShowTutorialRankUpPrompt();
-}
-
-function maybeShowTutorialRankUpPrompt() {
-  if (state.tutorialDone) return;
-  if (state.tutorialStage < 4) return;
-  if (state.guildRank !== 1) return;
-
-  const cost = RANK.cost(2);
-
-  const html = `
-    <div class="panelCard">
-      <div><b>次はランクアップしてみよう</b></div>
-      <div class="dim" style="margin-top:6px;">
-        ランクアップすると枠が増えます。<br>
-        今なら Rank1 → 2 に昇格できます。
-      </div>
-    </div>
-    <div class="panelCard" style="margin-top:10px;">
-      <div class="dim">必要Gold：<b>${cost.toLocaleString()}G</b></div>
-      <div class="dim">ヘッダーの「昇格」ボタンを押してみてね。</div>
-    </div>
-    <div class="modalFooter">
-      <button class="primary" id="trOk">OK</button>
-    </div>
-  `;
-  openModal("チュートリアル", html);
-  document.getElementById("trOk").addEventListener("click", closeModal);
 }
 
 /* =========================
