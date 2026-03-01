@@ -2679,3 +2679,4 @@ function toggleDumbbells() {
    Start
    ========================= */
 boot();
+console.log("END");
