@@ -1449,6 +1449,9 @@ function startQuest(def, partyIds, slotIdx) {
   };
 
   pushLog(`受注：${def.name} Lv${def.level}${def.timeType}（${def.durationMin}分 / 成功率 ${calc.p}%）`);
+  
+  // ✅ 受注したら「3種まとめて」次回提示Lvを再抽選
+  rollQuestOffers();
   renderAll();
   save();
 }
