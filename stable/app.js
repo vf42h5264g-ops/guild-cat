@@ -424,7 +424,7 @@ function ensureTrainingState() {
   state.trainingJobs = state.trainingJobs.slice(0, slotCount);
 }
 function ensureQuestState() {
-  const slots = RANK.dispatchSlots(state.guildRank);
+  const slots = getDispatchSlots();
   if (!Array.isArray(state.questJobs)) state.questJobs = [];
   while (state.questJobs.length < slots) state.questJobs.push(null);
   state.questJobs = state.questJobs.slice(0, slots);
@@ -452,7 +452,90 @@ function ensureInvest() {
   }
   if (!state.invest.holdings) state.invest.holdings = { insure: 0, arms: 0, trade: 0, magic: 0 };
 }
+function ensureAlpaca() {
+  if (!state.alpaca) {
+    state.alpaca = {
+      owned: 1,
+      boughtAt6: false,
+      boughtAt11: false,
+    };
+  }
+  if (typeof state.alpaca.owned !== "number") state.alpaca.owned = 1;
+  if (typeof state.alpaca.boughtAt6 !== "boolean") state.alpaca.boughtAt6 = false;
+  if (typeof state.alpaca.boughtAt11 !== "boolean") state.alpaca.boughtAt11 = false;
+}
 
+function getDispatchSlots() {
+  ensureAlpaca();
+  return Math.max(1, state.alpaca.owned || 1);
+}
+
+function getAvailableAlpacaPurchase() {
+  ensureAlpaca();
+
+  if (state.guildRank >= 11 && !state.alpaca.boughtAt11) {
+    return {
+      stage: 11,
+      cost: 150000,
+      label: "2頭目のアルパカを迎える",
+      desc: "派遣枠が1つ増えます",
+    };
+  }
+
+  if (state.guildRank >= 6 && !state.alpaca.boughtAt6) {
+    return {
+      stage: 6,
+      cost: 50000,
+      label: "アルパカを迎える",
+      desc: "派遣枠が1つ増えます",
+    };
+  }
+
+  return null;
+}
+
+function buyAlpaca(stage) {
+  ensureAlpaca();
+
+  if (stage === 6) {
+    const cost = 50000;
+    if (state.guildRank < 6 || state.alpaca.boughtAt6) return;
+
+    if (state.gold < cost) {
+      pushLog(`Gold不足：アルパカ購入に ${cost.toLocaleString()}G 必要`);
+      return;
+    }
+
+    state.gold -= cost;
+    state.alpaca.boughtAt6 = true;
+    state.alpaca.owned = 2;
+
+    ensureQuestState();
+    pushLog("🦙 アルパカを迎えた！派遣枠が1つ増えた");
+    renderAll();
+    save();
+    return;
+  }
+
+  if (stage === 11) {
+    const cost = 150000;
+    if (state.guildRank < 11 || state.alpaca.boughtAt11) return;
+
+    if (state.gold < cost) {
+      pushLog(`Gold不足：アルパカ購入に ${cost.toLocaleString()}G 必要`);
+      return;
+    }
+
+    state.gold -= cost;
+    state.alpaca.boughtAt11 = true;
+    state.alpaca.owned = 3;
+
+    ensureQuestState();
+    pushLog("🦙 2頭目のアルパカを迎えた！派遣枠が1つ増えた");
+    renderAll();
+    save();
+  }
+}
 /* =========================
    Busy check (quest/training)
    ========================= */
@@ -548,6 +631,12 @@ function newGame() {
     questJobs: [],
     trainingSlots: [],
     trainingJobs: [],
+
+    alpaca: {
+      owned: 1,          // 初期1頭 = 派遣枠1
+      boughtAt6: false,  // Rank6解放分を買ったか
+      boughtAt11: false, // Rank11解放分を買ったか
+    },
 
     invest: {
       holdings: { insure: 0, arms: 0, trade: 0, magic: 0 },
@@ -662,6 +751,7 @@ function boot() {
   ensureHire();
   ensureTutorial();
   ensureInvest();
+  ensureAlpaca();
   ensureQuestOffers();
 
   const tips = ["やる気はあるにゃ。", "急がば回れ、にゃ。", "訓練は裏切らないにゃ。", "Goldは正義にゃ。"];
@@ -1198,6 +1288,8 @@ function openRankUpPopup(prev, now) {
   if (now.ts !== prev.ts) changes.push(`🏋 訓練枠：${prev.ts} → ${now.ts}`);
   if (now.maxQL !== prev.maxQL) changes.push(`📜 クエストLv：${prev.maxQL} → ${now.maxQL}`);
   if (!prev.invest && now.invest) changes.push(`📈 投資タブ解禁！`);
+  if (now.rank === 6) changes.push(`🦙 アルパカ購入解放！`);
+  if (now.rank === 11) changes.push(`🦙 2頭目のアルパカ購入解放！`);
 
   const flavor = pickRankUpFlavor(now.rank);
   const rec = pickRankUpRecommend(prev, now);
@@ -2165,6 +2257,7 @@ function renderAll() {
   ensureHire();
   ensureTutorial();
   ensureInvest();
+  ensureAlpaca();
   ensureQuestOffers();
 
   renderGuildTitle();
@@ -2188,7 +2281,7 @@ function renderHeaderBadges() {
   const mult = RANK.goldMult(rank);
   const hs = RANK.hireSlots(rank);
   const ts = RANK.trainingSlots(rank);
-  const ds = RANK.dispatchSlots(rank);
+  const ds = getDispatchSlots();
 
   const usedDispatch = (state.questJobs || []).filter(Boolean).length;
   const usedTraining = (state.trainingJobs || []).filter(Boolean).length;
@@ -2262,11 +2355,14 @@ function switchTab(tab) {
 
 function renderQuestTab() {
   ensureQuestOffers();
+  ensureAlpaca();
   if (!state.questOffers) rollQuestOffers();
+
   const types = questTypes();
-  const ds = RANK.dispatchSlots(state.guildRank);
+  const ds = getDispatchSlots();
   const used = (state.questJobs || []).filter(Boolean).length;
   const maxLv = RANK.maxQuestLevel(state.guildRank);
+  const alpacaOffer = getAvailableAlpacaPurchase();
 
   el.tabQuest.innerHTML = `
     <div class="panelCard">
@@ -2274,10 +2370,29 @@ function renderQuestTab() {
         <div>
           <div><b>クエスト</b> <span class="dim">(Lv1〜${maxLv} 解放中)</span></div>
           <div class="dim">S/M/Lで時間選択（Sが最効率）。訓練と両立不可 / キャンセル不可</div>
+          <div class="dim">アルパカ ${state.alpaca.owned}頭 / 派遣枠 ${used}/${ds}</div>
         </div>
         <div class="mono">派遣枠 ${used}/${ds}</div>
       </div>
     </div>
+
+    ${
+      alpacaOffer ? `
+        <div class="panelCard">
+          <div class="row">
+            <div>
+              <div><b>🦙 ${escapeHtml(alpacaOffer.label)}</b></div>
+              <div class="dim">${escapeHtml(alpacaOffer.desc)} / 費用 ${alpacaOffer.cost.toLocaleString()}G</div>
+            </div>
+            <button class="primary smallBtn" id="btnBuyAlpaca"
+              ${state.gold >= alpacaOffer.cost ? "" : "disabled"}
+              style="${state.gold >= alpacaOffer.cost ? "" : "opacity:.6;"}">
+              迎える
+            </button>
+          </div>
+        </div>
+      ` : ""
+    }
 
     ${types.map(t => `
       <div class="panelCard">
@@ -2299,6 +2414,10 @@ function renderQuestTab() {
       const t = types.find(x => x.id === btn.dataset.qtype);
       if (t) openQuestSetupModal(t);
     });
+  });
+
+  document.getElementById("btnBuyAlpaca")?.addEventListener("click", () => {
+    if (alpacaOffer) buyAlpaca(alpacaOffer.stage);
   });
 }
 
