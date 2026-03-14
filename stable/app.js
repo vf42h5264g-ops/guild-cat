@@ -1573,15 +1573,20 @@ function makeQuestDef(type, level, timeKey) {
 function calcQuestChance(def, partyIds) {
   const party = partyIds.map(catById).filter(Boolean);
   const total = party.reduce((s, c) => s + c.str + c.agi + c.int, 0);
-  const mainSum = party.reduce((s, c) => s + (def.main === "STR" ? c.str : def.main === "AGI" ? c.agi : c.int), 0);
+  const mainSum = party.reduce((s, c) => s + (def.main === "STR" ? c.str : def.main === "SPD" ? c.agi : c.int), 0);
   const ratio = total > 0 ? (mainSum / total) : 0;
 
   const need = def.target;
-  const pBase = 60 + (total - need) * 1.0;
 
+  // 基本成功率：必要戦力との差で上下
+  const pBase = 55 + (total - need) * 1.0;
+
+  // 得意能力がしっかり入っていると少し有利
   const pAttrRaw = (ratio - 1 / 3) * 30;
   const attrBonus = clamp(-5, 10, Math.round(pAttrRaw));
-  const p = clamp(40, 90, Math.round(pBase + attrBonus));
+
+  // 最低10%、最高90%
+  const p = clamp(10, 90, Math.round(pBase + attrBonus));
 
   return { p, attrBonus };
 }
