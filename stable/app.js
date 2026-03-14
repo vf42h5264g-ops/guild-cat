@@ -128,6 +128,78 @@ const QUEST = {
   },
 };
 
+const QUEST_RESULT_LINES = {
+  battle: {
+    success: [
+      "いたずらモンスターを追い払ってきた。",
+      "ちゃんと役目を果たしてきた。",
+      "少し頼もしく見える。",
+    ],
+    great: [
+      "思った以上に大活躍だった。",
+      "周りの手伝いまでしてきた。",
+      "街の人に感心されたらしい。",
+    ],
+    fail: [
+      "相手の勢いに押されてしまったようだ。",
+      "物陰で様子を見すぎてしまったらしい。",
+      "少し慎重になりすぎたようだ。",
+    ],
+  },
+
+  search: {
+    success: [
+      "荷物を無事に届けてきた。",
+      "道順もしっかり覚えていたようだ。",
+      "手際よく運び終えた。",
+    ],
+    great: [
+      "ついでに追加の荷物まで運んできた。",
+      "配達先でとても喜ばれた。",
+      "予想より早く戻ってきた。",
+    ],
+    fail: [
+      "途中で寄り道していたらしい。",
+      "荷物より景色が気になったようだ。",
+      "道草をして少し遅れてしまったらしい。",
+    ],
+  },
+
+  invest: {
+    success: [
+      "森をひと回りして戻ってきた。",
+      "ちゃんと手がかりを見つけてきた。",
+      "落ち着いて探索できたようだ。",
+    ],
+    great: [
+      "思いがけない発見があったようだ。",
+      "珍しいものを見つけてきた。",
+      "森の奥までしっかり見てきた。",
+    ],
+    fail: [
+      "きれいな葉っぱに気を取られたらしい。",
+      "途中で木陰に落ち着いてしまったようだ。",
+      "森の静けさが心地よすぎたらしい。",
+    ],
+  },
+};
+
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function getQuestResultLine(questId, result) {
+  const group = QUEST_RESULT_LINES[questId];
+  if (!group) return "";
+
+  let key = "fail";
+  if (result === "大成功") key = "great";
+  else if (result === "成功") key = "success";
+
+  const lines = group[key];
+  if (!lines || lines.length === 0) return "";
+  return pickRandom(lines);
+}
 const INVEST = {
   unlockRank: {
     insure: 10,
@@ -1560,11 +1632,13 @@ function finishQuestsIfDone() {
     let result = "失敗";
     let gold = 0;
     let expEach = 0;
+    let resultLine = "";
 
     if (isTut) {
       result = "成功";
       gold = job.def.baseGold;
       expEach = 20;
+      resultLine = "はじめてのおしごとを、ちゃんと終わらせてきた。";
     } else {
       const roll = Math.random() * 100;
       if (roll <= job.pSuccess) {
@@ -1572,14 +1646,17 @@ function finishQuestsIfDone() {
       } else {
         result = "失敗";
       }
+
       const effGold = Math.floor(job.def.baseGold * QUEST.resultMult(result) * job.goldMult);
       const effExp = Math.floor(
         job.def.durationMin *
         QUEST.expPerMin(result) *
         (job.def.timeType === "S" ? 1.0 : job.def.timeType === "M" ? 0.96 : 0.92)
       );
+
       gold = effGold;
       expEach = effExp;
+      resultLine = getQuestResultLine(job.def.id.split("_")[0], result);
     }
 
     ensurePending();
@@ -1590,13 +1667,19 @@ function finishQuestsIfDone() {
       level: job.def.level,
       timeType: job.def.timeType,
       result,
+      resultLine,
       gold,
       expEach,
       partyIds: job.partyIds,
       tutorial: isTut,
     });
 
-    pushLog(`クエスト完了：${job.def.name}${isTut ? "" : ` Lv${job.def.level}${job.def.timeType}`} → ${result}（受取待ち）`);
+    pushLog(
+      `クエスト完了：${job.def.name}${isTut ? "" : ` Lv${job.def.level}${job.def.timeType}`} → ${result}` +
+      (resultLine ? `「${resultLine}」` : "") +
+      `（受取待ち）`
+    );
+
     state.questJobs[i] = null;
   }
 }
@@ -1993,7 +2076,11 @@ function collectAll() {
         const c = catById(id);
         if (c) addExp(c, r.expEach);
       }
-      pushLog(`受取：${r.questName}${r.tutorial ? "" : ` Lv${r.level}${r.timeType}`} ${r.result} / +${r.gold.toLocaleString()}G / EXP+${r.expEach}×${r.partyIds.length}`);
+      pushLog(
+        `受取：${r.questName}${r.tutorial ? "" : ` Lv${r.level}${r.timeType}`} ${r.result}` +
+        (r.resultLine ? `「${r.resultLine}」` : "") +
+        ` / +${r.gold.toLocaleString()}G / EXP+${r.expEach}×${r.partyIds.length}`
+      );
 
       if (!state.tutorialDone && r.tutorial) {
         state.tutorialStage = Math.max(state.tutorialStage, 4);
