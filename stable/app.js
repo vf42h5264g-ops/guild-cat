@@ -2064,18 +2064,80 @@ function openFireCatModal(catId) {
 /* =========================
    Pending / Collect
    ========================= */
+function openQuestResultModal(result, onNext) {
+  const html = `
+    <div class="panelCard">
+      <div style="font-size:18px;font-weight:900;">🐾 クエスト報告</div>
+      <div class="dim" style="margin-top:6px;">
+        ${escapeHtml(result.questName)}${result.tutorial ? "" : ` Lv${result.level}${result.timeType}`}
+      </div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div style="font-size:16px;font-weight:900;">${escapeHtml(result.result)}</div>
+      <div class="dim" style="margin-top:8px;">
+        ${escapeHtml(result.resultLine || "")}
+      </div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div class="dim">Gold：+${result.gold.toLocaleString()}G</div>
+      <div class="dim">EXP：+${result.expEach}</div>
+      <div class="dim">対象ネコ：${result.partyIds.length}匹</div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="primary" id="questResultNext">OK</button>
+    </div>
+  `;
+
+  openModal("クエスト結果", html);
+
+  document.getElementById("questResultNext")?.addEventListener("click", () => {
+    closeModal();
+    onNext?.();
+  });
+}
+
+function showQuestResultsSequentially(results, onDone) {
+  if (!results || results.length === 0) {
+    onDone?.();
+    return;
+  }
+
+  let index = 0;
+
+  function next() {
+    if (index >= results.length) {
+      onDone?.();
+      return;
+    }
+    openQuestResultModal(results[index], () => {
+      index++;
+      next();
+    });
+  }
+
+  next();
+}
 function collectAll() {
   ensurePending();
   const list = state.pendingResults;
   if (list.length === 0) return;
 
-  for (const r of list) {
-    if (r.type === "quest") {
+  const questResults = list.filter(r => r.type === "quest");
+  const otherResults = list.filter(r => r.type !== "quest");
+
+  function applyAllResults() {
+    // クエスト結果を反映
+    for (const r of questResults) {
       state.gold += r.gold;
+
       for (const id of r.partyIds) {
         const c = catById(id);
         if (c) addExp(c, r.expEach);
       }
+
       pushLog(
         `受取：${r.questName}${r.tutorial ? "" : ` Lv${r.level}${r.timeType}`} ${r.result}` +
         (r.resultLine ? `「${r.resultLine}」` : "") +
@@ -2086,22 +2148,33 @@ function collectAll() {
         state.tutorialStage = Math.max(state.tutorialStage, 4);
       }
     }
-    if (r.type === "training") {
-      const c = catById(r.catId);
-      if (c) addExp(c, r.exp);
-      pushLog(`受取：訓練 枠${r.slotNo} / EXP+${r.exp}`);
+
+    // 訓練・配当を反映
+    for (const r of otherResults) {
+      if (r.type === "training") {
+        const c = catById(r.catId);
+        if (c) addExp(c, r.exp);
+        pushLog(`受取：訓練 枠${r.slotNo} / EXP+${r.exp}`);
+      }
+
+      if (r.type === "dividend") {
+        state.gold += r.gold;
+        pushLog(`配当受取：+${r.gold.toLocaleString()}G（${escapeHtml(r.summary)}）`);
+      }
     }
-    if (r.type === "dividend") {
-      state.gold += r.gold;
-      pushLog(`配当受取：+${r.gold.toLocaleString()}G（${escapeHtml(r.summary)}）`);
-    }
+
+    state.pendingResults = [];
+    renderAll();
+    save();
+
+    maybeShowTutorialRankUpPrompt();
   }
 
-  state.pendingResults = [];
-  renderAll();
-  save();
-
-  maybeShowTutorialRankUpPrompt();
+  if (questResults.length > 0) {
+    showQuestResultsSequentially(questResults, applyAllResults);
+  } else {
+    applyAllResults();
+  }
 }
 
 function maybeShowTutorialRankUpPrompt() {
