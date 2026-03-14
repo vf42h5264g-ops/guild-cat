@@ -136,7 +136,7 @@ const INVEST = {
     magic: 15,
   },
   shops: {
-    insure: { name: "保険組合", base: 0.025, var: 0.05, icon: "🛡" },
+    insure: { name: "さかな組合", base: 0.025, var: 0.05, icon: "🐟" },
     arms:   { name: "武具商会", base: 0.03,  var: 0.10, icon: "🗡" },
     trade:  { name: "交易商会", base: 0.03,  var: 0.20, icon: "🚢" },
     magic:  { name: "魔導研究所", base: 0.02, var: 0.50, icon: "🔮" },
