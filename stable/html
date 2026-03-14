@@ -1,1 +1,114 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Cozy Cat Guild</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
 
+  <!-- Start Screen -->
+  <section id="startScreen" class="screen">
+    <div class="card">
+      <h1 class="title">Cozy Cat Guild</h1>
+      <p class="subtitle">ねこの小さなギルド経営記</p>
+
+      <div class="tip">
+        <div class="tipLabel">🐾 今日のひとこと</div>
+        <div class="tipText" id="dailyTip">「やる気はあるにゃ。」</div>
+      </div>
+
+      <p class="bodyText">
+        クエストと訓練は両立不可。完了は受取式です。<br>
+        まずはチュートリアルでギルド名を決めよう。
+      </p>
+
+      <button id="btnStart" class="primary">タップして開始</button>
+
+      <div class="row" style="margin-top:10px; gap:10px;">
+        <button id="btnContinue" class="ghost" type="button">続きから</button>
+        <button id="btnNew" class="ghost" type="button">新しく始める</button>
+      </div>
+
+      <div class="small" id="startMeta"></div>
+      <div class="small">Version 0.5</div>
+    </div>
+  </section>
+
+  <!-- Main Screen -->
+  <section id="mainScreen" class="screen hidden mainScreen">
+    <div class="container">
+
+      <header class="header" id="header">
+        <div class="headerRow">
+          <div class="brand" id="guildTitle">Cozy Cat Guild</div>
+          <div class="headerBtns">
+            <button id="btnGuildName" class="ghost">ギルド名</button>
+            <button id="btnReset" class="ghost">リセット</button>
+          </div>
+        </div>
+
+        <div class="statsGrid" id="hud"></div>
+
+        <div class="rankRow" id="rankRow">
+          <div class="rankText">
+            <div><b>ランクアップ</b> <span class="dim" id="rankInfo">Rank 1 → 2</span></div>
+            <div class="dim" id="rankCostText">必要: 5,000G</div>
+          </div>
+          <button id="btnRankUp" class="primary smallBtn">昇格</button>
+        </div>
+
+        <div class="logHeader" id="logHeader">
+          <span id="logChevron">▶</span>
+          <span>ログ</span>
+          <span class="pill" id="logUnreadPill">0</span>
+        </div>
+        <div class="logPanel hidden" id="logPanel"></div>
+
+        <div class="pendingBar hidden" id="pendingBar">
+          <span id="pendingText">受取待ち: 0</span>
+          <button id="btnCollectAll" class="primary smallBtn">まとめて受取</button>
+        </div>
+      </header>
+
+      <main class="content" id="content">
+        <nav class="tabs" aria-label="tabs">
+          <button class="tab active" data-tab="quest" type="button">
+            クエスト <span class="dot hidden" id="dotQuest">●</span>
+          </button>
+          <button class="tab" data-tab="cats" type="button">
+            ネコ <span class="dot hidden" id="dotCats">●</span>
+          </button>
+          <button class="tab" data-tab="training" type="button">
+            訓練 <span class="dot hidden" id="dotTraining">●</span>
+          </button>
+          <button class="tab hidden" data-tab="invest" type="button">
+            投資 <span class="dot hidden" id="dotInvest">●</span>
+          </button>
+        </nav>
+
+        <section id="tab-quest" class="tabPanel"></section>
+        <section id="tab-cats" class="tabPanel hidden"></section>
+        <section id="tab-training" class="tabPanel hidden"></section>
+        <section id="tab-invest" class="tabPanel hidden"></section>
+      </main>
+    </div>
+  </section>
+
+  <!-- Modal -->
+  <div id="modalBackdrop" class="backdrop hidden"></div>
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modalHeader">
+      <div id="modalTitle">Modal</div>
+      <button id="modalClose" class="ghost" type="button">×</button>
+    </div>
+    <div id="modalBody" class="modalBody"></div>
+  </div>
+
+  <!-- Confetti root -->
+  <div id="confetti" aria-hidden="true"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
