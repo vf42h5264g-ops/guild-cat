@@ -895,7 +895,7 @@ function openTutorialScoutModal() {
                 </div>
                 <div style="min-width:0;">
                   <b>${escapeHtml(c.name)}</b> <span class="dim">Lv${c.level}</span>
-                  <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} AGI ${c.agi} INT ${c.int}</div>
+                  <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.agi} INT ${c.int}</div>
                 </div>
               </div>
             </div>
@@ -1091,7 +1091,7 @@ function openTutorialQuestSetupModal() {
   partyList.innerHTML = idle.map(c => `
     <div class="modalItem" data-cat="${c.id}">
       <b>${escapeHtml(c.name)}</b> Lv${c.level}
-      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} AGI ${c.agi} INT ${c.int}</div>
+      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.agi} INT ${c.int}</div>
     </div>
   `).join("");
 
@@ -1325,9 +1325,9 @@ function openRankUpPopup(prev, now) {
    ========================= */
 function questTypes() {
   return [
-    { id: "battle", icon: "🗡", name: "戦闘", main: "STR" },
-    { id: "search", icon: "⚡", name: "探索", main: "AGI" },
-    { id: "invest", icon: "🧠", name: "調査", main: "INT" },
+    { id: "battle", icon: "⚔", name: "モンスター退治", main: "STR" },
+    { id: "search", icon: "📦", name: "おつかい運び", main: "SPD" },
+    { id: "invest", icon: "🌿", name: "森の探索", main: "INT" },
   ];
 }
 
@@ -1416,7 +1416,7 @@ function openQuestSetupModal(type) {
   partyList.innerHTML = idle.map(c => `
     <div class="modalItem" data-cat="${c.id}">
       <b>${escapeHtml(c.name)}</b> Lv${c.level}
-      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} AGI ${c.agi} INT ${c.int}</div>
+      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.agi} INT ${c.int}</div>
     </div>
   `).join("");
 
@@ -1671,7 +1671,7 @@ function openTrainingStartModal(slotNo) {
   tCats.innerHTML = idle.map(c => `
     <div class="modalItem" data-cat="${c.id}">
       <b>${escapeHtml(c.name)}</b> Lv${c.level}
-      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} AGI ${c.agi} INT ${c.int}</div>
+      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.agi} INT ${c.int}</div>
     </div>
   `).join("");
 
@@ -1839,7 +1839,7 @@ function openScoutModal(fromPaidScout) {
                     </div>
                     <div style="flex:1;min-width:0;">
                       <div><b>${escapeHtml(c.name)}</b> <span class="dim">Lv${c.level}</span></div>
-                      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} AGI ${c.agi} INT ${c.int}</div>
+                      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.agi} INT ${c.int}</div>
                     </div>
                     <button class="primary smallBtn" data-hire="${c.id}" ${canHireMore ? "" : "disabled"}
                       style="${canHireMore ? "" : "opacity:.6;"}">雇用</button>
@@ -2488,7 +2488,7 @@ function renderCatsTab() {
             <div><span class="statusDot ${dotClass}"></span>${statusText}</div>
           </div>
           <div class="dim">${escapeHtml(c.personality)}</div>
-          <div class="mono catStats">STR ${c.str} / AGI ${c.agi} / INT ${c.int}</div>
+          <div class="mono catStats">STR ${c.str} / SPD ${c.agi} / INT ${c.int}</div>
 
           <div class="row" style="margin-top:8px;">
             <div class="dim">EXP ${c.exp}/${LEVEL.expToNext(c.level)}</div>
