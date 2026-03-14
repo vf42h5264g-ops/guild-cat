@@ -71,7 +71,7 @@ const LEVEL = {
   gain3(personality) {
     switch (personality) {
       case "ツンデレ": return { str: 2, agi: 1, int: 0 };
-      case "やんちゃ": return { str: 1, agi: 2, int: 0 };
+      case "やんちゃ": return { str: 0, agi: 2, int: 1 };
       case "クール":   return { str: 1, agi: 0, int: 2 };
       case "あまえんぼ": return { str: 1, agi: 1, int: 1 };
       default: return { str: 1, agi: 1, int: 1 };
