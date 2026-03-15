@@ -1159,7 +1159,7 @@ function finishTutorialCats(firstCat) {
   save();
   renderAll();
 
-  openRankStoryModal(1, () => {
+　openRankStoryModal(1, () => {
     openTutorialQuestFlowExplain();
   });
 }
@@ -1491,12 +1491,6 @@ function doRankUp() {
 
   pushLog(`🎉 ギルドランク ${state.guildRank} に昇格！`);
 
-  openRankUpPopup(prev, now, () => {
-    if (!state.tutorialDone && state.tutorialStage >= 5 && state.guildRank >= 2) {
-      openTutorialTrainingIntroAfterRankUp();
-    }
-  });
-
   const shouldShowTrainingIntro =
     !state.tutorialDone &&
     state.tutorialStage >= 4 &&
@@ -1508,6 +1502,14 @@ function doRankUp() {
 
   renderAll();
   save();
+
+  openRankStoryModal(now.rank, () => {
+    openRankUpPopup(prev, now, () => {
+      if (!state.tutorialDone && state.tutorialStage >= 5 && state.guildRank >= 2) {
+        openTutorialTrainingIntroAfterRankUp();
+      }
+    });
+  });
 }
 
 function pickRankUpRecommend(prev, now) {
@@ -1536,7 +1538,7 @@ function pickRankUpFlavor(rank) {
   const pool = rank >= 10 ? mid.concat(high) : low.concat(mid);
   return pool[Math.floor(Math.random() * pool.length)];
 }
-function openRankUpPopup(prev, now, onAfterStory) {
+function openRankUpPopup(prev, now, onDone) {
   const changes = [];
   if (now.mult !== prev.mult) changes.push(`Gold倍率：×${prev.mult.toFixed(1)} → ×${now.mult.toFixed(1)}`);
   if (now.hs !== prev.hs) changes.push(`🐾 雇用枠：${prev.hs} → ${now.hs}`);
@@ -1567,22 +1569,23 @@ function openRankUpPopup(prev, now, onAfterStory) {
       </div>
     </div>
 
-    <div class="modalFooter">
+   　<div class="modalFooter">
       <button class="ghost" id="ruClose">閉じる</button>
-      <button class="primary" id="ruGo">紙芝居へ</button>
+      <button class="primary" id="ruGo">${escapeHtml(rec.label)}</button>
     </div>
   `;
 
   openModal("ランクアップ！", html);
 
-  document.getElementById("ruClose")?.addEventListener("click", closeModal);
+　document.getElementById("ruClose")?.addEventListener("click", () => {
+    closeModal();
+    onDone?.();
+  });
 
   document.getElementById("ruGo")?.addEventListener("click", () => {
     closeModal();
-    openRankStoryModal(now.rank, () => {
-      switchTab(rec.tab);
-      onAfterStory?.();
-    });
+    switchTab(rec.tab);
+    onDone?.();
   });
 }
 
