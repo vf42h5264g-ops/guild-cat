@@ -222,6 +222,83 @@ const INVEST = {
   STEP: 1000,
 };
 
+const RANK_STORIES = {
+  1:  {
+    title: "ギルド開設",
+    text: "小さなネコギルドが\n今日から始まる。",
+    img: "img/story/rank01.png",
+  },
+  2:  {
+    title: "最初の依頼",
+    text: "街の人から\nはじめての依頼が届いた。",
+    img: "img/story/rank02.png",
+  },
+  3:  {
+    title: "訓練場",
+    text: "ネコたちのために\n小さな訓練場を作った。",
+    img: "img/story/rank03.png",
+  },
+  4:  {
+    title: "仲間が増える",
+    text: "少しずつ\nネコが集まってきた。",
+    img: "img/story/rank04.png",
+  },
+  5:  {
+    title: "街で噂に",
+    text: "このギルドの名前が\n少しずつ知られてきた。",
+    img: "img/story/rank05.png",
+  },
+  6:  {
+    title: "アルパカ到着",
+    text: "荷運び用のアルパカが\nギルドにやってきた。",
+    img: "img/story/rank06.png",
+  },
+  7:  {
+    title: "忙しい日々",
+    text: "依頼が増えて\nギルドは少しにぎやかになった。",
+    img: "img/story/rank07.png",
+  },
+  8:  {
+    title: "遠くからの依頼",
+    text: "少し遠くの町からも\n依頼が届くようになった。",
+    img: "img/story/rank08.png",
+  },
+  9:  {
+    title: "ギルド拡張",
+    text: "ギルドの部屋を\n少し広くした。",
+    img: "img/story/rank09.png",
+  },
+  10: {
+    title: "さかな組合",
+    text: "街のさかな組合が\n出資を持ちかけてきた。",
+    img: "img/story/rank10.png",
+  },
+  11: {
+    title: "アルパカ増員",
+    text: "依頼が増えてきた。\nもう一頭アルパカを迎えた。",
+    img: "img/story/rank11.png",
+  },
+  12: {
+    title: "武具商会",
+    text: "武具商会から\n共同出資の話が届いた。",
+    img: "img/story/rank12.png",
+  },
+  13: {
+    title: "交易船団",
+    text: "港の交易船団が\n新しい商売を提案してきた。",
+    img: "img/story/rank13.png",
+  },
+  14: {
+    title: "大きなギルド",
+    text: "街の人が\nこのギルドを頼りにしている。",
+    img: "img/story/rank14.png",
+  },
+  15: {
+    title: "魔導研究所",
+    text: "魔導研究所から\n共同研究の誘いが届いた。",
+    img: "img/story/rank15.png",
+  },
+};
 /* =========================
    Random appearance (fur only)
    ========================= */
@@ -312,6 +389,58 @@ function closeModal() {
 el.modalBackdrop?.addEventListener("click", closeModal);
 el.modalClose?.addEventListener("click", closeModal);
 
+function openRankStoryModal(rank, onDone) {
+  const story = RANK_STORIES[rank];
+  if (!story) {
+    onDone?.();
+    return;
+  }
+
+  const html = `
+    <div class="storyWrap">
+      <div class="storyStage">
+        <img src="${story.img}" alt="" class="storyImage" />
+        <div class="storyPaperCover" id="storyPaperCover"></div>
+      </div>
+
+      <div class="storyCaption">
+        <div class="storyRank">Rank ${rank}</div>
+        <div class="storyTitle">${escapeHtml(story.title)}</div>
+        <div class="storyText">${escapeHtml(story.text)}</div>
+        <div class="storyHint">タップでつづく</div>
+      </div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="primary" id="storyNextBtn">つづく</button>
+    </div>
+  `;
+
+  openModal("紙芝居", html);
+
+  const cover = document.getElementById("storyPaperCover");
+  const nextBtn = document.getElementById("storyNextBtn");
+
+  // 開いて少ししてから紙を引く
+  setTimeout(() => {
+    cover?.classList.add("reveal");
+  }, 60);
+
+  const finish = () => {
+    closeModal();
+    onDone?.();
+  };
+
+  nextBtn?.addEventListener("click", finish);
+
+  // 画像や本文をタップしても閉じられるようにする
+  el.modalBody?.addEventListener("click", function handleStoryTap(e) {
+    if (document.getElementById("storyNextBtn")) {
+      el.modalBody.removeEventListener("click", handleStoryTap);
+      finish();
+    }
+  }, { once: true });
+}
 /* =========================
    Save/Load (AUTO SAVE)
    ========================= */
@@ -1028,8 +1157,9 @@ function finishTutorialCats(firstCat) {
   save();
   renderAll();
 
-  openTutorialTrainingIntro();
-}
+  openRankStoryModal(1, () => {
+    openTutorialTrainingIntro();
+  });
 
 function openTutorialTrainingIntro() {
   setTabGlow("training", true);
@@ -1360,8 +1490,13 @@ function openRankUpPopup(prev, now) {
   if (now.ts !== prev.ts) changes.push(`🏋 訓練枠：${prev.ts} → ${now.ts}`);
   if (now.maxQL !== prev.maxQL) changes.push(`📜 クエストLv：${prev.maxQL} → ${now.maxQL}`);
   if (!prev.invest && now.invest) changes.push(`📈 投資タブ解禁！`);
+
   if (now.rank === 6) changes.push(`🦙 アルパカ購入解放！`);
   if (now.rank === 11) changes.push(`🦙 2頭目のアルパカ購入解放！`);
+  if (now.rank === 10) changes.push(`🐟 さかな組合への出資が解放！`);
+  if (now.rank === 12) changes.push(`🗡 武具商会への出資が解放！`);
+  if (now.rank === 13) changes.push(`🚢 交易船団への出資が解放！`);
+  if (now.rank === 15) changes.push(`🔮 魔導研究所への出資が解放！`);
 
   const flavor = pickRankUpFlavor(now.rank);
   const rec = pickRankUpRecommend(prev, now);
@@ -1381,14 +1516,19 @@ function openRankUpPopup(prev, now) {
 
     <div class="modalFooter">
       <button class="ghost" id="ruClose">閉じる</button>
-      <button class="primary" id="ruGo">${escapeHtml(rec.label)}</button>
+      <button class="primary" id="ruGo">紙芝居へ</button>
     </div>
   `;
+
   openModal("ランクアップ！", html);
+
   document.getElementById("ruClose")?.addEventListener("click", closeModal);
+
   document.getElementById("ruGo")?.addEventListener("click", () => {
     closeModal();
-    switchTab(rec.tab);
+    openRankStoryModal(now.rank, () => {
+      switchTab(rec.tab);
+    });
   });
 }
 
