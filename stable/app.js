@@ -2443,12 +2443,12 @@ function dividendFlavor(breakdown) {
   if (up >= 0.30 && best.key === "magic") return "🔮 新魔法の特許が成立！研究成果が爆発！";
   if (up >= 0.15 && best.key === "trade") return "🚢 交易路が大当たり！商人たちが賑わっている。";
   if (up >= 0.08 && best.key === "arms") return "🗡 武具の需要が堅調だ。戦の気配か？";
-  if (up >= 0.03 && best.key === "insure") return "🛡 堅実な運営が実を結んでいる。";
+  if (up >= 0.03 && best.key === "insure") return "🐟 大漁だ！さかな組合が賑わっている。";
 
   if (down >= 0.30 && worst.key === "magic") return "🔮 実験は難航しているようだ…";
   if (down >= 0.15 && worst.key === "trade") return "🚢 風向きが悪い日もある。";
   if (down >= 0.08 && worst.key === "arms") return "🗡 鍛冶場は静かだが、安定している。";
-  if (down >= 0.03 && worst.key === "insure") return "🛡 今日も静かな黒字だ。";
+  if (down >= 0.03 && worst.key === "insure") return "🐟 今日は漁獲が少なかったようだ。";
 
   return "街の経済は穏やかに動いている。";
 }
