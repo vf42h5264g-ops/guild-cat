@@ -1158,7 +1158,7 @@ function finishTutorialCats(firstCat) {
   renderAll();
 
   openRankStoryModal(1, () => {
-    openTutorialTrainingIntro();
+    openTutorialQuestFlowExplain();
   });
 
 function openTutorialTrainingIntro() {
@@ -1204,6 +1204,50 @@ function openTutorialTrainingIntro() {
   });
 }
 
+function openTutorialTrainingIntroAfterRankUp() {
+  const html = `
+    <div class="panelCard">
+      <div><b>🏋 訓練もできるようになった</b></div>
+      <div class="dim" style="margin-top:6px; line-height:1.6;">
+        ネコたちは訓練で少しずつ成長します。<br>
+        強くなると、難しい依頼にも挑みやすくなります。<br>
+        ただし <b>訓練中はクエストに出せません</b>。
+      </div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div class="dim">
+        次は、訓練タブも試してみよう。<br>
+        ここからは自由に遊べます。
+      </div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="ghost" id="ttaQuest">クエストへ</button>
+      <button class="primary" id="ttaTraining">訓練へ</button>
+    </div>
+  `;
+
+  openModal("チュートリアル完了", html);
+
+  document.getElementById("ttaQuest")?.addEventListener("click", () => {
+    state.tutorialDone = true;
+    pushLog("チュートリアル完了！");
+    closeModal();
+    switchTab("quest");
+    renderAll();
+    save();
+  });
+
+  document.getElementById("ttaTraining")?.addEventListener("click", () => {
+    state.tutorialDone = true;
+    pushLog("チュートリアル完了！");
+    closeModal();
+    switchTab("training");
+    renderAll();
+    save();
+  });
+}   
 function openTutorialQuestFlowExplain(fromTraining = false) {
   const html = `
     <div class="panelCard">
@@ -1446,15 +1490,23 @@ function doRankUp() {
 
   openRankUpPopup(prev, now);
 
-  // Tutorial完了条件：チュートクエ受取済み＆Rank2到達
-  if (!state.tutorialDone && state.tutorialStage >= 4 && state.guildRank >= 2) {
+    const shouldShowTrainingIntro =
+    !state.tutorialDone &&
+    state.tutorialStage >= 4 &&
+    state.guildRank >= 2;
+
+  if (shouldShowTrainingIntro) {
     state.tutorialStage = 5;
-    state.tutorialDone = true;
-    pushLog("チュートリアル完了！");
   }
 
   renderAll();
   save();
+
+  if (shouldShowTrainingIntro) {
+    setTimeout(() => {
+      openTutorialTrainingIntroAfterRankUp();
+    }, 200);
+  }
 }
 
 function pickRankUpRecommend(prev, now) {
