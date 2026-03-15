@@ -1109,7 +1109,7 @@ function openTutorialScoutModal() {
 
     <div class="modalFooter">
       <button class="ghost" id="tutBack">戻る</button>
-      <button class="primary" id="tutPickHint" disabled>候補をタップして選択</button>
+      <button class="primary" id="tutPickConfirm" disabled>このネコにする</button>
     </div>
   `;
 
@@ -1120,11 +1120,26 @@ function openTutorialScoutModal() {
     startTutorialFlow();
   });
 
-  document.querySelectorAll("[data-pick]").forEach(item => {
+  let selectedId = null;
+
+  const items = document.querySelectorAll("[data-pick]");
+  const confirmBtn = document.getElementById("tutPickConfirm");
+
+  items.forEach(item => {
     item.addEventListener("click", () => {
-      const picked = candidates.find(c => c.id === item.dataset.pick);
-      if (picked) finishTutorialCats(picked);
+      selectedId = item.dataset.pick;
+
+      items.forEach(x => x.style.outline = "");
+      item.style.outline = "2px solid var(--blue)";
+
+      if (confirmBtn) confirmBtn.disabled = false;
     });
+  });
+
+  confirmBtn?.addEventListener("click", () => {
+    if (!selectedId) return;
+    const picked = candidates.find(c => c.id === selectedId);
+    if (picked) finishTutorialCats(picked);
   });
 }
 
