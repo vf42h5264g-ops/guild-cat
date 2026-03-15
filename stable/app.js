@@ -1109,7 +1109,7 @@ function openTutorialScoutModal() {
 
     <div class="modalFooter">
       <button class="ghost" id="tutBack">戻る</button>
-      <button class="primary" id="tutPickConfirm" disabled>このネコにする</button>
+      <button class="primary" id="tutPickConfirm" disabled>この子にする</button>
     </div>
   `;
 
