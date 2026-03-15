@@ -1160,6 +1160,7 @@ function finishTutorialCats(firstCat) {
   openRankStoryModal(1, () => {
     openTutorialQuestFlowExplain();
   });
+}
 
 function openTutorialTrainingIntro() {
   setTabGlow("training", true);
@@ -1488,9 +1489,13 @@ function doRankUp() {
 
   pushLog(`🎉 ギルドランク ${state.guildRank} に昇格！`);
 
-  openRankUpPopup(prev, now);
+  openRankUpPopup(prev, now, () => {
+    if (!state.tutorialDone && state.tutorialStage >= 5 && state.guildRank >= 2) {
+      openTutorialTrainingIntroAfterRankUp();
+    }
+  });
 
-    const shouldShowTrainingIntro =
+  const shouldShowTrainingIntro =
     !state.tutorialDone &&
     state.tutorialStage >= 4 &&
     state.guildRank >= 2;
@@ -1501,12 +1506,6 @@ function doRankUp() {
 
   renderAll();
   save();
-
-  if (shouldShowTrainingIntro) {
-    setTimeout(() => {
-      openTutorialTrainingIntroAfterRankUp();
-    }, 200);
-  }
 }
 
 function pickRankUpRecommend(prev, now) {
@@ -1535,7 +1534,7 @@ function pickRankUpFlavor(rank) {
   const pool = rank >= 10 ? mid.concat(high) : low.concat(mid);
   return pool[Math.floor(Math.random() * pool.length)];
 }
-function openRankUpPopup(prev, now) {
+function openRankUpPopup(prev, now, onAfterStory) {
   const changes = [];
   if (now.mult !== prev.mult) changes.push(`Gold倍率：×${prev.mult.toFixed(1)} → ×${now.mult.toFixed(1)}`);
   if (now.hs !== prev.hs) changes.push(`🐾 雇用枠：${prev.hs} → ${now.hs}`);
@@ -1580,6 +1579,7 @@ function openRankUpPopup(prev, now) {
     closeModal();
     openRankStoryModal(now.rank, () => {
       switchTab(rec.tab);
+      onAfterStory?.();
     });
   });
 }
