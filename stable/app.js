@@ -397,7 +397,7 @@ function openRankStoryModal(rank, onDone) {
   }
 
   const html = `
-    <div class="storyWrap">
+    <div class="storyWrap" id="storyWrapTap">
       <div class="storyStage">
         <img src="${story.img}" alt="" class="storyImage" />
         <div class="storyPaperCover" id="storyPaperCover"></div>
@@ -420,26 +420,28 @@ function openRankStoryModal(rank, onDone) {
 
   const cover = document.getElementById("storyPaperCover");
   const nextBtn = document.getElementById("storyNextBtn");
+  const storyWrapTap = document.getElementById("storyWrapTap");
 
-  // 開いて少ししてから紙を引く
   setTimeout(() => {
     cover?.classList.add("reveal");
   }, 60);
 
+  let finished = false;
   const finish = () => {
+    if (finished) return;
+    finished = true;
     closeModal();
     onDone?.();
   };
 
-  nextBtn?.addEventListener("click", finish);
+  nextBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    finish();
+  });
 
-  // 画像や本文をタップしても閉じられるようにする
-  el.modalBody?.addEventListener("click", function handleStoryTap(e) {
-    if (document.getElementById("storyNextBtn")) {
-      el.modalBody.removeEventListener("click", handleStoryTap);
-      finish();
-    }
-  }, { once: true });
+  storyWrapTap?.addEventListener("click", () => {
+    finish();
+  });
 }
 /* =========================
    Save/Load (AUTO SAVE)
