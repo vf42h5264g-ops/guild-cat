@@ -464,3 +464,20 @@ img,svg,canvas{ max-width:100%; height:auto; }
   opacity:.9;
   line-height:1.6;
 }
+
+/* ===== 成功率カラー ===== */
+.rate{
+  font-weight:800;
+}
+
+.rate.high{
+  color:#2bd76f; /* 緑 */
+}
+
+.rate.mid{
+  color:#ffd93b; /* 黄 */
+}
+
+.rate.low{
+  color:#ff5c5c; /* 赤 */
+}
