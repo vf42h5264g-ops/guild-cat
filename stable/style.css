@@ -527,3 +527,41 @@ img,svg,canvas{ max-width:100%; height:auto; }
   margin-top:6px;
   text-align:right;
 }
+
+/* =========================
+   Quest Level Badge
+   ========================= */
+.qBadge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  line-height:1;
+  border:1px solid var(--line);
+  background:linear-gradient(180deg,#1a2130,#121722);
+  color:#e9ecf1;
+}
+
+/* レベル帯で色変化（任意だけどおすすめ） */
+.qBadge.easy{
+  background:linear-gradient(180deg,#1e3a2b,#14261d);
+  border-color:#2f5f45;
+}
+
+.qBadge.mid{
+  background:linear-gradient(180deg,#1a2130,#121722);
+}
+
+.qBadge.hard{
+  background:linear-gradient(180deg,#3a1f1f,#261414);
+  border-color:#7a2f2f;
+}
+
+.qBadge.danger{
+  background:linear-gradient(180deg,#5a1a1a,#2a0f0f);
+  border-color:#ff4d4d;
+  box-shadow:0 0 10px rgba(255,80,80,.25);
+}
