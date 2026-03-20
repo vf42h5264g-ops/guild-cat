@@ -690,7 +690,7 @@ function getAvailableAlpacaPurchase() {
       stage: 6,
       cost: 50000,
       label: "アルパカを迎える",
-      desc: "派遣枠が1つ増えます",
+      desc: "派遣できる数が1つ増えます",
     };
   }
 
@@ -1615,6 +1615,46 @@ function questTypes() {
   ];
 }
 
+function getQuestDangerLabel(level) {
+  if (level <= 2) return "やさしい";
+  if (level <= 4) return "ふつう";
+  if (level <= 6) return "しっかり準備";
+  if (level <= 8) return "むずかしい";
+  return "かなり危険";
+}
+
+function getQuestFlavor(typeId, level) {
+  const map = {
+    battle: [
+      "近くの原っぱで困りごとがあるらしい。",
+      "街はずれから相談が届いている。",
+      "少し手強そうな気配がする。",
+    ],
+    search: [
+      "荷物を待っている人がいるようだ。",
+      "急ぎの配達らしい。",
+      "今日は少し遠くまで運ぶみたい。",
+    ],
+    invest: [
+      "森の奥で何か見つかるかもしれない。",
+      "静かな森を調べてみよう。",
+      "小さな手がかりを探しにいく。",
+    ],
+  };
+
+  const list = map[typeId] || ["依頼が届いている。"];
+  return list[(level - 1) % list.length];
+}
+
+function makeQuestLevelBadge(level) {
+  return `<span class="pill">Lv${level}</span>`;
+}
+function getQuestMainLabel(main) {
+  if (main === "STR") return "STR";
+  if (main === "SPD") return "SPD";
+  if (main === "INT") return "INT";
+  return main;
+}
 function rollQuestOffers() {
   const cap = RANK.maxQuestLevel(state.guildRank); // 1..10
   let minLv = Math.max(1, cap - 2);
@@ -2746,8 +2786,8 @@ function renderQuestTab() {
       <div class="row">
         <div>
           <div><b>クエスト</b> <span class="dim">(Lv1〜${maxLv} 解放中)</span></div>
-          <div class="dim">S/M/Lで時間選択（Sが最効率）。訓練と両立不可 / キャンセル不可</div>
-          <div class="dim">アルパカ ${state.alpaca.owned}頭 / 派遣枠 ${used}/${ds}</div>
+          <div class="dim">S/M/Lで時間選択</div>
+          <div class="dim">派遣枠 ${used}/${ds}</div>
         </div>
         <div class="mono">派遣枠 ${used}/${ds}</div>
       </div>
@@ -2771,17 +2811,28 @@ function renderQuestTab() {
       ` : ""
     }
 
-    ${types.map(t => `
-      <div class="panelCard">
-        <div class="row">
-          <div>
-            <div><b>${t.icon} ${t.name}</b></div>
-            <div class="dim">属性：${t.main} / 今日の提示：<b>Lv${state.questOffers[t.id]}</b>（受注ごと再抽選）</div>
+        ${types.map(t => {
+      const lv = state.questOffers[t.id];
+      const danger = getQuestDangerLabel(lv);
+      const flavor = getQuestFlavor(t.id, lv);
+
+      return `
+        <div class="panelCard">
+          <div class="row">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <b>${t.icon} ${t.name}</b>
+                ${makeQuestLevelBadge(lv)}
+              </div>
+              <div class="dim" style="margin-top:6px;">${danger}</div>
+              <div class="dim" style="margin-top:4px;">${flavor}</div>
+              <div class="dim" style="margin-top:4px;">属性：${getQuestMainLabel(t.main)}（受注ごと再抽選）</div>
+            </div>
+            <button class="primary smallBtn" data-qtype="${t.id}">受注</button>
           </div>
-          <button class="primary smallBtn" data-qtype="${t.id}">受注</button>
         </div>
-      </div>
-    `).join("")}
+      `;
+    }).join("")}
 
     ${renderQuestRunning()}
   `;
