@@ -565,3 +565,38 @@ img,svg,canvas{ max-width:100%; height:auto; }
   border-color:#ff4d4d;
   box-shadow:0 0 10px rgba(255,80,80,.25);
 }
+
+/* =========================
+   Success Rate
+   ========================= */
+.qRate{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:8px;
+  font-size:12px;
+  font-weight:900;
+  border:1px solid var(--line);
+}
+
+/* 成功率ごとの色 */
+.qRate.good{
+  background:#1e3a2b;
+  color:#6bdc9b;
+  border-color:#2f5f45;
+}
+
+.qRate.mid{
+  background:#1a2130;
+  color:#9fb4ff;
+}
+
+.qRate.warn{
+  background:#3a2a1a;
+  color:#ffb86b;
+}
+
+.qRate.bad{
+  background:#3a1f1f;
+  color:#ff6b6b;
+  box-shadow:0 0 8px rgba(255,80,80,.25);
+}
