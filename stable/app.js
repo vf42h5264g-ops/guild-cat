@@ -391,6 +391,11 @@ function closeModal() {
   el.modalBackdrop.classList.add("hidden");
   el.modal.classList.add("hidden");
   el.modalBody.innerHTML = "";
+
+  const header = el.modal.querySelector(".modalHeader");
+  if (header) {
+    header.style.display = "flex";
+  }
 }
 el.modalBackdrop?.addEventListener("click", closeModal);
 el.modalClose?.addEventListener("click", closeModal);
@@ -1598,7 +1603,7 @@ function openRankUpPopup(prev, now, onDone) {
 
   openModal("ランクアップ！", html);
 
-　document.getElementById("ruClose")?.addEventListener("click", () => {
+  document.getElementById("ruClose")?.addEventListener("click", () => {
     closeModal();
     onDone?.();
   });
@@ -2836,19 +2841,17 @@ function renderQuestTab() {
     }
 
         ${types.map(t => {
-  const lv = state.questOffers[t.id];
-  const danger = getQuestDangerLabel(lv);
-  const flavor = getQuestFlavor(t.id, lv);
+          const lv = state.questOffers[t.id];
+          const danger = getQuestDangerLabel(lv);
+          const flavor = getQuestFlavor(t.id, lv);
 
-  // ★ 成功率計算
-  const preview = QUEST.calcSuccess({
-    cats: state.cats,
-    partyIds: state.cats.slice(0, 3).map(c => c.id), // 仮：上位3匹
-    main: t.main,
-    level: lv
-  });
+          const previewPartyIds = state.cats.slice(0, 3).map(c => c.id);
+          const previewDef = makeQuestDef(t, lv, "S");
+          const preview = previewPartyIds.length > 0
+            ? calcQuestChance(previewDef, previewPartyIds)
+            : { p: 0, attrBonus: 0 };
 
-  return `
+          return `
     <div class="panelCard">
       <div class="row">
         <div>
