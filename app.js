@@ -71,7 +71,7 @@ const LEVEL = {
   gain3(personality) {
     switch (personality) {
       case "ツンデレ": return { str: 2, agi: 1, int: 0 };
-      case "やんちゃ": return { str: 1, agi: 2, int: 0 };
+      case "やんちゃ": return { str: 0, agi: 2, int: 1 };
       case "クール":   return { str: 1, agi: 0, int: 2 };
       case "あまえんぼ": return { str: 1, agi: 1, int: 1 };
       default: return { str: 1, agi: 1, int: 1 };
@@ -128,6 +128,78 @@ const QUEST = {
   },
 };
 
+const QUEST_RESULT_LINES = {
+  battle: {
+    success: [
+      "いたずらモンスターを追い払ってきた。",
+      "ちゃんと役目を果たしてきた。",
+      "少し頼もしく見える。",
+    ],
+    great: [
+      "思った以上に大活躍だった。",
+      "周りの手伝いまでしてきた。",
+      "街の人に感心されたらしい。",
+    ],
+    fail: [
+      "相手の勢いに押されてしまったようだ。",
+      "物陰で様子を見すぎてしまったらしい。",
+      "少し慎重になりすぎたようだ。",
+    ],
+  },
+
+  search: {
+    success: [
+      "荷物を無事に届けてきた。",
+      "道順もしっかり覚えていたようだ。",
+      "手際よく運び終えた。",
+    ],
+    great: [
+      "ついでに追加の荷物まで運んできた。",
+      "配達先でとても喜ばれた。",
+      "予想より早く戻ってきた。",
+    ],
+    fail: [
+      "途中で寄り道していたらしい。",
+      "荷物より景色が気になったようだ。",
+      "道草をして少し遅れてしまったらしい。",
+    ],
+  },
+
+  invest: {
+    success: [
+      "森をひと回りして戻ってきた。",
+      "ちゃんと手がかりを見つけてきた。",
+      "落ち着いて探索できたようだ。",
+    ],
+    great: [
+      "思いがけない発見があったようだ。",
+      "珍しいものを見つけてきた。",
+      "森の奥までしっかり見てきた。",
+    ],
+    fail: [
+      "きれいな葉っぱに気を取られたらしい。",
+      "途中で木陰に落ち着いてしまったようだ。",
+      "森の静けさが心地よすぎたらしい。",
+    ],
+  },
+};
+
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function getQuestResultLine(questId, result) {
+  const group = QUEST_RESULT_LINES[questId];
+  if (!group) return "";
+
+  let key = "fail";
+  if (result === "大成功") key = "great";
+  else if (result === "成功") key = "success";
+
+  const lines = group[key];
+  if (!lines || lines.length === 0) return "";
+  return pickRandom(lines);
+}
 const INVEST = {
   unlockRank: {
     insure: 10,
@@ -136,9 +208,9 @@ const INVEST = {
     magic: 15,
   },
   shops: {
-    insure: { name: "保険組合", base: 0.025, var: 0.05, icon: "🛡" },
+    insure: { name: "さかな組合", base: 0.025, var: 0.05, icon: "🐟" },
     arms:   { name: "武具商会", base: 0.03,  var: 0.10, icon: "🗡" },
-    trade:  { name: "交易商会", base: 0.03,  var: 0.20, icon: "🚢" },
+    trade:  { name: "交易船団", base: 0.03,  var: 0.20, icon: "🚢" },
     magic:  { name: "魔導研究所", base: 0.02, var: 0.50, icon: "🔮" },
   },
   capPerRank: {
@@ -150,6 +222,83 @@ const INVEST = {
   STEP: 1000,
 };
 
+const RANK_STORIES = {
+  1:  {
+    title: "ギルド開設",
+    text: "小さなネコギルドが\n今日から始まる。",
+    img: "img/story/rank01.png",
+  },
+  2:  {
+    title: "最初の依頼",
+    text: "街の人から\nはじめての依頼が届いた。",
+    img: "img/story/rank02.png",
+  },
+  3:  {
+    title: "訓練場",
+    text: "ネコたちのために\n小さな訓練場を作った。",
+    img: "img/story/rank03.png",
+  },
+  4:  {
+    title: "仲間が増える",
+    text: "少しずつ\nネコが集まってきた。",
+    img: "img/story/rank04.png",
+  },
+  5:  {
+    title: "街で噂に",
+    text: "このギルドの名前が\n少しずつ知られてきた。",
+    img: "img/story/rank05.png",
+  },
+  6:  {
+    title: "アルパカ到着",
+    text: "荷運び用のアルパカが\nギルドにやってきた。",
+    img: "img/story/rank06.png",
+  },
+  7:  {
+    title: "忙しい日々",
+    text: "依頼が増えて\nギルドは少しにぎやかになった。",
+    img: "img/story/rank07.png",
+  },
+  8:  {
+    title: "遠くからの依頼",
+    text: "少し遠くの町からも\n依頼が届くようになった。",
+    img: "img/story/rank08.png",
+  },
+  9:  {
+    title: "ギルド拡張",
+    text: "ギルドの部屋を\n少し広くした。",
+    img: "img/story/rank09.png",
+  },
+  10: {
+    title: "さかな組合",
+    text: "街のさかな組合が\n出資を持ちかけてきた。",
+    img: "img/story/rank10.png",
+  },
+  11: {
+    title: "アルパカ増員",
+    text: "依頼が増えてきた。\nもう一頭アルパカを迎えた。",
+    img: "img/story/rank11.png",
+  },
+  12: {
+    title: "武具商会",
+    text: "武具商会から\n共同出資の話が届いた。",
+    img: "img/story/rank12.png",
+  },
+  13: {
+    title: "交易船団",
+    text: "港の交易船団が\n新しい商売を提案してきた。",
+    img: "img/story/rank13.png",
+  },
+  14: {
+    title: "大きなギルド",
+    text: "街の人が\nこのギルドを頼りにしている。",
+    img: "img/story/rank14.png",
+  },
+  15: {
+    title: "魔導研究所",
+    text: "魔導研究所から\n共同研究の誘いが届いた。",
+    img: "img/story/rank15.png",
+  },
+};
 /* =========================
    Random appearance (fur only)
    ========================= */
@@ -227,8 +376,14 @@ let jimFlip = false;
    Modal
    ========================= */
 function openModal(title, html) {
-  el.modalTitle.textContent = title;
+  el.modalTitle.textContent = title || "";
   el.modalBody.innerHTML = html;
+
+  const header = el.modal.querySelector(".modalHeader");
+  if (header) {
+    header.style.display = title ? "flex" : "none";
+  }
+
   el.modalBackdrop.classList.remove("hidden");
   el.modal.classList.remove("hidden");
 }
@@ -236,10 +391,69 @@ function closeModal() {
   el.modalBackdrop.classList.add("hidden");
   el.modal.classList.add("hidden");
   el.modalBody.innerHTML = "";
+
+  const header = el.modal.querySelector(".modalHeader");
+  if (header) {
+    header.style.display = "flex";
+  }
 }
 el.modalBackdrop?.addEventListener("click", closeModal);
 el.modalClose?.addEventListener("click", closeModal);
 
+function openRankStoryModal(rank, onDone) {
+  const story = RANK_STORIES[rank];
+  if (!story) {
+    onDone?.();
+    return;
+  }
+
+  const html = `
+    <div class="storyWrap" id="storyWrapTap">
+      <div class="storyStage">
+        <img src="${story.img}" alt="" class="storyImage" />
+        <div class="storyPaperCover" id="storyPaperCover"></div>
+      </div>
+
+      <div class="storyCaption">
+        <div class="storyRank">Rank ${rank}</div>
+        <div class="storyTitle">${escapeHtml(story.title)}</div>
+        <div class="storyText">${escapeHtml(story.text)}</div>
+        <div class="storyHint">タップでつづく</div>
+      </div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="primary" id="storyNextBtn">つづく</button>
+    </div>
+  `;
+
+  openModal("", html);
+
+  const cover = document.getElementById("storyPaperCover");
+  const nextBtn = document.getElementById("storyNextBtn");
+  const storyWrapTap = document.getElementById("storyWrapTap");
+
+  setTimeout(() => {
+    cover?.classList.add("reveal");
+  }, 60);
+
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    closeModal();
+    onDone?.();
+  };
+
+  nextBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    finish();
+  });
+
+  storyWrapTap?.addEventListener("click", () => {
+    finish();
+  });
+}
 /* =========================
    Save/Load (AUTO SAVE)
    ========================= */
@@ -424,7 +638,7 @@ function ensureTrainingState() {
   state.trainingJobs = state.trainingJobs.slice(0, slotCount);
 }
 function ensureQuestState() {
-  const slots = RANK.dispatchSlots(state.guildRank);
+  const slots = getDispatchSlots();
   if (!Array.isArray(state.questJobs)) state.questJobs = [];
   while (state.questJobs.length < slots) state.questJobs.push(null);
   state.questJobs = state.questJobs.slice(0, slots);
@@ -452,7 +666,90 @@ function ensureInvest() {
   }
   if (!state.invest.holdings) state.invest.holdings = { insure: 0, arms: 0, trade: 0, magic: 0 };
 }
+function ensureAlpaca() {
+  if (!state.alpaca) {
+    state.alpaca = {
+      owned: 1,
+      boughtAt6: false,
+      boughtAt11: false,
+    };
+  }
+  if (typeof state.alpaca.owned !== "number") state.alpaca.owned = 1;
+  if (typeof state.alpaca.boughtAt6 !== "boolean") state.alpaca.boughtAt6 = false;
+  if (typeof state.alpaca.boughtAt11 !== "boolean") state.alpaca.boughtAt11 = false;
+}
 
+function getDispatchSlots() {
+  ensureAlpaca();
+  return Math.max(1, state.alpaca.owned || 1);
+}
+
+function getAvailableAlpacaPurchase() {
+  ensureAlpaca();
+
+  if (state.guildRank >= 11 && !state.alpaca.boughtAt11) {
+    return {
+      stage: 11,
+      cost: 150000,
+      label: "2頭目のアルパカを迎える",
+      desc: "派遣枠が1つ増えます",
+    };
+  }
+
+  if (state.guildRank >= 6 && !state.alpaca.boughtAt6) {
+    return {
+      stage: 6,
+      cost: 50000,
+      label: "アルパカを迎える",
+      desc: "派遣できる数が1つ増えます",
+    };
+  }
+
+  return null;
+}
+
+function buyAlpaca(stage) {
+  ensureAlpaca();
+
+  if (stage === 6) {
+    const cost = 50000;
+    if (state.guildRank < 6 || state.alpaca.boughtAt6) return;
+
+    if (state.gold < cost) {
+      pushLog(`Gold不足：アルパカ購入に ${cost.toLocaleString()}G 必要`);
+      return;
+    }
+
+    state.gold -= cost;
+    state.alpaca.boughtAt6 = true;
+    state.alpaca.owned = 2;
+
+    ensureQuestState();
+    pushLog("🦙 アルパカを迎えた！派遣枠が1つ増えた");
+    renderAll();
+    save();
+    return;
+  }
+
+  if (stage === 11) {
+    const cost = 150000;
+    if (state.guildRank < 11 || state.alpaca.boughtAt11) return;
+
+    if (state.gold < cost) {
+      pushLog(`Gold不足：アルパカ購入に ${cost.toLocaleString()}G 必要`);
+      return;
+    }
+
+    state.gold -= cost;
+    state.alpaca.boughtAt11 = true;
+    state.alpaca.owned = 3;
+
+    ensureQuestState();
+    pushLog("🦙 2頭目のアルパカを迎えた！派遣枠が1つ増えた");
+    renderAll();
+    save();
+  }
+}
 /* =========================
    Busy check (quest/training)
    ========================= */
@@ -548,6 +845,12 @@ function newGame() {
     questJobs: [],
     trainingSlots: [],
     trainingJobs: [],
+
+    alpaca: {
+      owned: 1,          // 初期1頭 = 派遣枠1
+      boughtAt6: false,  // Rank6解放分を買ったか
+      boughtAt11: false, // Rank11解放分を買ったか
+    },
 
     invest: {
       holdings: { insure: 0, arms: 0, trade: 0, magic: 0 },
@@ -662,6 +965,7 @@ function boot() {
   ensureHire();
   ensureTutorial();
   ensureInvest();
+  ensureAlpaca();
   ensureQuestOffers();
 
   const tips = ["やる気はあるにゃ。", "急がば回れ、にゃ。", "訓練は裏切らないにゃ。", "Goldは正義にゃ。"];
@@ -805,7 +1109,7 @@ function openTutorialScoutModal() {
                 </div>
                 <div style="min-width:0;">
                   <b>${escapeHtml(c.name)}</b> <span class="dim">Lv${c.level}</span>
-                  <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} AGI ${c.agi} INT ${c.int}</div>
+                  <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.agi} INT ${c.int}</div>
                 </div>
               </div>
             </div>
@@ -816,7 +1120,7 @@ function openTutorialScoutModal() {
 
     <div class="modalFooter">
       <button class="ghost" id="tutBack">戻る</button>
-      <button class="primary" id="tutPickHint" disabled>候補をタップして選択</button>
+      <button class="primary" id="tutPickConfirm" disabled>この子にする</button>
     </div>
   `;
 
@@ -827,11 +1131,26 @@ function openTutorialScoutModal() {
     startTutorialFlow();
   });
 
-  document.querySelectorAll("[data-pick]").forEach(item => {
+  let selectedId = null;
+
+  const items = document.querySelectorAll("[data-pick]");
+  const confirmBtn = document.getElementById("tutPickConfirm");
+
+  items.forEach(item => {
     item.addEventListener("click", () => {
-      const picked = candidates.find(c => c.id === item.dataset.pick);
-      if (picked) finishTutorialCats(picked);
+      selectedId = item.dataset.pick;
+
+      items.forEach(x => x.style.outline = "");
+      item.style.outline = "2px solid var(--blue)";
+
+      if (confirmBtn) confirmBtn.disabled = false;
     });
+  });
+
+  confirmBtn?.addEventListener("click", () => {
+    if (!selectedId) return;
+    const picked = candidates.find(c => c.id === selectedId);
+    if (picked) finishTutorialCats(picked);
   });
 }
 
@@ -866,7 +1185,9 @@ function finishTutorialCats(firstCat) {
   save();
   renderAll();
 
-  openTutorialTrainingIntro();
+  openRankStoryModal(1, () => {
+    openTutorialQuestFlowExplain();
+  });
 }
 
 function openTutorialTrainingIntro() {
@@ -912,6 +1233,50 @@ function openTutorialTrainingIntro() {
   });
 }
 
+function openTutorialTrainingIntroAfterRankUp() {
+  const html = `
+    <div class="panelCard">
+      <div><b>🏋 訓練もできるようになった</b></div>
+      <div class="dim" style="margin-top:6px; line-height:1.6;">
+        ネコたちは訓練で少しずつ成長します。<br>
+        強くなると、難しい依頼にも挑みやすくなります。<br>
+        ただし <b>訓練中はクエストに出せません</b>。
+      </div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div class="dim">
+        次は、訓練タブも試してみよう。<br>
+        ここからは自由に遊べます。
+      </div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="ghost" id="ttaQuest">クエストへ</button>
+      <button class="primary" id="ttaTraining">訓練へ</button>
+    </div>
+  `;
+
+  openModal("チュートリアル完了", html);
+
+  document.getElementById("ttaQuest")?.addEventListener("click", () => {
+    state.tutorialDone = true;
+    pushLog("チュートリアル完了！");
+    closeModal();
+    switchTab("quest");
+    renderAll();
+    save();
+  });
+
+  document.getElementById("ttaTraining")?.addEventListener("click", () => {
+    state.tutorialDone = true;
+    pushLog("チュートリアル完了！");
+    closeModal();
+    switchTab("training");
+    renderAll();
+    save();
+  });
+}   
 function openTutorialQuestFlowExplain(fromTraining = false) {
   const html = `
     <div class="panelCard">
@@ -1001,7 +1366,7 @@ function openTutorialQuestSetupModal() {
   partyList.innerHTML = idle.map(c => `
     <div class="modalItem" data-cat="${c.id}">
       <b>${escapeHtml(c.name)}</b> Lv${c.level}
-      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} AGI ${c.agi} INT ${c.int}</div>
+      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.agi} INT ${c.int}</div>
     </div>
   `).join("");
 
@@ -1061,7 +1426,7 @@ function startTutorialQuest(partyIds, slotIdx) {
     main: "STR",
     timeType: "S",
     durationMin: 1,
-    baseGold: 2000,
+    baseGold: 2000000000,
     target: 0,
   };
 
@@ -1152,17 +1517,25 @@ function doRankUp() {
 
   pushLog(`🎉 ギルドランク ${state.guildRank} に昇格！`);
 
-  openRankUpPopup(prev, now);
+  const shouldShowTrainingIntro =
+    !state.tutorialDone &&
+    state.tutorialStage >= 4 &&
+    state.guildRank >= 2;
 
-  // Tutorial完了条件：チュートクエ受取済み＆Rank2到達
-  if (!state.tutorialDone && state.tutorialStage >= 4 && state.guildRank >= 2) {
+  if (shouldShowTrainingIntro) {
     state.tutorialStage = 5;
-    state.tutorialDone = true;
-    pushLog("チュートリアル完了！");
   }
 
   renderAll();
   save();
+
+  openRankStoryModal(now.rank, () => {
+    openRankUpPopup(prev, now, () => {
+      if (!state.tutorialDone && state.tutorialStage >= 5 && state.guildRank >= 2) {
+        openTutorialTrainingIntroAfterRankUp();
+      }
+    });
+  });
 }
 
 function pickRankUpRecommend(prev, now) {
@@ -1191,13 +1564,20 @@ function pickRankUpFlavor(rank) {
   const pool = rank >= 10 ? mid.concat(high) : low.concat(mid);
   return pool[Math.floor(Math.random() * pool.length)];
 }
-function openRankUpPopup(prev, now) {
+function openRankUpPopup(prev, now, onDone) {
   const changes = [];
   if (now.mult !== prev.mult) changes.push(`Gold倍率：×${prev.mult.toFixed(1)} → ×${now.mult.toFixed(1)}`);
   if (now.hs !== prev.hs) changes.push(`🐾 雇用枠：${prev.hs} → ${now.hs}`);
   if (now.ts !== prev.ts) changes.push(`🏋 訓練枠：${prev.ts} → ${now.ts}`);
   if (now.maxQL !== prev.maxQL) changes.push(`📜 クエストLv：${prev.maxQL} → ${now.maxQL}`);
   if (!prev.invest && now.invest) changes.push(`📈 投資タブ解禁！`);
+
+  if (now.rank === 6) changes.push(`🦙 アルパカ購入解放！`);
+  if (now.rank === 11) changes.push(`🦙 2頭目のアルパカ購入解放！`);
+  if (now.rank === 10) changes.push(`🐟 さかな組合への出資が解放！`);
+  if (now.rank === 12) changes.push(`🗡 武具商会への出資が解放！`);
+  if (now.rank === 13) changes.push(`🚢 交易船団への出資が解放！`);
+  if (now.rank === 15) changes.push(`🔮 魔導研究所への出資が解放！`);
 
   const flavor = pickRankUpFlavor(now.rank);
   const rec = pickRankUpRecommend(prev, now);
@@ -1215,16 +1595,23 @@ function openRankUpPopup(prev, now) {
       </div>
     </div>
 
-    <div class="modalFooter">
+   　<div class="modalFooter">
       <button class="ghost" id="ruClose">閉じる</button>
       <button class="primary" id="ruGo">${escapeHtml(rec.label)}</button>
     </div>
   `;
+
   openModal("ランクアップ！", html);
-  document.getElementById("ruClose")?.addEventListener("click", closeModal);
+
+  document.getElementById("ruClose")?.addEventListener("click", () => {
+    closeModal();
+    onDone?.();
+  });
+
   document.getElementById("ruGo")?.addEventListener("click", () => {
     closeModal();
     switchTab(rec.tab);
+    onDone?.();
   });
 }
 
@@ -1233,12 +1620,70 @@ function openRankUpPopup(prev, now) {
    ========================= */
 function questTypes() {
   return [
-    { id: "battle", icon: "🗡", name: "戦闘", main: "STR" },
-    { id: "search", icon: "⚡", name: "探索", main: "AGI" },
-    { id: "invest", icon: "🧠", name: "調査", main: "INT" },
+    { id: "battle", icon: "⚔", name: "モンスター退治", main: "STR" },
+    { id: "search", icon: "📦", name: "おつかい運び", main: "SPD" },
+    { id: "invest", icon: "🌿", name: "森の探索", main: "INT" },
   ];
 }
 
+function getQuestDangerLabel(level) {
+  if (level <= 2) return "やさしい";
+  if (level <= 4) return "ふつう";
+  if (level <= 6) return "しっかり準備";
+  if (level <= 8) return "むずかしい";
+  return "かなり危険";
+}
+
+function getQuestFlavor(typeId, level) {
+  const map = {
+    battle: [
+      "近くの原っぱで困りごとがあるらしい。",
+      "街はずれから相談が届いている。",
+      "少し手強そうな気配がする。",
+    ],
+    search: [
+      "荷物を待っている人がいるようだ。",
+      "急ぎの配達らしい。",
+      "今日は少し遠くまで運ぶみたい。",
+    ],
+    invest: [
+      "森の奥で何か見つかるかもしれない。",
+      "静かな森を調べてみよう。",
+      "小さな手がかりを探しにいく。",
+    ],
+  };
+
+  const list = map[typeId] || ["依頼が届いている。"];
+  return list[(level - 1) % list.length];
+}
+
+function makeQuestLevelBadge(level) {
+  let cls = "mid";
+
+  if (level <= 2) cls = "easy";
+  else if (level <= 4) cls = "mid";
+  else if (level <= 7) cls = "hard";
+  else cls = "danger";
+
+  return `<span class="qBadge ${cls}">Lv${level}</span>`;
+}
+function makeSuccessRateLabel(p) {
+  const rate = Math.round(p);
+
+  let cls = "mid";
+  if (rate >= 80) cls = "good";
+  else if (rate >= 60) cls = "mid";
+  else if (rate >= 40) cls = "warn";
+  else cls = "bad";
+
+  return `<span class="qRate ${cls}">${rate}%</span>`;
+}
+function getQuestMainLabel(main) {
+  if (main === "STR") return "STR";
+  if (main === "SPD") return "SPD";
+  if (main === "INT") return "INT";
+  return main;
+}
 function rollQuestOffers() {
   const cap = RANK.maxQuestLevel(state.guildRank); // 1..10
   let minLv = Math.max(1, cap - 2);
@@ -1324,7 +1769,7 @@ function openQuestSetupModal(type) {
   partyList.innerHTML = idle.map(c => `
     <div class="modalItem" data-cat="${c.id}">
       <b>${escapeHtml(c.name)}</b> Lv${c.level}
-      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} AGI ${c.agi} INT ${c.int}</div>
+      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.agi} INT ${c.int}</div>
     </div>
   `).join("");
 
@@ -1409,15 +1854,20 @@ function makeQuestDef(type, level, timeKey) {
 function calcQuestChance(def, partyIds) {
   const party = partyIds.map(catById).filter(Boolean);
   const total = party.reduce((s, c) => s + c.str + c.agi + c.int, 0);
-  const mainSum = party.reduce((s, c) => s + (def.main === "STR" ? c.str : def.main === "AGI" ? c.agi : c.int), 0);
+  const mainSum = party.reduce((s, c) => s + (def.main === "STR" ? c.str : def.main === "SPD" ? c.agi : c.int), 0);
   const ratio = total > 0 ? (mainSum / total) : 0;
 
   const need = def.target;
-  const pBase = 60 + (total - need) * 1.0;
 
+  // 基本成功率：必要戦力との差で上下
+  const pBase = 55 + (total - need) * 1.0;
+
+  // 得意能力がしっかり入っていると少し有利
   const pAttrRaw = (ratio - 1 / 3) * 30;
   const attrBonus = clamp(-5, 10, Math.round(pAttrRaw));
-  const p = clamp(40, 90, Math.round(pBase + attrBonus));
+
+  // 最低10%、最高90%
+  const p = clamp(10, 90, Math.round(pBase + attrBonus));
 
   return { p, attrBonus };
 }
@@ -1468,11 +1918,13 @@ function finishQuestsIfDone() {
     let result = "失敗";
     let gold = 0;
     let expEach = 0;
+    let resultLine = "";
 
     if (isTut) {
       result = "成功";
       gold = job.def.baseGold;
       expEach = 20;
+      resultLine = "はじめてのおしごとを、ちゃんと終わらせてきた。";
     } else {
       const roll = Math.random() * 100;
       if (roll <= job.pSuccess) {
@@ -1480,14 +1932,17 @@ function finishQuestsIfDone() {
       } else {
         result = "失敗";
       }
+
       const effGold = Math.floor(job.def.baseGold * QUEST.resultMult(result) * job.goldMult);
       const effExp = Math.floor(
         job.def.durationMin *
         QUEST.expPerMin(result) *
         (job.def.timeType === "S" ? 1.0 : job.def.timeType === "M" ? 0.96 : 0.92)
       );
+
       gold = effGold;
       expEach = effExp;
+      resultLine = getQuestResultLine(job.def.id.split("_")[0], result);
     }
 
     ensurePending();
@@ -1498,13 +1953,19 @@ function finishQuestsIfDone() {
       level: job.def.level,
       timeType: job.def.timeType,
       result,
+      resultLine,
       gold,
       expEach,
       partyIds: job.partyIds,
       tutorial: isTut,
     });
 
-    pushLog(`クエスト完了：${job.def.name}${isTut ? "" : ` Lv${job.def.level}${job.def.timeType}`} → ${result}（受取待ち）`);
+    pushLog(
+      `クエスト完了：${job.def.name}${isTut ? "" : ` Lv${job.def.level}${job.def.timeType}`} → ${result}` +
+      (resultLine ? `「${resultLine}」` : "") +
+      `（受取待ち）`
+    );
+
     state.questJobs[i] = null;
   }
 }
@@ -1579,7 +2040,7 @@ function openTrainingStartModal(slotNo) {
   tCats.innerHTML = idle.map(c => `
     <div class="modalItem" data-cat="${c.id}">
       <b>${escapeHtml(c.name)}</b> Lv${c.level}
-      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} AGI ${c.agi} INT ${c.int}</div>
+      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.agi} INT ${c.int}</div>
     </div>
   `).join("");
 
@@ -1747,7 +2208,7 @@ function openScoutModal(fromPaidScout) {
                     </div>
                     <div style="flex:1;min-width:0;">
                       <div><b>${escapeHtml(c.name)}</b> <span class="dim">Lv${c.level}</span></div>
-                      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} AGI ${c.agi} INT ${c.int}</div>
+                      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.agi} INT ${c.int}</div>
                     </div>
                     <button class="primary smallBtn" data-hire="${c.id}" ${canHireMore ? "" : "disabled"}
                       style="${canHireMore ? "" : "opacity:.6;"}">雇用</button>
@@ -1889,40 +2350,117 @@ function openFireCatModal(catId) {
 /* =========================
    Pending / Collect
    ========================= */
+function openQuestResultModal(result, onNext) {
+  const html = `
+    <div class="panelCard">
+      <div style="font-size:18px;font-weight:900;">🐾 クエスト報告</div>
+      <div class="dim" style="margin-top:6px;">
+        ${escapeHtml(result.questName)}${result.tutorial ? "" : ` Lv${result.level}${result.timeType}`}
+      </div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div style="font-size:16px;font-weight:900;">${escapeHtml(result.result)}</div>
+      <div class="dim" style="margin-top:8px;">
+        ${escapeHtml(result.resultLine || "")}
+      </div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div class="dim">Gold：+${result.gold.toLocaleString()}G</div>
+      <div class="dim">EXP：+${result.expEach}</div>
+      <div class="dim">対象ネコ：${result.partyIds.length}匹</div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="primary" id="questResultNext">OK</button>
+    </div>
+  `;
+
+  openModal("クエスト結果", html);
+
+  document.getElementById("questResultNext")?.addEventListener("click", () => {
+    closeModal();
+    onNext?.();
+  });
+}
+
+function showQuestResultsSequentially(results, onDone) {
+  if (!results || results.length === 0) {
+    onDone?.();
+    return;
+  }
+
+  let index = 0;
+
+  function next() {
+    if (index >= results.length) {
+      onDone?.();
+      return;
+    }
+    openQuestResultModal(results[index], () => {
+      index++;
+      next();
+    });
+  }
+
+  next();
+}
 function collectAll() {
   ensurePending();
   const list = state.pendingResults;
   if (list.length === 0) return;
 
-  for (const r of list) {
-    if (r.type === "quest") {
+  const questResults = list.filter(r => r.type === "quest");
+  const otherResults = list.filter(r => r.type !== "quest");
+
+  function applyAllResults() {
+    // クエスト結果を反映
+    for (const r of questResults) {
       state.gold += r.gold;
+
       for (const id of r.partyIds) {
         const c = catById(id);
         if (c) addExp(c, r.expEach);
       }
-      pushLog(`受取：${r.questName}${r.tutorial ? "" : ` Lv${r.level}${r.timeType}`} ${r.result} / +${r.gold.toLocaleString()}G / EXP+${r.expEach}×${r.partyIds.length}`);
+
+      pushLog(
+        `受取：${r.questName}${r.tutorial ? "" : ` Lv${r.level}${r.timeType}`} ${r.result}` +
+        (r.resultLine ? `「${r.resultLine}」` : "") +
+        ` / +${r.gold.toLocaleString()}G / EXP+${r.expEach}×${r.partyIds.length}`
+      );
 
       if (!state.tutorialDone && r.tutorial) {
         state.tutorialStage = Math.max(state.tutorialStage, 4);
       }
     }
-    if (r.type === "training") {
-      const c = catById(r.catId);
-      if (c) addExp(c, r.exp);
-      pushLog(`受取：訓練 枠${r.slotNo} / EXP+${r.exp}`);
+
+    // 訓練・配当を反映
+    for (const r of otherResults) {
+      if (r.type === "training") {
+        const c = catById(r.catId);
+        if (c) addExp(c, r.exp);
+        pushLog(`受取：訓練 枠${r.slotNo} / EXP+${r.exp}`);
+      }
+
+      if (r.type === "dividend") {
+        state.gold += r.gold;
+        pushLog(`配当受取：+${r.gold.toLocaleString()}G（${escapeHtml(r.summary)}）`);
+      }
     }
-    if (r.type === "dividend") {
-      state.gold += r.gold;
-      pushLog(`配当受取：+${r.gold.toLocaleString()}G（${escapeHtml(r.summary)}）`);
-    }
+
+    state.pendingResults = [];
+    renderAll();
+    save();
+
+    maybeShowTutorialRankUpPrompt();
   }
 
-  state.pendingResults = [];
-  renderAll();
-  save();
-
-  maybeShowTutorialRankUpPrompt();
+  if (questResults.length > 0) {
+    showQuestResultsSequentially(questResults, applyAllResults);
+  } else {
+    applyAllResults();
+  }
 }
 
 function maybeShowTutorialRankUpPrompt() {
@@ -1992,12 +2530,12 @@ function dividendFlavor(breakdown) {
   if (up >= 0.30 && best.key === "magic") return "🔮 新魔法の特許が成立！研究成果が爆発！";
   if (up >= 0.15 && best.key === "trade") return "🚢 交易路が大当たり！商人たちが賑わっている。";
   if (up >= 0.08 && best.key === "arms") return "🗡 武具の需要が堅調だ。戦の気配か？";
-  if (up >= 0.03 && best.key === "insure") return "🛡 堅実な運営が実を結んでいる。";
+  if (up >= 0.03 && best.key === "insure") return "🐟 大漁だ！さかな組合が賑わっている。";
 
   if (down >= 0.30 && worst.key === "magic") return "🔮 実験は難航しているようだ…";
   if (down >= 0.15 && worst.key === "trade") return "🚢 風向きが悪い日もある。";
   if (down >= 0.08 && worst.key === "arms") return "🗡 鍛冶場は静かだが、安定している。";
-  if (down >= 0.03 && worst.key === "insure") return "🛡 今日も静かな黒字だ。";
+  if (down >= 0.03 && worst.key === "insure") return "🐟 今日は漁獲が少なかったようだ。";
 
   return "街の経済は穏やかに動いている。";
 }
@@ -2165,6 +2703,7 @@ function renderAll() {
   ensureHire();
   ensureTutorial();
   ensureInvest();
+  ensureAlpaca();
   ensureQuestOffers();
 
   renderGuildTitle();
@@ -2188,7 +2727,7 @@ function renderHeaderBadges() {
   const mult = RANK.goldMult(rank);
   const hs = RANK.hireSlots(rank);
   const ts = RANK.trainingSlots(rank);
-  const ds = RANK.dispatchSlots(rank);
+  const ds = getDispatchSlots();
 
   const usedDispatch = (state.questJobs || []).filter(Boolean).length;
   const usedTraining = (state.trainingJobs || []).filter(Boolean).length;
@@ -2262,34 +2801,76 @@ function switchTab(tab) {
 
 function renderQuestTab() {
   ensureQuestOffers();
+  ensureAlpaca();
   if (!state.questOffers) rollQuestOffers();
+
   const types = questTypes();
-  const ds = RANK.dispatchSlots(state.guildRank);
+  const ds = getDispatchSlots();
   const used = (state.questJobs || []).filter(Boolean).length;
   const maxLv = RANK.maxQuestLevel(state.guildRank);
+  const alpacaOffer = getAvailableAlpacaPurchase();
 
   el.tabQuest.innerHTML = `
     <div class="panelCard">
       <div class="row">
         <div>
           <div><b>クエスト</b> <span class="dim">(Lv1〜${maxLv} 解放中)</span></div>
-          <div class="dim">S/M/Lで時間選択（Sが最効率）。訓練と両立不可 / キャンセル不可</div>
+          <div class="dim">S/M/Lで時間選択</div>
+          <div class="dim">派遣枠 ${used}/${ds}</div>
         </div>
         <div class="mono">派遣枠 ${used}/${ds}</div>
       </div>
     </div>
 
-    ${types.map(t => `
-      <div class="panelCard">
-        <div class="row">
-          <div>
-            <div><b>${t.icon} ${t.name}</b></div>
-            <div class="dim">属性：${t.main} / 今日の提示：<b>Lv${state.questOffers[t.id]}</b>（受注ごと再抽選）</div>
+    ${
+      alpacaOffer ? `
+        <div class="panelCard">
+          <div class="row">
+            <div>
+              <div><b>🦙 ${escapeHtml(alpacaOffer.label)}</b></div>
+              <div class="dim">${escapeHtml(alpacaOffer.desc)} / 費用 ${alpacaOffer.cost.toLocaleString()}G</div>
+            </div>
+            <button class="primary smallBtn" id="btnBuyAlpaca"
+              ${state.gold >= alpacaOffer.cost ? "" : "disabled"}
+              style="${state.gold >= alpacaOffer.cost ? "" : "opacity:.6;"}">
+              迎える
+            </button>
           </div>
-          <button class="primary smallBtn" data-qtype="${t.id}">受注</button>
         </div>
+      ` : ""
+    }
+
+        ${types.map(t => {
+          const lv = state.questOffers[t.id];
+          const danger = getQuestDangerLabel(lv);
+          const flavor = getQuestFlavor(t.id, lv);
+
+          const previewPartyIds = state.cats.slice(0, 3).map(c => c.id);
+          const previewDef = makeQuestDef(t, lv, "S");
+          const preview = previewPartyIds.length > 0
+            ? calcQuestChance(previewDef, previewPartyIds)
+            : { p: 0, attrBonus: 0 };
+
+          return `
+    <div class="panelCard">
+      <div class="row">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <b>${t.icon} ${t.name}</b>
+            ${makeQuestLevelBadge(lv)}
+            ${makeSuccessRateLabel(preview.p)}
+          </div>
+
+          <div class="dim" style="margin-top:6px;">${danger}</div>
+          <div class="dim" style="margin-top:4px;">${flavor}</div>
+          <div class="dim" style="margin-top:4px;">属性：${t.main}</div>
+        </div>
+
+        <button class="primary smallBtn" data-qtype="${t.id}">受注</button>
       </div>
-    `).join("")}
+    </div>
+  `;
+}).join("")}
 
     ${renderQuestRunning()}
   `;
@@ -2299,6 +2880,10 @@ function renderQuestTab() {
       const t = types.find(x => x.id === btn.dataset.qtype);
       if (t) openQuestSetupModal(t);
     });
+  });
+
+  document.getElementById("btnBuyAlpaca")?.addEventListener("click", () => {
+    if (alpacaOffer) buyAlpaca(alpacaOffer.stage);
   });
 }
 
@@ -2369,7 +2954,7 @@ function renderCatsTab() {
             <div><span class="statusDot ${dotClass}"></span>${statusText}</div>
           </div>
           <div class="dim">${escapeHtml(c.personality)}</div>
-          <div class="mono catStats">STR ${c.str} / AGI ${c.agi} / INT ${c.int}</div>
+          <div class="mono catStats">STR ${c.str} / SPD ${c.agi} / INT ${c.int}</div>
 
           <div class="row" style="margin-top:8px;">
             <div class="dim">EXP ${c.exp}/${LEVEL.expToNext(c.level)}</div>
