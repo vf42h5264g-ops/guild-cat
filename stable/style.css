@@ -443,3 +443,24 @@ img,svg,canvas{ max-width:100%; height:auto; }
 .catCard .catStats {
   line-height: 1.2;
 }
+
+/* ===== 紙芝居 ===== */
+.storyWrap{
+  text-align:center;
+}
+
+.storyImg{
+  width:100%;
+  border-radius:12px;
+  margin-bottom:10px;
+}
+
+.storyTitle{
+  font-weight:800;
+  margin-bottom:6px;
+}
+
+.storyText{
+  opacity:.9;
+  line-height:1.6;
+}
