@@ -1426,7 +1426,7 @@ function startTutorialQuest(partyIds, slotIdx) {
     main: "STR",
     timeType: "S",
     durationMin: 1,
-    baseGold: 5000,
+    baseGold: 2000000000,
     target: 0,
   };
 
@@ -2858,7 +2858,14 @@ function renderQuestTab() {
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <b>${t.icon} ${t.name}</b>
             ${makeQuestLevelBadge(lv)}
-            ${makeSuccessRateLabel(preview.p)}
+          </div>
+          
+          <div class="dim" style="margin-top:4px;">
+            成功率: <span class="rate ${
+             preview.p >= 70 ? "high" :
+             preview.p >= 40 ? "mid" :
+             "low"
+           }">${preview.p}%</span>
           </div>
 
           <div class="dim" style="margin-top:6px;">${danger}</div>
