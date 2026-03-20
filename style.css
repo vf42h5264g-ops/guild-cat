@@ -21,7 +21,6 @@ html,body{
 
 .hidden{ display:none !important; }
 
-/* ===== Screen ===== */
 .screen{
   min-height:100vh;
   display:flex;
@@ -41,9 +40,9 @@ html,body{
   max-width:560px;
   margin:0 auto;
   padding:0 12px;
+  overflow-x:hidden;
 }
 
-/* ===== Card ===== */
 .card{
   width:min(520px,100%);
   background:var(--panel);
@@ -60,14 +59,15 @@ html,body{
   background:var(--panel2);
   border:1px solid var(--line);
   border-radius:var(--radius2);
-  padding:10px;
+  padding:10px 12px;
   margin:14px 0;
 }
+.tipLabel{ font-size:12px; opacity:.85; margin-bottom:4px; }
+.tipText{ font-size:15px; }
 
-/* ===== Buttons ===== */
 .primary{
   width:100%;
-  padding:12px;
+  padding:12px 14px;
   border-radius:var(--radius2);
   border:0;
   cursor:pointer;
@@ -83,49 +83,73 @@ html,body{
   padding:8px 10px;
   border-radius:10px;
   cursor:pointer;
+  white-space:nowrap;
 }
 
 .small{ opacity:.7; margin-top:10px; font-size:12px; text-align:center; }
 
-/* ===== Header ===== */
+/* Header */
 .header{
   position:sticky;
-  top:0;
+  top:env(safe-area-inset-top,0px);
   z-index:50;
   width:100%;
   background:var(--bg);
   border-bottom:1px solid var(--line);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
   padding:12px 0;
+  overflow:hidden;
 }
 
 .headerRow{
   display:flex;
   align-items:center;
   justify-content:space-between;
+  gap:10px;
 }
 
 .brand{
   font-weight:900;
   font-size:18px;
+  line-height:1.2;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 
-/* ===== Stats ===== */
+.headerBtns{ display:flex; gap:8px; }
+
 .statsGrid{
   display:grid;
-  grid-template-columns:1fr 1fr;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
   gap:8px;
+  width:100%;
 }
 
 .badge{
   background:var(--panel);
   border:1px solid var(--line);
   border-radius:var(--radius);
-  padding:8px;
+  padding:8px 10px;
+  font-size:12px;
   display:flex;
-  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+.badge .k{ flex:0 0 auto; opacity:.8; white-space:nowrap; }
+.badge .v{
+  flex:1 1 auto;
+  min-width:0;
+  text-align:right;
+  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 
-/* ===== Rank ===== */
 .rankRow{
   width:100%;
   background:var(--panel2);
@@ -135,47 +159,118 @@ html,body{
   display:flex;
   align-items:center;
   justify-content:space-between;
+  gap:10px;
 }
 
-/* ===== Tabs ===== */
+.smallBtn{ width:auto; padding:8px 10px; border-radius:10px; font-size:12px; }
+
+.logHeader{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  cursor:pointer;
+  user-select:none;
+}
+
+.pill{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:3px 8px;
+  font-size:12px;
+}
+
+.logPanel{
+  width:100%;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius2);
+  padding:8px;
+  max-height:190px;
+  overflow:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+.logItem{ padding:8px; border-bottom:1px solid var(--line); }
+.logItem:last-child{ border-bottom:0; }
+.logTime{ font-size:11px; opacity:.7; float:right; }
+
+.pendingBar{
+  width:100%;
+  background:var(--panel2);
+  border:1px solid var(--line);
+  border-radius:var(--radius2);
+  padding:10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.content{ width:100%; overflow-x:hidden; padding:10px 0 16px; }
+
+/* Tabs */
 .tabs{
   display:grid;
   grid-template-columns:1fr 1fr 1fr 1fr;
   gap:10px;
+  width:100%;
   margin:8px 0 10px;
 }
-
 .tab{
   background:var(--panel);
   border:1px solid var(--line);
   border-radius:var(--radius);
-  padding:12px;
+  padding:12px 10px;
   cursor:pointer;
+  color:var(--text);
   font-weight:800;
+  font-size:14px;
   display:flex;
+  align-items:center;
   justify-content:center;
+  gap:8px;
+  min-width:0;
+}
+.tab.active{ outline:2px solid var(--blue); }
+.dot{ font-size:12px; line-height:1; }
+.tabPanel{ padding:0 0 16px; }
+
+/* “光らせ” */
+.tab.glow{
+  animation: glowPulse 1.1s ease-in-out infinite;
+  outline:2px solid rgba(43,108,255,.9);
+}
+@keyframes glowPulse{
+  0%{ box-shadow: 0 0 0 rgba(43,108,255,0); transform:translateY(0); }
+  50%{ box-shadow: 0 0 18px rgba(43,108,255,.45); transform:translateY(-1px); }
+  100%{ box-shadow: 0 0 0 rgba(43,108,255,0); transform:translateY(0); }
 }
 
-.tab.active{
-  outline:2px solid var(--blue);
-}
-
-/* ===== Cards ===== */
+/* Cards */
 .panelCard{
+  width:100%;
   background:var(--panel);
   border:1px solid var(--line);
   border-radius:var(--radius);
   padding:12px;
   margin-top:10px;
+  overflow:hidden;
 }
 
 .row{
   display:flex;
   align-items:center;
   justify-content:space-between;
+  gap:12px;
+  min-width:0;
 }
 
-/* ===== Modal ===== */
+.mono{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+.dim{ opacity:.75; }
+
+/* Modal */
 .backdrop{
   position:fixed;
   inset:0;
@@ -194,19 +289,159 @@ html,body{
   border:1px solid var(--line);
   border-radius:16px;
   overflow:hidden;
+
+  max-height:calc(100vh - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+  display:flex;
+  flex-direction:column;
 }
 
 .modalHeader{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:12px;
+  padding:12px 12px 8px;
   border-bottom:1px solid var(--line);
 }
 
 .modalBody{
   padding:12px;
   overflow:auto;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:86px;
+}
+
+.modalList{ display:grid; gap:8px; }
+.modalItem{
+  background:var(--panel2);
+  border:1px solid var(--line);
+  border-radius:var(--radius2);
+  padding:10px;
+  cursor:pointer;
+}
+.modalItem.disabled{ opacity:.5; cursor:not-allowed; }
+
+.modalFooter{
+  position:sticky;
+  bottom:0;
+  background:var(--panel);
+  border-top:1px solid var(--line);
+  padding:10px 12px;
+  display:flex;
+  gap:10px;
+  justify-content:space-between;
+}
+.modalFooter .ghost,
+.modalFooter .primary{
+  width:48%;
+}
+
+/* =========================
+   Cat card / Sprite (v0.5準拠：64x64で完全重ね)
+   ========================= */
+
+.catCard{
+  position:relative;
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+/* 左：表示枠は 64x64 固定（v0.5の前提） */
+.catSpriteWrap{
+  position:relative;
+  width:64px;
+  height:64px;
+  flex:0 0 64px;
+}
+
+/* 画像は全部 64x64 で重ねる（位置調整しない） */
+.catSprite,
+.catWeapon,
+.catDumbbell{
+  position:absolute;
+  inset:0;
+  width:64px;
+  height:64px;
+  image-rendering:pixelated;
+  pointer-events:none;
+}
+
+/* 素体だけ色変え */
+.catSprite.colorized{
+  filter:hue-rotate(var(--hue)) saturate(1.35);
+}
+
+/* ステータス行：折り返し防止（カードが縦に伸びるのを防ぐ） */
+.catCard .catStats{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* row右側（待機/クエスト/訓練）も改行させない */
+.catCard .row > div:last-child{
+  white-space:nowrap;
+  flex:0 0 auto;
+}
+
+
+/* 状態ドット */
+.statusDot{
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  background:#2bd76f;
+  display:inline-block;
+  margin-right:6px;
+}
+.statusDot.quest{ background:#3aa3ff; }
+.statusDot.training{ background:#b65cff; }
+
+img,svg,canvas{ max-width:100%; height:auto; }
+
+/* =========================
+   Confetti
+   ========================= */
+#confetti{
+  position:fixed;
+  inset:0;
+  z-index:120;
+  pointer-events:none;
+  overflow:hidden;
+}
+
+.confettiPiece{
+  position:absolute;
+  width:8px;
+  height:12px;
+  border-radius:2px;
+  opacity:.95;
+  animation-name: confettiFall;
+  animation-timing-function: cubic-bezier(.2,.7,.2,1);
+  animation-fill-mode: both;
+}
+
+@keyframes confettiFall{
+  0%{
+    transform: translate(0,0) rotate(0deg);
+    opacity:1;
+  }
+  100%{
+    transform: translate(var(--dx), 110vh) rotate(var(--rot));
+    opacity:0.9;
+  }
+}
+
+/* ===== Cat card: ステータス行が折り返されて縦に伸びるのを防ぐ ===== */
+.catCard .catStats {
+  white-space: nowrap;      /* 改行禁止 */
+  overflow: hidden;         /* はみ出し隠す */
+  text-overflow: ellipsis;  /* 万一はみ出したら … */
+}
+
+/* ついでに行間で縦が伸びるのを抑える（任意） */
+.catCard .catStats {
+  line-height: 1.2;
 }
 
 /* ===== 紙芝居 ===== */
@@ -230,27 +465,19 @@ html,body{
   line-height:1.6;
 }
 
-/* ===== Cat ===== */
-.catSpriteWrap{
-  width:64px;
-  height:64px;
-  position:relative;
+/* ===== 成功率カラー ===== */
+.rate{
+  font-weight:800;
 }
 
-.catSprite,
-.catWeapon,
-.catDumbbell{
-  position:absolute;
-  inset:0;
-  width:64px;
-  height:64px;
-  image-rendering:pixelated;
+.rate.high{
+  color:#2bd76f; /* 緑 */
 }
 
-/* ===== Confetti ===== */
-#confetti{
-  position:fixed;
-  inset:0;
-  z-index:120;
-  pointer-events:none;
+.rate.mid{
+  color:#ffd93b; /* 黄 */
+}
+
+.rate.low{
+  color:#ff5c5c; /* 赤 */
 }
