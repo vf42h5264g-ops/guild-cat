@@ -1180,7 +1180,7 @@ function finishTutorialCats(firstCat) {
   save();
   renderAll();
 
-　openRankStoryModal(1, () => {
+  openRankStoryModal(1, () => {
     openTutorialQuestFlowExplain();
   });
 }
