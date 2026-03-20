@@ -2830,27 +2830,38 @@ function renderQuestTab() {
     }
 
         ${types.map(t => {
-      const lv = state.questOffers[t.id];
-      const danger = getQuestDangerLabel(lv);
-      const flavor = getQuestFlavor(t.id, lv);
+  const lv = state.questOffers[t.id];
+  const danger = getQuestDangerLabel(lv);
+  const flavor = getQuestFlavor(t.id, lv);
 
-      return `
-        <div class="panelCard">
-          <div class="row">
-            <div>
-              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                <b>${t.icon} ${t.name}</b>
-                ${makeQuestLevelBadge(lv)}
-              </div>
-              <div class="dim" style="margin-top:6px;">${danger}</div>
-              <div class="dim" style="margin-top:4px;">${flavor}</div>
-              <div class="dim" style="margin-top:4px;">属性：${getQuestMainLabel(t.main)}（受注ごと再抽選）</div>
-            </div>
-            <button class="primary smallBtn" data-qtype="${t.id}">受注</button>
+  // ★ 成功率計算
+  const preview = QUEST.calcSuccess({
+    cats: state.cats,
+    partyIds: state.cats.slice(0, 3).map(c => c.id), // 仮：上位3匹
+    main: t.main,
+    level: lv
+  });
+
+  return `
+    <div class="panelCard">
+      <div class="row">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <b>${t.icon} ${t.name}</b>
+            ${makeQuestLevelBadge(lv)}
+            ${makeSuccessRateLabel(preview.p)}
           </div>
+
+          <div class="dim" style="margin-top:6px;">${danger}</div>
+          <div class="dim" style="margin-top:4px;">${flavor}</div>
+          <div class="dim" style="margin-top:4px;">属性：${t.main}</div>
         </div>
-      `;
-    }).join("")}
+
+        <button class="primary smallBtn" data-qtype="${t.id}">受注</button>
+      </div>
+    </div>
+  `;
+}).join("")}
 
     ${renderQuestRunning()}
   `;
