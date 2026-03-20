@@ -1647,7 +1647,14 @@ function getQuestFlavor(typeId, level) {
 }
 
 function makeQuestLevelBadge(level) {
-  return `<span class="pill">Lv${level}</span>`;
+  let cls = "mid";
+
+  if (level <= 2) cls = "easy";
+  else if (level <= 4) cls = "mid";
+  else if (level <= 7) cls = "hard";
+  else cls = "danger";
+
+  return `<span class="qBadge ${cls}">Lv${level}</span>`;
 }
 function getQuestMainLabel(main) {
   if (main === "STR") return "STR";
