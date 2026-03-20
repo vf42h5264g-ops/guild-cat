@@ -52,7 +52,7 @@ html,body{
   padding:18px;
 }
 
-.title{ font-size:30px; margin:0 0 6px; }
+.title{ margin:0 0 6px; font-size:30px; }
 .subtitle{ margin:0 0 14px; opacity:.9; }
 .bodyText{ opacity:.9; line-height:1.6; margin:12px 0 16px; }
 
@@ -72,7 +72,7 @@ html,body{
   border:0;
   cursor:pointer;
   background:var(--blue);
-  color:#fff;
+  color:white;
   font-weight:800;
 }
 
@@ -85,11 +85,14 @@ html,body{
   cursor:pointer;
 }
 
+.small{ opacity:.7; margin-top:10px; font-size:12px; text-align:center; }
+
 /* ===== Header ===== */
 .header{
   position:sticky;
   top:0;
   z-index:50;
+  width:100%;
   background:var(--bg);
   border-bottom:1px solid var(--line);
   padding:12px 0;
@@ -97,8 +100,8 @@ html,body{
 
 .headerRow{
   display:flex;
-  justify-content:space-between;
   align-items:center;
+  justify-content:space-between;
 }
 
 .brand{
@@ -124,11 +127,13 @@ html,body{
 
 /* ===== Rank ===== */
 .rankRow{
+  width:100%;
   background:var(--panel2);
   border:1px solid var(--line);
   border-radius:var(--radius2);
   padding:10px;
   display:flex;
+  align-items:center;
   justify-content:space-between;
 }
 
@@ -136,17 +141,19 @@ html,body{
 .tabs{
   display:grid;
   grid-template-columns:1fr 1fr 1fr 1fr;
-  gap:8px;
+  gap:10px;
+  margin:8px 0 10px;
 }
 
 .tab{
   background:var(--panel);
   border:1px solid var(--line);
   border-radius:var(--radius);
-  padding:10px;
-  text-align:center;
-  font-weight:800;
+  padding:12px;
   cursor:pointer;
+  font-weight:800;
+  display:flex;
+  justify-content:center;
 }
 
 .tab.active{
@@ -164,35 +171,36 @@ html,body{
 
 .row{
   display:flex;
-  justify-content:space-between;
   align-items:center;
+  justify-content:space-between;
 }
 
 /* ===== Modal ===== */
 .backdrop{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.6);
+  background:rgba(0,0,0,.55);
   z-index:90;
 }
 
 .modal{
   position:fixed;
+  z-index:100;
   left:50%;
   top:50%;
   transform:translate(-50%,-50%);
   width:min(520px,calc(100% - 24px));
   background:var(--panel);
+  border:1px solid var(--line);
   border-radius:16px;
-  z-index:100;
   overflow:hidden;
-  animation:fadeIn .25s ease;
 }
 
 .modalHeader{
   display:flex;
+  align-items:center;
   justify-content:space-between;
-  padding:10px;
+  padding:12px;
   border-bottom:1px solid var(--line);
 }
 
@@ -201,7 +209,7 @@ html,body{
   overflow:auto;
 }
 
-/* ===== Paper Story (紙芝居) ===== */
+/* ===== 紙芝居 ===== */
 .storyWrap{
   text-align:center;
 }
@@ -222,20 +230,6 @@ html,body{
   line-height:1.6;
 }
 
-/* ===== Animation ===== */
-@keyframes fadeIn{
-  from{ opacity:0; transform:translate(-50%,-48%); }
-  to{ opacity:1; transform:translate(-50%,-50%); }
-}
-
-/* ===== Confetti ===== */
-#confetti{
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  z-index:120;
-}
-
 /* ===== Cat ===== */
 .catSpriteWrap{
   width:64px;
@@ -247,7 +241,16 @@ html,body{
 .catWeapon,
 .catDumbbell{
   position:absolute;
+  inset:0;
   width:64px;
   height:64px;
   image-rendering:pixelated;
+}
+
+/* ===== Confetti ===== */
+#confetti{
+  position:fixed;
+  inset:0;
+  z-index:120;
+  pointer-events:none;
 }
