@@ -376,8 +376,14 @@ let jimFlip = false;
    Modal
    ========================= */
 function openModal(title, html) {
-  el.modalTitle.textContent = title;
+  el.modalTitle.textContent = title || "";
   el.modalBody.innerHTML = html;
+
+  const header = el.modal.querySelector(".modalHeader");
+  if (header) {
+    header.style.display = title ? "flex" : "none";
+  }
+
   el.modalBackdrop.classList.remove("hidden");
   el.modal.classList.remove("hidden");
 }
@@ -416,7 +422,7 @@ function openRankStoryModal(rank, onDone) {
     </div>
   `;
 
-  openModal("紙芝居", html);
+  openModal("", html);
 
   const cover = document.getElementById("storyPaperCover");
   const nextBtn = document.getElementById("storyNextBtn");
