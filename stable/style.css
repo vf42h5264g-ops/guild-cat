@@ -1,602 +1,114 @@
-:root{
-  --bg:#0f1115;
-  --panel:#151a22;
-  --panel2:#10141b;
-  --line:#232a36;
-  --text:#e9ecf1;
-  --blue:#2b6cff;
-  --radius:14px;
-  --radius2:12px;
-}
-
-*{ box-sizing:border-box; }
-
-html,body{
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  overflow-x:hidden;
-  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-}
-
-.hidden{ display:none !important; }
-
-.screen{
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:16px;
-}
-
-.mainScreen{
-  align-items:flex-start;
-  justify-content:flex-start;
-  padding-top:0;
-}
-
-.container{
-  width:100%;
-  max-width:560px;
-  margin:0 auto;
-  padding:0 12px;
-  overflow-x:hidden;
-}
-
-.card{
-  width:min(520px,100%);
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:18px;
-}
-
-.title{ margin:0 0 6px; font-size:30px; }
-.subtitle{ margin:0 0 14px; opacity:.9; }
-.bodyText{ opacity:.9; line-height:1.6; margin:12px 0 16px; }
-
-.tip{
-  background:var(--panel2);
-  border:1px solid var(--line);
-  border-radius:var(--radius2);
-  padding:10px 12px;
-  margin:14px 0;
-}
-.tipLabel{ font-size:12px; opacity:.85; margin-bottom:4px; }
-.tipText{ font-size:15px; }
-
-.primary{
-  width:100%;
-  padding:12px 14px;
-  border-radius:var(--radius2);
-  border:0;
-  cursor:pointer;
-  background:var(--blue);
-  color:white;
-  font-weight:800;
-}
-
-.ghost{
-  border:1px solid #2a3342;
-  background:transparent;
-  color:var(--text);
-  padding:8px 10px;
-  border-radius:10px;
-  cursor:pointer;
-  white-space:nowrap;
-}
-
-.small{ opacity:.7; margin-top:10px; font-size:12px; text-align:center; }
-
-/* Header */
-.header{
-  position:sticky;
-  top:env(safe-area-inset-top,0px);
-  z-index:50;
-  width:100%;
-  background:var(--bg);
-  border-bottom:1px solid var(--line);
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  padding:12px 0;
-  overflow:hidden;
-}
-
-.headerRow{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-}
-
-.brand{
-  font-weight:900;
-  font-size:18px;
-  line-height:1.2;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-.headerBtns{ display:flex; gap:8px; }
-
-.statsGrid{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-  gap:8px;
-  width:100%;
-}
-
-.badge{
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  padding:8px 10px;
-  font-size:12px;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  min-width:0;
-}
-.badge .k{ flex:0 0 auto; opacity:.8; white-space:nowrap; }
-.badge .v{
-  flex:1 1 auto;
-  min-width:0;
-  text-align:right;
-  font-weight:800;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-.rankRow{
-  width:100%;
-  background:var(--panel2);
-  border:1px solid var(--line);
-  border-radius:var(--radius2);
-  padding:10px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-}
-
-.smallBtn{ width:auto; padding:8px 10px; border-radius:10px; font-size:12px; }
-
-.logHeader{
-  width:100%;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  cursor:pointer;
-  user-select:none;
-}
-
-.pill{
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:999px;
-  padding:3px 8px;
-  font-size:12px;
-}
-
-.logPanel{
-  width:100%;
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:var(--radius2);
-  padding:8px;
-  max-height:190px;
-  overflow:auto;
-  -webkit-overflow-scrolling:touch;
-}
-
-.logItem{ padding:8px; border-bottom:1px solid var(--line); }
-.logItem:last-child{ border-bottom:0; }
-.logTime{ font-size:11px; opacity:.7; float:right; }
-
-.pendingBar{
-  width:100%;
-  background:var(--panel2);
-  border:1px solid var(--line);
-  border-radius:var(--radius2);
-  padding:10px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-}
-
-.content{ width:100%; overflow-x:hidden; padding:10px 0 16px; }
-
-/* Tabs */
-.tabs{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr 1fr;
-  gap:10px;
-  width:100%;
-  margin:8px 0 10px;
-}
-.tab{
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  padding:12px 10px;
-  cursor:pointer;
-  color:var(--text);
-  font-weight:800;
-  font-size:14px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  min-width:0;
-}
-.tab.active{ outline:2px solid var(--blue); }
-.dot{ font-size:12px; line-height:1; }
-.tabPanel{ padding:0 0 16px; }
-
-/* “光らせ” */
-.tab.glow{
-  animation: glowPulse 1.1s ease-in-out infinite;
-  outline:2px solid rgba(43,108,255,.9);
-}
-@keyframes glowPulse{
-  0%{ box-shadow: 0 0 0 rgba(43,108,255,0); transform:translateY(0); }
-  50%{ box-shadow: 0 0 18px rgba(43,108,255,.45); transform:translateY(-1px); }
-  100%{ box-shadow: 0 0 0 rgba(43,108,255,0); transform:translateY(0); }
-}
-
-/* Cards */
-.panelCard{
-  width:100%;
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  padding:12px;
-  margin-top:10px;
-  overflow:hidden;
-}
-
-.row{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  min-width:0;
-}
-
-.mono{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
-.dim{ opacity:.75; }
-
-/* Modal */
-.backdrop{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.55);
-  z-index:90;
-}
-
-.modal{
-  position:fixed;
-  z-index:100;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
-  width:min(520px,calc(100% - 24px));
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:16px;
-  overflow:hidden;
-
-  max-height:calc(100vh - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
-  display:flex;
-  flex-direction:column;
-}
-
-.modalHeader{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:12px 12px 8px;
-  border-bottom:1px solid var(--line);
-}
-
-.modalBody{
-  padding:12px;
-  overflow:auto;
-  -webkit-overflow-scrolling:touch;
-  padding-bottom:86px;
-}
-
-.modalList{ display:grid; gap:8px; }
-.modalItem{
-  background:var(--panel2);
-  border:1px solid var(--line);
-  border-radius:var(--radius2);
-  padding:10px;
-  cursor:pointer;
-}
-.modalItem.disabled{ opacity:.5; cursor:not-allowed; }
-
-.modalFooter{
-  position:sticky;
-  bottom:0;
-  background:var(--panel);
-  border-top:1px solid var(--line);
-  padding:10px 12px;
-  display:flex;
-  gap:10px;
-  justify-content:space-between;
-}
-.modalFooter .ghost,
-.modalFooter .primary{
-  width:48%;
-}
-
-/* =========================
-   Cat card / Sprite (v0.5準拠：64x64で完全重ね)
-   ========================= */
-
-.catCard{
-  position:relative;
-  display:flex;
-  gap:12px;
-  align-items:center;
-}
-
-/* 左：表示枠は 64x64 固定（v0.5の前提） */
-.catSpriteWrap{
-  position:relative;
-  width:64px;
-  height:64px;
-  flex:0 0 64px;
-}
-
-/* 画像は全部 64x64 で重ねる（位置調整しない） */
-.catSprite,
-.catWeapon,
-.catDumbbell{
-  position:absolute;
-  inset:0;
-  width:64px;
-  height:64px;
-  image-rendering:pixelated;
-  pointer-events:none;
-}
-
-/* 素体だけ色変え */
-.catSprite.colorized{
-  filter:hue-rotate(var(--hue)) saturate(1.35);
-}
-
-/* ステータス行：折り返し防止（カードが縦に伸びるのを防ぐ） */
-.catCard .catStats{
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-/* row右側（待機/クエスト/訓練）も改行させない */
-.catCard .row > div:last-child{
-  white-space:nowrap;
-  flex:0 0 auto;
-}
-
-
-/* 状態ドット */
-.statusDot{
-  width:10px;
-  height:10px;
-  border-radius:999px;
-  background:#2bd76f;
-  display:inline-block;
-  margin-right:6px;
-}
-.statusDot.quest{ background:#3aa3ff; }
-.statusDot.training{ background:#b65cff; }
-
-img,svg,canvas{ max-width:100%; height:auto; }
-
-/* =========================
-   Confetti
-   ========================= */
-#confetti{
-  position:fixed;
-  inset:0;
-  z-index:120;
-  pointer-events:none;
-  overflow:hidden;
-}
-
-.confettiPiece{
-  position:absolute;
-  width:8px;
-  height:12px;
-  border-radius:2px;
-  opacity:.95;
-  animation-name: confettiFall;
-  animation-timing-function: cubic-bezier(.2,.7,.2,1);
-  animation-fill-mode: both;
-}
-
-@keyframes confettiFall{
-  0%{
-    transform: translate(0,0) rotate(0deg);
-    opacity:1;
-  }
-  100%{
-    transform: translate(var(--dx), 110vh) rotate(var(--rot));
-    opacity:0.9;
-  }
-}
-
-/* ===== Cat card: ステータス行が折り返されて縦に伸びるのを防ぐ ===== */
-.catCard .catStats {
-  white-space: nowrap;      /* 改行禁止 */
-  overflow: hidden;         /* はみ出し隠す */
-  text-overflow: ellipsis;  /* 万一はみ出したら … */
-}
-
-/* ついでに行間で縦が伸びるのを抑える（任意） */
-.catCard .catStats {
-  line-height: 1.2;
-}
-
-/* =========================
-   Rank Story / Kamishibai
-   ========================= */
-.storyWrap{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-
-.storyStage{
-  position:relative;
-  width:100%;
-  aspect-ratio: 1 / 1;
-  border-radius:14px;
-  overflow:hidden;
-  background:#0d1016;
-  border:1px solid var(--line);
-}
-
-.storyImage{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-  image-rendering:auto;
-}
-
-.storyPaperCover{
-  position:absolute;
-  inset:0;
-  background:
-    linear-gradient(180deg, #f4e7c8 0%, #ead8b0 100%);
-  border-left:6px solid #9a6b2f;
-  box-shadow:
-    inset 0 0 0 1px rgba(0,0,0,.08),
-    0 0 20px rgba(0,0,0,.15);
-  transform:translateX(0);
-  z-index:2;
-}
-
-.storyPaperCover.reveal{
-  animation: kamishibaiSlide 0.42s cubic-bezier(.22,.8,.2,1) forwards;
-}
-
-@keyframes kamishibaiSlide{
-  0%{
-    transform:translateX(0);
-  }
-  100%{
-    transform:translateX(-105%);
-  }
-}
-
-.storyCaption{
-  background:var(--panel2);
-  border:1px solid var(--line);
-  border-radius:12px;
-  padding:12px;
-}
-
-.storyRank{
-  font-size:12px;
-  opacity:.7;
-  margin-bottom:6px;
-}
-
-.storyTitle{
-  font-weight:900;
-  font-size:18px;
-  margin-bottom:8px;
-}
-
-.storyText{
-  line-height:1.7;
-  white-space:pre-line;
-}
-
-.storyHint{
-  font-size:12px;
-  opacity:.65;
-  margin-top:6px;
-  text-align:right;
-}
-
-/* =========================
-   Quest Level Badge
-   ========================= */
-.qBadge{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:4px 8px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:900;
-  line-height:1;
-  border:1px solid var(--line);
-  background:linear-gradient(180deg,#1a2130,#121722);
-  color:#e9ecf1;
-}
-
-/* レベル帯で色変化（任意だけどおすすめ） */
-.qBadge.easy{
-  background:linear-gradient(180deg,#1e3a2b,#14261d);
-  border-color:#2f5f45;
-}
-
-.qBadge.mid{
-  background:linear-gradient(180deg,#1a2130,#121722);
-}
-
-.qBadge.hard{
-  background:linear-gradient(180deg,#3a1f1f,#261414);
-  border-color:#7a2f2f;
-}
-
-.qBadge.danger{
-  background:linear-gradient(180deg,#5a1a1a,#2a0f0f);
-  border-color:#ff4d4d;
-  box-shadow:0 0 10px rgba(255,80,80,.25);
-}
-
-/* =========================
-   Success Rate
-   ========================= */
-.qRate{
-  display:inline-block;
-  padding:4px 8px;
-  border-radius:8px;
-  font-size:12px;
-  font-weight:900;
-  border:1px solid var(--line);
-}
-
-/* 成功率ごとの色 */
-.qRate.good{
-  background:#1e3a2b;
-  color:#6bdc9b;
-  border-color:#2f5f45;
-}
-
-.qRate.mid{
-  background:#1a2130;
-  color:#9fb4ff;
-}
-
-.qRate.warn{
-  background:#3a2a1a;
-  color:#ffb86b;
-}
-
-.qRate.bad{
-  background:#3a1f1f;
-  color:#ff6b6b;
-  box-shadow:0 0 8px rgba(255,80,80,.25);
-}
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Cozy Cat Guild</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Start Screen -->
+  <section id="startScreen" class="screen">
+    <div class="card">
+      <h1 class="title">Cozy Cat Guild</h1>
+      <p class="subtitle">ねこの小さなギルド経営記</p>
+
+      <div class="tip">
+        <div class="tipLabel">🐾 今日のひとこと</div>
+        <div class="tipText" id="dailyTip">「やる気はあるにゃ。」</div>
+      </div>
+
+      <p class="bodyText">
+        クエストと訓練は両立不可。完了は受取式です。<br>
+        まずはチュートリアルでギルド名を決めよう。
+      </p>
+
+      <button id="btnStart" class="primary">タップして開始</button>
+
+      <div class="row" style="margin-top:10px; gap:10px;">
+        <button id="btnContinue" class="ghost" type="button">続きから</button>
+        <button id="btnNew" class="ghost" type="button">新しく始める</button>
+      </div>
+
+      <div class="small" id="startMeta"></div>
+      <div class="small">Version 0.6</div>
+    </div>
+  </section>
+
+  <!-- Main Screen -->
+  <section id="mainScreen" class="screen hidden mainScreen">
+    <div class="container">
+
+      <header class="header" id="header">
+        <div class="headerRow">
+          <div class="brand" id="guildTitle">Cozy Cat Guild</div>
+          <div class="headerBtns">
+            <button id="btnGuildName" class="ghost">ギルド名</button>
+            <button id="btnReset" class="ghost">リセット</button>
+          </div>
+        </div>
+
+        <div class="statsGrid" id="hud"></div>
+
+        <div class="rankRow" id="rankRow">
+          <div class="rankText">
+            <div><b>ランクアップ</b> <span class="dim" id="rankInfo">Rank 1 → 2</span></div>
+            <div class="dim" id="rankCostText">必要: 5,000G</div>
+          </div>
+          <button id="btnRankUp" class="primary smallBtn">昇格</button>
+        </div>
+
+        <div class="logHeader" id="logHeader">
+          <span id="logChevron">▶</span>
+          <span>ログ</span>
+          <span class="pill" id="logUnreadPill">0</span>
+        </div>
+        <div class="logPanel hidden" id="logPanel"></div>
+
+        <div class="pendingBar hidden" id="pendingBar">
+          <span id="pendingText">受取待ち: 0</span>
+          <button id="btnCollectAll" class="primary smallBtn">まとめて受取</button>
+        </div>
+      </header>
+
+      <main class="content" id="content">
+        <nav class="tabs" aria-label="tabs">
+          <button class="tab active" data-tab="quest" type="button">
+            クエスト <span class="dot hidden" id="dotQuest">●</span>
+          </button>
+          <button class="tab" data-tab="cats" type="button">
+            ネコ <span class="dot hidden" id="dotCats">●</span>
+          </button>
+          <button class="tab" data-tab="training" type="button">
+            訓練 <span class="dot hidden" id="dotTraining">●</span>
+          </button>
+          <button class="tab hidden" data-tab="invest" type="button">
+            投資 <span class="dot hidden" id="dotInvest">●</span>
+          </button>
+        </nav>
+
+        <section id="tab-quest" class="tabPanel"></section>
+        <section id="tab-cats" class="tabPanel hidden"></section>
+        <section id="tab-training" class="tabPanel hidden"></section>
+        <section id="tab-invest" class="tabPanel hidden"></section>
+      </main>
+    </div>
+  </section>
+
+  <!-- Modal -->
+  <div id="modalBackdrop" class="backdrop hidden"></div>
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modalHeader">
+      <div id="modalTitle">Modal</div>
+      <button id="modalClose" class="ghost" type="button">×</button>
+    </div>
+    <div id="modalBody" class="modalBody"></div>
+  </div>
+
+  <!-- Confetti root -->
+  <div id="confetti" aria-hidden="true"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
