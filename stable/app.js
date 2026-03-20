@@ -1656,6 +1656,17 @@ function makeQuestLevelBadge(level) {
 
   return `<span class="qBadge ${cls}">Lv${level}</span>`;
 }
+function makeSuccessRateLabel(p) {
+  const rate = Math.round(p);
+
+  let cls = "mid";
+  if (rate >= 80) cls = "good";
+  else if (rate >= 60) cls = "mid";
+  else if (rate >= 40) cls = "warn";
+  else cls = "bad";
+
+  return `<span class="qRate ${cls}">${rate}%</span>`;
+}
 function getQuestMainLabel(main) {
   if (main === "STR") return "STR";
   if (main === "SPD") return "SPD";
