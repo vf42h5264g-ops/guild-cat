@@ -2861,12 +2861,6 @@ function renderQuestTab() {
           </div>
           
           <div class="dim" style="margin-top:4px;">
-            成功率: <span class="rate ${
-             preview.p >= 70 ? "high" :
-             preview.p >= 40 ? "mid" :
-             "low"
-           }">${preview.p}%</span>
-          </div>
 
           <div class="dim" style="margin-top:6px;">${danger}</div>
           <div class="dim" style="margin-top:4px;">${flavor}</div>
