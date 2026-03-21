@@ -2841,30 +2841,22 @@ function renderQuestTab() {
     }
 
         ${types.map(t => {
-          const lv = state.questOffers[t.id];
-          const danger = getQuestDangerLabel(lv);
-          const flavor = getQuestFlavor(t.id, lv);
+  const lv = state.questOffers[t.id];
+  const danger = getQuestDangerLabel(lv);
+  const flavor = getQuestFlavor(t.id, lv);
 
-          const previewPartyIds = state.cats.slice(0, 3).map(c => c.id);
-          const previewDef = makeQuestDef(t, lv, "S");
-          const preview = previewPartyIds.length > 0
-            ? calcQuestChance(previewDef, previewPartyIds)
-            : { p: 0, attrBonus: 0 };
-
-          return `
+  return `
     <div class="panelCard">
       <div class="row">
-        <div>
+        <div style="min-width:0; flex:1;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <b>${t.icon} ${t.name}</b>
             ${makeQuestLevelBadge(lv)}
           </div>
-          
-          <div class="dim" style="margin-top:4px;">
 
           <div class="dim" style="margin-top:6px;">${danger}</div>
           <div class="dim" style="margin-top:4px;">${flavor}</div>
-          <div class="dim" style="margin-top:4px;">属性：${t.main}</div>
+          <div class="dim" style="margin-top:4px;">属性：${getQuestMainLabel(t.main)}</div>
         </div>
 
         <button class="primary smallBtn" data-qtype="${t.id}">受注</button>
