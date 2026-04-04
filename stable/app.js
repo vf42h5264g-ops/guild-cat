@@ -1892,7 +1892,7 @@ function calcQuestChance(def, partyIds) {
   const need = def.target * 0.68;
 
   // 基本成功率
-  const pBase = 52 + (score - need) * 0.85;
+  const pBase = 62 + (score - need) * 0.85;
 
   // 主能力の比率ボーナス
   // 旧式より効かせるが、尖りすぎないように抑えめ
