@@ -1851,6 +1851,37 @@ function makeQuestDef(type, level, timeKey) {
   };
 }
 
+function calcPersonalityBonus(def, party) {
+  let bonus = 0;
+
+  for (const c of party) {
+    switch (c.personality) {
+
+      // ツンデレ：戦闘でちょい強い
+      case "tsundere":
+        if (def.type === "battle") bonus += 5;
+        break;
+
+      // やんちゃ：短時間クエで元気
+      case "genki":
+        if (def.durationMin <= 120) bonus += 5;
+        break;
+
+      // クール：長時間クエで安定
+      case "cool":
+        if (def.durationMin >= 240) bonus += 5;
+        break;
+
+      // あまえんぼ：人数が多いほど頑張る
+      case "amaenbo":
+        bonus += party.length * 2; // 1匹あたり +2
+        break;
+    }
+  }
+
+  return bonus;
+}
+
 function calcQuestChance(def, partyIds) {
   const party = partyIds.map(catById).filter(Boolean);
 
@@ -1905,11 +1936,18 @@ function calcQuestChance(def, partyIds) {
   if (party.length === 2) teamBonus += 2;
   if (party.length >= 3) teamBonus += 4;
 
-  const p = clamp(10, 90, Math.round(pBase + attrBonus + teamBonus));
+  // ★ここ追加（性格補正）
+  const personalityBonus = calcPersonalityBonus(def, party);
+
+  const p = clamp(
+    10,
+    90,
+    Math.round(pBase + attrBonus + teamBonus + personalityBonus)
+  );
 
   return {
     p,
-    attrBonus: attrBonus + teamBonus,
+    attrBonus: attrBonus + teamBonus + personalityBonus,
   };
 }
 
