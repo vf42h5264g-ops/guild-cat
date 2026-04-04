@@ -1853,23 +1853,77 @@ function makeQuestDef(type, level, timeKey) {
 
 function calcQuestChance(def, partyIds) {
   const party = partyIds.map(catById).filter(Boolean);
+
+  if (party.length === 0) {
+    return { p: 10, attrBonus: 0 };
+  }
+
+  const getMainStat = (cat) => {
+    if (def.main === "STR") return cat.str;
+    if (def.main === "SPD") return cat.agi;
+    return cat.int;
+  };
+
+  const getSubStat = (cat) => {
+    if (def.main === "STR") return cat.agi; // STRクエではSPDを副能力
+    if (def.main === "SPD") return cat.int; // SPDクエではINTを副能力
+    return cat.agi; // INTクエではSPDを副能力
+  };
+
+  const getOffStat = (cat) => {
+    if (def.main === "STR") return cat.int;
+    if (def.main === "SPD") return cat.str;
+    return cat.str;
+  };
+
   const total = party.reduce((s, c) => s + c.str + c.agi + c.int, 0);
-  const mainSum = party.reduce((s, c) => s + (def.main === "STR" ? c.str : def.main === "SPD" ? c.agi : c.int), 0);
+  const mainSum = party.reduce((s, c) => s + getMainStat(c), 0);
+  const subSum = party.reduce((s, c) => s + getSubStat(c), 0);
+  const offSum = party.reduce((s, c) => s + getOffStat(c), 0);
+
+  // クエスト適性スコア
+  // 主能力を強め、副能力は少し、無関係能力はかなり薄くする
+  const score =
+    mainSum * 1.0 +
+    subSum * 0.35 +
+    offSum * 0.15;
+
+  // 旧targetは総戦力前提なので、そのままだと主能力型で不利になりやすい
+  // 目標値を少し緩めて、主能力重視でも戦えるように補正
+  const need = def.target * 0.72;
+
+  // 基本成功率
+  const pBase = 50 + (score - need) * 0.9;
+
+  // 主能力の比率によるボーナス
+  // 以前より効きを強める
   const ratio = total > 0 ? (mainSum / total) : 0;
+  const pAttrRaw = (ratio - 1 / 3) * 90;
+  const attrBonus = clamp(-12, 18, Math.round(pAttrRaw));
 
-  const need = def.target;
+  // 編成バランスの軽い補正
+  // 同じ能力だけに寄りすぎた編成を少しだけ抑える
+  let teamBonus = 0;
+  if (party.length >= 2) {
+    const avgMain = mainSum / party.length;
+    const avgSub = subSum / party.length;
 
-  // 基本成功率：必要戦力との差で上下
-  const pBase = 55 + (total - need) * 1.0;
+    if (avgMain >= avgSub + 8) {
+      teamBonus += 3;
+    }
+  }
 
-  // 得意能力がしっかり入っていると少し有利
-  const pAttrRaw = (ratio - 1 / 3) * 30;
-  const attrBonus = clamp(-5, 10, Math.round(pAttrRaw));
+  // 人数補正
+  // 1匹だけより、複数で出すメリットを少し付ける
+  if (party.length === 2) teamBonus += 2;
+  if (party.length >= 3) teamBonus += 4;
 
-  // 最低10%、最高90%
-  const p = clamp(10, 90, Math.round(pBase + attrBonus));
+  const p = clamp(10, 90, Math.round(pBase + attrBonus + teamBonus));
 
-  return { p, attrBonus };
+  return {
+    p,
+    attrBonus: attrBonus + teamBonus,
+  };
 }
 
 function startQuest(def, partyIds, slotIdx) {
