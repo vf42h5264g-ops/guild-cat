@@ -1881,40 +1881,27 @@ function calcQuestChance(def, partyIds) {
   const subSum = party.reduce((s, c) => s + getSubStat(c), 0);
   const offSum = party.reduce((s, c) => s + getOffStat(c), 0);
 
-  // クエスト適性スコア
-  // 主能力を強め、副能力は少し、無関係能力はかなり薄くする
+  // 主能力をしっかり重視しつつ、
+  // 副能力・その他能力もそこそこ効くようにして極端さを緩和
   const score =
-    mainSum * 1.0 +
+    mainSum * 0.75 +
     subSum * 0.35 +
-    offSum * 0.15;
+    offSum * 0.20;
 
-  // 旧targetは総戦力前提なので、そのままだと主能力型で不利になりやすい
-  // 目標値を少し緩めて、主能力重視でも戦えるように補正
-  const need = def.target * 0.72;
+  // 旧targetは総戦力基準なので、適性スコア制に合わせて少し圧縮
+  const need = def.target * 0.68;
 
   // 基本成功率
-  const pBase = 50 + (score - need) * 0.9;
+  const pBase = 52 + (score - need) * 0.85;
 
-  // 主能力の比率によるボーナス
-  // 以前より効きを強める
+  // 主能力の比率ボーナス
+  // 旧式より効かせるが、尖りすぎないように抑えめ
   const ratio = total > 0 ? (mainSum / total) : 0;
-  const pAttrRaw = (ratio - 1 / 3) * 90;
-  const attrBonus = clamp(-12, 18, Math.round(pAttrRaw));
+  const pAttrRaw = (ratio - 1 / 3) * 60;
+  const attrBonus = clamp(-8, 12, Math.round(pAttrRaw));
 
-  // 編成バランスの軽い補正
-  // 同じ能力だけに寄りすぎた編成を少しだけ抑える
+  // 人数ボーナスは軽め
   let teamBonus = 0;
-  if (party.length >= 2) {
-    const avgMain = mainSum / party.length;
-    const avgSub = subSum / party.length;
-
-    if (avgMain >= avgSub + 8) {
-      teamBonus += 3;
-    }
-  }
-
-  // 人数補正
-  // 1匹だけより、複数で出すメリットを少し付ける
   if (party.length === 2) teamBonus += 2;
   if (party.length >= 3) teamBonus += 4;
 
