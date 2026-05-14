@@ -2990,55 +2990,29 @@ function renderCatsTab() {
   const canFire = RANK.canFire(state.guildRank);
 
   const catsHtml = (state.cats || []).map(c => {
-    const busy = isCatBusy(c.id);
-    const statusText = busy === "quest" ? "クエスト" : busy === "training" ? "訓練" : "待機";
-    const dotClass = busy === "quest" ? "quest" : busy === "training" ? "training" : "";
+  const busy = isCatBusy(c.id);
+  const statusText = busy === "quest" ? "クエスト" : busy === "training" ? "訓練" : "待機";
+  const dotClass = busy === "quest" ? "quest" : busy === "training" ? "training" : "";
 
-    const weaponImg = getWeaponImageByPersonality(c.personality);
-    const training = busy === "training";
-    const onQuest = busy === "quest";
-
-    return `
-      <div class="panelCard catCard" style="display:flex;align-items:center;gap:12px;">
-        <div class="catSpriteWrap" style="position:relative;width:64px;height:64px;flex:0 0 64px;">
-          <img
-            src="img/cat.png"
-            class="catSprite colorized"
-            style="--hue:${c.hue}deg;width:64px;height:64px;display:block;image-rendering:pixelated;"
-            alt=""
-          />
-          ${
-            training
-              ? `<img src="img/jim1.png" class="catDumbbell" data-jim="${c.id}"
-                   style="position:absolute;inset:0;width:64px;height:64px;image-rendering:pixelated;pointer-events:none;" alt="" />`
-              : (onQuest && weaponImg)
-                ? `<img src="${weaponImg}" class="catWeapon"
-                     style="position:absolute;inset:0;width:64px;height:64px;image-rendering:pixelated;pointer-events:none;" alt="" />`
-                : ""
-          }
+  return `
+    <div class="panelCard catCompactCard">
+      <div class="row">
+        <div style="min-width:0;flex:1;">
+          <div>
+            <b>${escapeHtml(c.name)}</b>
+            <span class="dim">Lv${c.level} / ${escapeHtml(c.personality)}</span>
+          </div>
+          <div class="mono catStats">STR ${c.str} / SPD ${c.agi} / INT ${c.int}</div>
         </div>
 
-        <div style="min-width:0;flex:1;">
-          <div class="row">
-            <div style="min-width:0;">
-              <b>${escapeHtml(c.name)}</b> <span class="dim">Lv${c.level}</span>
-            </div>
-            <div><span class="statusDot ${dotClass}"></span>${statusText}</div>
-          </div>
-          <div class="dim">${escapeHtml(c.personality)}</div>
-          <div class="mono catStats">STR ${c.str} / SPD ${c.agi} / INT ${c.int}</div>
-
-          <div class="row" style="margin-top:8px;">
-            <div class="dim">EXP ${c.exp}/${LEVEL.expToNext(c.level)}</div>
-            <div style="display:flex;gap:8px;">
-              <button class="ghost smallBtn" data-rename="${c.id}">名前変更</button>
-              ${canFire ? `<button class="ghost smallBtn" data-fire="${c.id}" ${busy ? "disabled" : ""} style="${busy ? "opacity:.6;" : ""}">解雇</button>` : ""}
-            </div>
-          </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <span><span class="statusDot ${dotClass}"></span>${statusText}</span>
+          <button class="ghost smallBtn" data-cat-detail="${c.id}">詳細</button>
         </div>
       </div>
-    `;
-  }).join("");
+    </div>
+  `;
+}).join("");
 
   el.tabCats.innerHTML = `
     <div class="panelCard">
@@ -3069,15 +3043,74 @@ function renderCatsTab() {
     </div>
   `;
 
-  el.tabCats.querySelectorAll("[data-rename]").forEach(btn => {
-    btn.addEventListener("click", () => openRenameCatModal(btn.dataset.rename));
-  });
-  el.tabCats.querySelectorAll("[data-fire]").forEach(btn => {
-    btn.addEventListener("click", () => openFireCatModal(btn.dataset.fire));
-  });
+  el.tabCats.querySelectorAll("[data-cat-detail]").forEach(btn => {
+  btn.addEventListener("click", () => openCatDetailModal(btn.dataset.catDetail));
+});
 
   document.getElementById("btnScout")?.addEventListener("click", () => scoutPayAndOpen());
   document.getElementById("btnViewCandidates")?.addEventListener("click", () => openScoutModal(false));
+}
+
+function openCatDetailModal(catId) {
+  const c = catById(catId);
+  if (!c) return;
+
+  const busy = isCatBusy(c.id);
+  const statusText = busy === "quest" ? "クエスト中" : busy === "training" ? "訓練中" : "待機中";
+  const canFire = RANK.canFire(state.guildRank);
+  const weaponImg = getWeaponImageByPersonality(c.personality);
+
+  const html = `
+    <div class="panelCard" style="display:flex;gap:12px;align-items:center;">
+      <div class="catSpriteWrap" style="position:relative;width:64px;height:64px;flex:0 0 64px;">
+        <img
+          src="img/cat.png"
+          class="catSprite colorized"
+          style="--hue:${c.hue}deg;width:64px;height:64px;display:block;image-rendering:pixelated;"
+          alt=""
+        />
+        ${weaponImg ? `
+          <img src="${weaponImg}"
+            style="position:absolute;inset:0;width:64px;height:64px;image-rendering:pixelated;pointer-events:none;"
+            alt="" />
+        ` : ""}
+      </div>
+
+      <div style="min-width:0;">
+        <div><b>${escapeHtml(c.name)}</b> <span class="dim">Lv${c.level}</span></div>
+        <div class="dim">${escapeHtml(c.personality)} / ${statusText}</div>
+        <div class="mono catStats">STR ${c.str} / SPD ${c.agi} / INT ${c.int}</div>
+      </div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div class="dim">EXP ${c.exp}/${LEVEL.expToNext(c.level)}</div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="ghost" id="catDetailClose">閉じる</button>
+      <button class="ghost" id="catDetailRename">名前変更</button>
+      ${canFire ? `
+        <button class="ghost" id="catDetailFire" ${busy ? "disabled" : ""} style="${busy ? "opacity:.6;" : ""}>
+          解雇
+        </button>
+      ` : ""}
+    </div>
+  `;
+
+  openModal("ネコ詳細", html);
+
+  document.getElementById("catDetailClose")?.addEventListener("click", closeModal);
+
+  document.getElementById("catDetailRename")?.addEventListener("click", () => {
+    closeModal();
+    openRenameCatModal(catId);
+  });
+
+  document.getElementById("catDetailFire")?.addEventListener("click", () => {
+    closeModal();
+    openFireCatModal(catId);
+  });
 }
 
 function renderTrainingTab() {
