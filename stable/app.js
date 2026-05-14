@@ -545,7 +545,7 @@ function addItem(itemId, amount = 1) {
     state.items[itemId] + amount
   );
 
-  addLog(`${master.icon} ${master.name} を${amount}個手に入れた`);
+  pushLog(`${master.icon} ${master.name} を${amount}個手に入れた`);
 }
 
 function consumeItem(itemId, amount = 1) {
@@ -1904,22 +1904,22 @@ function calcPersonalityBonus(def, party) {
     switch (c.personality) {
 
       // ツンデレ：戦闘でちょい強い
-      case "tsundere":
+      case "ツンデレ":
         if (def.type === "battle") bonus += 5;
         break;
 
       // やんちゃ：短時間クエで元気
-      case "genki":
+      case "やんちゃ":
         if (def.durationMin <= 120) bonus += 5;
         break;
 
       // クール：長時間クエで安定
-      case "cool":
+      case "クール":
         if (def.durationMin >= 240) bonus += 5;
         break;
 
       // あまえんぼ：人数が多いほど頑張る
-      case "amaenbo":
+      case "あまえんぼ":
         bonus += party.length * 2; // 1匹あたり +2
         break;
     }
