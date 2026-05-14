@@ -2995,6 +2995,8 @@ function renderCatsTab() {
   const dotClass = busy === "quest" ? "quest" : busy === "training" ? "training" : "";
 
   const weaponImg = getWeaponImageByPersonality(c.personality);
+  const training = busy === "training";
+  const onQuest = busy === "quest";
 
   return `
     <div class="panelCard catCompactCard">
@@ -3003,14 +3005,19 @@ function renderCatsTab() {
           <img
             src="img/cat.png"
             class="catSprite colorized"
-            style="--hue:${c.hue}deg;width:40px;height:40px;display:block;image-rendering:pixelated;"
+            style="--hue:${c.hue}deg;width:32px;height:32px;display:block;image-rendering:pixelated;"
             alt=""
           />
-          ${weaponImg ? `
-            <img src="${weaponImg}"
-              style="position:absolute;inset:0;width:40px;height:40px;image-rendering:pixelated;pointer-events:none;"
-              alt="" />
-          ` : ""}
+
+          ${
+            training
+              ? `<img src="img/jim1.png" class="catDumbbell" data-jim="${c.id}"
+                   style="position:absolute;inset:0;width:32px;height:32px;image-rendering:pixelated;pointer-events:none;" alt="" />`
+              : (onQuest && weaponImg)
+                ? `<img src="${weaponImg}" class="catWeapon"
+                     style="position:absolute;inset:0;width:32px;height:32px;image-rendering:pixelated;pointer-events:none;" alt="" />`
+                : ""
+          }
         </div>
 
         <div class="catCompactName">
