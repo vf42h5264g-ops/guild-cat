@@ -2058,8 +2058,14 @@ function finishQuestsIfDone() {
         result = "失敗";
       }
 
-       if (result === "大成功" && Math.random() < 0.15) {
+      let foundItem = null;
+
+      if (result === "大成功" && Math.random() < 0.15) {
         addItem("matatabi", 1);
+        foundItem = {
+          id: "matatabi",
+          amount: 1,
+        };
       }
 
       const effGold = Math.floor(job.def.baseGold * QUEST.resultMult(result) * job.goldMult);
@@ -2087,6 +2093,7 @@ function finishQuestsIfDone() {
       expEach,
       partyIds: job.partyIds,
       tutorial: isTut,
+      foundItem,
     });
 
     pushLog(
@@ -2500,6 +2507,17 @@ function openQuestResultModal(result, onNext) {
       <div class="dim">EXP：+${result.expEach}</div>
       <div class="dim">対象ネコ：${result.partyIds.length}匹</div>
     </div>
+
+    ${
+  result.foundItem ? `
+    <div class="panelCard" style="margin-top:10px;">
+      <div style="font-size:16px;font-weight:900;">🌿 マタタビを見つけた！</div>
+      <div class="dim" style="margin-top:6px;">
+        訓練で使うとEXPが2倍になる特別なアイテムです。
+      </div>
+    </div>
+  ` : ""
+}
 
     <div class="modalFooter">
       <button class="primary" id="questResultNext">OK</button>
