@@ -184,6 +184,16 @@ const QUEST_RESULT_LINES = {
   },
 };
 
+const ITEM_MASTER = {
+  matatabi: {
+    id: "matatabi",
+    icon: "🌿",
+    name: "マタタビ",
+    desc: "訓練EXPが2倍になる",
+    stackMax: 9,
+  },
+};
+
 function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -522,6 +532,30 @@ el.logHeader?.addEventListener("click", () => {
 function uid() {
   return Math.random().toString(16).slice(2) + Date.now().toString(16);
 }
+function addItem(itemId, amount = 1) {
+  if (!state.items[itemId]) {
+    state.items[itemId] = 0;
+  }
+
+  const master = ITEM_MASTER[itemId];
+  const max = master?.stackMax ?? 99;
+
+  state.items[itemId] = Math.min(
+    max,
+    state.items[itemId] + amount
+  );
+
+  addLog(`${master.icon} ${master.name} を${amount}個手に入れた`);
+}
+
+function consumeItem(itemId, amount = 1) {
+  if ((state.items[itemId] || 0) < amount) {
+    return false;
+  }
+
+  state.items[itemId] -= amount;
+  return true;
+}
 function clamp(min, max, v) {
   return Math.max(min, Math.min(max, v));
 }
@@ -636,6 +670,13 @@ function ensureTrainingState() {
   // 余分があれば切る（ランクダウンはないが保険）
   state.trainingSlots = state.trainingSlots.slice(0, slotCount);
   state.trainingJobs = state.trainingJobs.slice(0, slotCount);
+}
+function ensureItems() {
+  if (!state.items) state.items = {};
+
+  if (typeof state.items.matatabi !== "number") {
+    state.items.matatabi = 0;
+  }
 }
 function ensureQuestState() {
   const slots = getDispatchSlots();
@@ -840,6 +881,10 @@ function newGame() {
     logs: [],
     pendingResults: [],
 
+    items: {
+      matatabi: 0,
+    },
+
     hire: { candidates: [], lastRefreshAt: 0 },
 
     questJobs: [],
@@ -966,6 +1011,7 @@ function boot() {
   ensureTutorial();
   ensureInvest();
   ensureAlpaca();
+  ensureItems();
   ensureQuestOffers();
 
   const tips = ["やる気はあるにゃ。", "急がば回れ、にゃ。", "訓練は裏切らないにゃ。", "Goldは正義にゃ。"];
@@ -2012,6 +2058,10 @@ function finishQuestsIfDone() {
         result = "失敗";
       }
 
+       if (result === "大成功" && Math.random() < 0.15) {
+        addItem("matatabi", 1);
+      }
+
       const effGold = Math.floor(job.def.baseGold * QUEST.resultMult(result) * job.goldMult);
       const effExp = Math.floor(
         job.def.durationMin *
@@ -2783,6 +2833,7 @@ function renderAll() {
   ensureTutorial();
   ensureInvest();
   ensureAlpaca();
+  ensureItems();
   ensureQuestOffers();
 
   renderGuildTitle();
