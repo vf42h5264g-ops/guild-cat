@@ -2053,14 +2053,14 @@ function finishQuestsIfDone() {
     } else {
       const roll = Math.random() * 100;
       if (roll <= job.pSuccess) {
-        result = (roll <= job.pSuccess * 0.2) ? "大成功" : "成功";
+        result = (roll <= job.pSuccess * 0.8) ? "大成功" : "成功";
       } else {
         result = "失敗";
       }
 
       let foundItem = null;
 
-      if (result === "大成功" && Math.random() < 0.15) {
+      if (result === "大成功" && Math.random() < 0.8) {
         addItem("matatabi", 1);
         foundItem = {
           id: "matatabi",
