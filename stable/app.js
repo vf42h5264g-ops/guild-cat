@@ -2994,21 +2994,35 @@ function renderCatsTab() {
   const statusText = busy === "quest" ? "クエスト" : busy === "training" ? "訓練" : "待機";
   const dotClass = busy === "quest" ? "quest" : busy === "training" ? "training" : "";
 
+  const weaponImg = getWeaponImageByPersonality(c.personality);
+
   return `
     <div class="panelCard catCompactCard">
-      <div class="row">
-        <div style="min-width:0;flex:1;">
-          <div>
-            <b>${escapeHtml(c.name)}</b>
-            <span class="dim">Lv${c.level} / ${escapeHtml(c.personality)}</span>
-          </div>
-          <div class="mono catStats">STR ${c.str} / SPD ${c.agi} / INT ${c.int}</div>
+      <div class="catCompactRow">
+        <div class="catMiniSpriteWrap">
+          <img
+            src="img/cat.png"
+            class="catSprite colorized"
+            style="--hue:${c.hue}deg;width:40px;height:40px;display:block;image-rendering:pixelated;"
+            alt=""
+          />
+          ${weaponImg ? `
+            <img src="${weaponImg}"
+              style="position:absolute;inset:0;width:40px;height:40px;image-rendering:pixelated;pointer-events:none;"
+              alt="" />
+          ` : ""}
         </div>
 
-        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-          <span><span class="statusDot ${dotClass}"></span>${statusText}</span>
-          <button class="ghost smallBtn" data-cat-detail="${c.id}">詳細</button>
+        <div class="catCompactName">
+          <b>${escapeHtml(c.name)}</b>
+          <span class="dim">Lv${c.level} / ${escapeHtml(c.personality)}</span>
         </div>
+
+        <div class="catCompactStatus">
+          <span class="statusDot ${dotClass}"></span>${statusText}
+        </div>
+
+        <button class="ghost smallBtn" data-cat-detail="${c.id}">詳細</button>
       </div>
     </div>
   `;
