@@ -3097,6 +3097,19 @@ function renderCatsTab() {
       </div>
     </div>
 
+     <div class="panelCard">
+    <div class="row">
+      <div>
+        <div><b>アイテム</b></div>
+        <div class="dim">たまにクエストで手に入る</div>
+      </div>
+
+      <div class="mono">
+        🌿 ×${state.items?.matatabi || 0}
+      </div>
+    </div>
+  </div>
+
     ${catsHtml || `<div class="panelCard"><div class="dim">ネコがいません。チュートリアルから開始してください。</div></div>`}
 
     <div class="panelCard">
