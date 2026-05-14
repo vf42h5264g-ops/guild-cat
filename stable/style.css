@@ -483,20 +483,21 @@ img,svg,canvas{ max-width:100%; height:auto; }
 }
 
 .catCompactCard {
-  padding: 10px 12px;
+  padding: 6px 10px;
 }
 
 .catCompactRow {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  min-height: 36px;
 }
 
 .catMiniSpriteWrap {
   position: relative;
-  width: 40px;
-  height: 40px;
-  flex: 0 0 40px;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
 }
 
 .catCompactName {
@@ -519,4 +520,5 @@ img,svg,canvas{ max-width:100%; height:auto; }
 
 .catCompactRow .smallBtn {
   flex: 0 0 auto;
+  padding: 6px 10px;
 }
