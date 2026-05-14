@@ -122,9 +122,9 @@ const QUEST = {
     return 0.3;
   },
   expPerMin(result) {
-    if (result === "大成功") return 1.2;
-    if (result === "成功") return 1.0;
-    return 0.8;
+    if (result === "大成功") return 1.8;
+    if (result === "成功") return 1.3;
+    return 0.7;
   },
 };
 
