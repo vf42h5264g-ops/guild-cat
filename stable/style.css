@@ -481,3 +481,42 @@ img,svg,canvas{ max-width:100%; height:auto; }
 .rate.low{
   color:#ff5c5c; /* 赤 */
 }
+
+.catCompactCard {
+  padding: 10px 12px;
+}
+
+.catCompactRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.catMiniSpriteWrap {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+}
+
+.catCompactName {
+  min-width: 0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.catCompactName .dim {
+  margin-left: 4px;
+}
+
+.catCompactStatus {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.catCompactRow .smallBtn {
+  flex: 0 0 auto;
+}
