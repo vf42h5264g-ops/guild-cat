@@ -2096,6 +2096,8 @@ function finishQuestsIfDone() {
       foundItem,
     });
 
+    state.questJobs[i] = null;
+
     pushLog(
       `クエスト完了：${job.def.name}${isTut ? "" : ` Lv${job.def.level}${job.def.timeType}`} → ${result}` +
       (resultLine ? `「${resultLine}」` : "") +
