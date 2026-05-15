@@ -522,3 +522,17 @@ img,svg,canvas{ max-width:100%; height:auto; }
   flex: 0 0 auto;
   padding: 6px 10px;
 }
+
+#guildBgWrap{
+  width:100%;
+  border-radius:20px;
+  overflow:hidden;
+  margin-bottom:16px;
+  border:2px solid rgba(255,255,255,.08);
+}
+
+#guildBg{
+  width:100%;
+  display:block;
+  image-rendering:auto;
+}
