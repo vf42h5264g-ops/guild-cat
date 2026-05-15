@@ -464,6 +464,11 @@ function openRankStoryModal(rank, onDone) {
     finish();
   });
 }
+
+function getGuildBg() {
+  return `img/guild/guild_rank_${String(state.guildRank).padStart(2, "0")}.png`;
+}
+
 /* =========================
    Save/Load (AUTO SAVE)
    ========================= */
@@ -2845,6 +2850,12 @@ function openInvestDepositModal(key) {
    Rendering
    ========================= */
 function renderAll() {
+
+ const bg = document.getElementById("guildBg");
+if (bg) {
+  bg.src = getGuildBg();
+}
+   
   ensureQuestState();
   ensureTrainingState();
   ensurePending();
