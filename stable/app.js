@@ -2044,7 +2044,8 @@ function finishQuestsIfDone() {
     let gold = 0;
     let expEach = 0;
     let resultLine = "";
-
+    let foundItem = null;
+     
     if (isTut) {
       result = "成功";
       gold = job.def.baseGold;
@@ -2057,8 +2058,6 @@ function finishQuestsIfDone() {
       } else {
         result = "失敗";
       }
-
-      let foundItem = null;
 
       if (result === "大成功" && Math.random() < 0.8) {
         addItem("matatabi", 1);
