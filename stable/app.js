@@ -3122,7 +3122,7 @@ function renderCatsTab() {
         <div class="catMiniSpriteWrap">
           <img
             src="${getDisplayCatImage(c)}"
-            class="catSprite colorized ${training ? "catDumbbell" : ""}"
+            class="catSprite colorized ${training ? "catDumbbell" : ""} ${c.matatabiBoost ? "matatabiBoost" : ""}"
             ${training ? `data-jim="${c.id}"` : ""}
             style="--hue:${c.hue}deg;width:32px;height:32px;display:block;image-rendering:pixelated;"
             alt=""
