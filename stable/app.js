@@ -1164,7 +1164,8 @@ function openTutorialScoutModal() {
     <div class="panelCard" style="margin-top:10px;">
       <div class="modalList">
         ${candidates.map(c => {
-          const weapon = getWeaponImageByPersonality(c.personality);
+          <img src="${getCatBaseImage(c)}" class="catSprite colorized"
+  style="--hue:${c.hue}deg;width:56px;height:56px;" />
           return `
             <div class="modalItem" data-pick="${c.id}">
               <div style="display:flex;gap:10px;align-items:center;">
@@ -2355,7 +2356,8 @@ function openScoutModal(fromPaidScout) {
           list.length === 0
             ? `<div class="dim">候補がありません。スカウトしてください</div>`
             : list.map(c => {
-              const weapon = getWeaponImageByPersonality(c.personality);
+              <img src="${getCatBaseImage(c)}" class="catSprite colorized"
+  style="--hue:${c.hue}deg; width:56px; height:56px;" />
               return `
                   <div class="modalItem" style="display:flex; gap:10px; align-items:center;">
                     <div style="width:56px;height:56px;position:relative;flex:0 0 56px;">
@@ -3090,9 +3092,9 @@ function renderCatsTab() {
   const statusText = busy === "quest" ? "クエスト" : busy === "training" ? "訓練" : "待機";
   const dotClass = busy === "quest" ? "quest" : busy === "training" ? "training" : "";
 
-  const weaponImg = getWeaponImageByPersonality(c.personality);
+  
   const training = busy === "training";
-  const onQuest = busy === "quest";
+  
      
   return `
     <div class="panelCard catCompactCard">
@@ -3109,10 +3111,6 @@ function renderCatsTab() {
             training
               ? `<img src="${getTrainingImage(c, 1)}" class="catDumbbell" data-jim="${c.id}"
                    style="position:absolute;inset:0;width:32px;height:32px;image-rendering:pixelated;pointer-events:none;" alt="" />`
-              : (onQuest && weaponImg)
-                ? `<img src="${weaponImg}" class="catWeapon"
-                     style="position:absolute;inset:0;width:32px;height:32px;image-rendering:pixelated;pointer-events:none;" alt="" />`
-                : ""
           }
         </div>
 
@@ -3257,7 +3255,12 @@ function openCatDetailModal(catId) {
   const busy = isCatBusy(c.id);
   const statusText = busy === "quest" ? "クエスト中" : busy === "training" ? "訓練中" : "待機中";
   const canFire = RANK.canFire(state.guildRank);
-  const weaponImg = getWeaponImageByPersonality(c.personality);
+  <img
+  src="${getCatBaseImage(c)}"
+  class="catSprite colorized"
+  style="--hue:${c.hue}deg;width:64px;height:64px;display:block;image-rendering:pixelated;"
+  alt=""
+/>
 
   const html = `
     <div class="panelCard" style="display:flex;gap:12px;align-items:center;">
