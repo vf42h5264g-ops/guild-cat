@@ -3079,6 +3079,15 @@ function renderCatsTab() {
   const training = busy === "training";
   const onQuest = busy === "quest";
 
+  const CAT_SPOTS = [
+
+  {x:18, y:74},
+  {x:35, y:68},
+  {x:52, y:76},
+  {x:72, y:70},
+
+];
+     
   return `
     <div class="panelCard catCompactCard">
       <div class="catCompactRow">
@@ -3164,6 +3173,65 @@ function renderCatsTab() {
 
   document.getElementById("btnScout")?.addEventListener("click", () => scoutPayAndOpen());
   document.getElementById("btnViewCandidates")?.addEventListener("click", () => openScoutModal(false));
+}
+
+function createBgCat(){
+
+  const cat = document.createElement("div");
+
+  cat.className = "bgCat idle";
+
+  cat.style.left = "50%";
+  cat.style.top = "72%";
+
+  document
+    .getElementById("catLayer")
+    .appendChild(cat);
+
+  return cat;
+}
+
+function moveBgCat(cat){
+
+  const spot =
+    CAT_SPOTS[
+      Math.floor(Math.random() * CAT_SPOTS.length)
+    ];
+
+  const currentX =
+    parseFloat(cat.style.left);
+
+  if(spot.x < currentX){
+
+    cat.style.transform =
+      "translate(-50%,-50%) scaleX(-1)";
+
+  }else{
+
+    cat.style.transform =
+      "translate(-50%,-50%) scaleX(1)";
+  }
+
+  cat.classList.remove("idle","sleep");
+  cat.classList.add("walk");
+
+  cat.style.left = spot.x + "%";
+  cat.style.top  = spot.y + "%";
+
+  setTimeout(()=>{
+
+    cat.classList.remove("walk");
+
+    if(Math.random() < 0.2){
+
+      cat.classList.add("sleep");
+
+    }else{
+
+      cat.classList.add("idle");
+    }
+
+  }, 4000);
 }
 
 function openCatDetailModal(catId) {
@@ -3388,4 +3456,13 @@ function toggleDumbbells() {
    Start
    ========================= */
 boot();
+
+const bgCat = createBgCat();
+
+setInterval(()=>{
+
+  moveBgCat(bgCat);
+
+}, 8000);
+
 console.log("END");
