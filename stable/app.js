@@ -2310,7 +2310,18 @@ function finishTrainingIfDone() {
     if (job.endAt > now) continue;
 
     ensurePending();
-    state.pendingResults.push({
+
+    const cat = catById(job.catId);
+
+    let expGain = job.expGain;
+
+    if (cat?.matatabiBoost) {
+      expGain *= 2;
+      cat.matatabiBoost = false;
+      pushLog(`🌿 ${cat.name} はマタタビ効果で訓練EXP2倍！`);
+    }
+    
+     state.pendingResults.push({
       type: "training",
       finishedAt: now,
       slotNo: job.slotNo,
@@ -3286,6 +3297,9 @@ function openCatDetailModal(catId) {
     <div class="modalFooter">
       <button class="ghost" id="catDetailClose">閉じる</button>
       <button class="ghost" id="catDetailRename">名前変更</button>
+      <button class="ghost" id="catDetailMatatabi" ${(state.items?.matatabi || 0) <= 0 ? "disabled" : ""}>
+         🌿 マタタビ
+      </button>
       ${canFire ? `
         <button class="ghost" id="catDetailFire" ${busy ? "disabled" : ""} style="${busy ? "opacity:.6;" : ""}>
           解雇
@@ -3302,7 +3316,20 @@ function openCatDetailModal(catId) {
     closeModal();
     openRenameCatModal(catId);
   });
+  document.getElementById("catDetailMatatabi")?.addEventListener("click", () => {
+  if ((state.items?.matatabi || 0) <= 0) {
+    pushLog("マタタビがありません");
+    return;
+  }
 
+  state.items.matatabi -= 1;
+  c.matatabiBoost = true;
+
+  pushLog(`🌿 ${c.name} にマタタビを使った！次の訓練EXPが2倍`);
+  closeModal();
+  renderAll();
+  save();
+});
   document.getElementById("catDetailFire")?.addEventListener("click", () => {
     closeModal();
     openFireCatModal(catId);
