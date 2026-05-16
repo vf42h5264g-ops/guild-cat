@@ -2365,7 +2365,7 @@ function openScoutModal(fromPaidScout) {
     </div>
   `;
 }).join("")}
-        }
+        
       </div>
     </div>
 
@@ -3247,12 +3247,7 @@ function openCatDetailModal(catId) {
   const busy = isCatBusy(c.id);
   const statusText = busy === "quest" ? "クエスト中" : busy === "training" ? "訓練中" : "待機中";
   const canFire = RANK.canFire(state.guildRank);
-  <img
-  src="${getCatBaseImage(c)}"
-  class="catSprite colorized"
-  style="--hue:${c.hue}deg;width:64px;height:64px;display:block;image-rendering:pixelated;"
-  alt=""
-/>
+  
 
   const html = `
   <div class="panelCard" style="display:flex;gap:12px;align-items:center;">
