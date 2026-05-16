@@ -316,19 +316,34 @@ const CAT_HUES = [0, 25, 45, 80, 160, 210, 260, 320];
 function randomHue() {
   return CAT_HUES[Math.floor(Math.random() * CAT_HUES.length)];
 }
-
 /* =========================
-   Weapon mapping
+   Cat Images
    ========================= */
-function getWeaponImageByPersonality(p) {
-  switch (p) {
-    case "ツンデレ": return "img/Bsword.png";
-    case "やんちゃ": return "img/Dsword.png";
-    case "クール": return "img/rod.png";
-    case "あまえんぼ": return "img/fish.png";
-    default: return null;
-  }
+
+function getCatBaseImage(cat) {
+
+  return cat.personality === "あまえんぼ"
+    ? "img/cat2.png"
+    : "img/cat.png";
 }
+
+function getTrainingImage(cat, frame = 1) {
+
+  const isAmaenbo =
+    cat?.personality === "あまえんぼ";
+
+  if (frame === 2) {
+
+    return isAmaenbo
+      ? "img/jim2_cat2.png"
+      : "img/jim2.png";
+  }
+
+  return isAmaenbo
+    ? "img/jim1_cat2.png"
+    : "img/jim1.png";
+}
+
 
 /* =========================
    DOM
@@ -3084,7 +3099,7 @@ function renderCatsTab() {
       <div class="catCompactRow">
         <div class="catMiniSpriteWrap">
           <img
-            src="img/cat.png"
+            src="${getCatBaseImage(c)}"
             class="catSprite colorized"
             style="--hue:${c.hue}deg;width:32px;height:32px;display:block;image-rendering:pixelated;"
             alt=""
@@ -3092,7 +3107,7 @@ function renderCatsTab() {
 
           ${
             training
-              ? `<img src="img/jim1.png" class="catDumbbell" data-jim="${c.id}"
+              ? `<img src="${getTrainingImage(c, 1)}" class="catDumbbell" data-jim="${c.id}"
                    style="position:absolute;inset:0;width:32px;height:32px;image-rendering:pixelated;pointer-events:none;" alt="" />`
               : (onQuest && weaponImg)
                 ? `<img src="${weaponImg}" class="catWeapon"
@@ -3449,7 +3464,13 @@ function toggleDumbbells() {
     if (!job) continue;
     const img = document.querySelector(`img[data-jim="${job.catId}"]`);
     if (!img) continue;
-    img.src = jimFlip ? "img/jim2.png" : "img/jim1.png";
+    const cat =
+  state.cats.find(c => c.id === job.catId);
+
+img.src = getTrainingImage(
+  cat,
+  jimFlip ? 2 : 1
+);
   }
 }
 
