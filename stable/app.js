@@ -1164,24 +1164,21 @@ function openTutorialScoutModal() {
     <div class="panelCard" style="margin-top:10px;">
       <div class="modalList">
         ${candidates.map(c => {
+  return `
+    <div class="modalItem" data-pick="${c.id}">
+      <div style="display:flex;gap:10px;align-items:center;">
+        <div style="width:56px;height:56px;position:relative;flex:0 0 56px;">
           <img src="${getCatBaseImage(c)}" class="catSprite colorized"
-  style="--hue:${c.hue}deg;width:56px;height:56px;" />
-          return `
-            <div class="modalItem" data-pick="${c.id}">
-              <div style="display:flex;gap:10px;align-items:center;">
-                <div style="width:56px;height:56px;position:relative;flex:0 0 56px;">
-                  <img src="img/cat.png" class="catSprite colorized"
-                    style="--hue:${c.hue}deg;width:56px;height:56px;" />
-                  ${weapon ? `<img src="${weapon}" style="position:absolute;left:0;top:0;width:56px;height:56px;image-rendering:pixelated;">` : ""}
-                </div>
-                <div style="min-width:0;">
-                  <b>${escapeHtml(c.name)}</b> <span class="dim">Lv${c.level}</span>
-                  <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.agi} INT ${c.int}</div>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join("")}
+            style="--hue:${c.hue}deg;width:56px;height:56px;image-rendering:pixelated;" />
+        </div>
+        <div style="min-width:0;">
+          <b>${escapeHtml(c.name)}</b> <span class="dim">Lv${c.level}</span>
+          <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.agi} INT ${c.int}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}).join("")}
       </div>
     </div>
 
@@ -2352,28 +2349,22 @@ function openScoutModal(fromPaidScout) {
         <button class="ghost smallBtn" id="btnRescout">再スカウト</button>
       </div>
       <div class="modalList" style="margin-top:10px;">
-        ${
-          list.length === 0
-            ? `<div class="dim">候補がありません。スカウトしてください</div>`
-            : list.map(c => {
-              <img src="${getCatBaseImage(c)}" class="catSprite colorized"
-  style="--hue:${c.hue}deg; width:56px; height:56px;" />
-              return `
-                  <div class="modalItem" style="display:flex; gap:10px; align-items:center;">
-                    <div style="width:56px;height:56px;position:relative;flex:0 0 56px;">
-                      <img src="img/cat.png" class="catSprite colorized"
-                        style="--hue:${c.hue}deg; width:56px; height:56px;" />
-                      ${weapon ? `<img src="${weapon}" style="position:absolute;left:0;top:0;width:56px;height:56px;image-rendering:pixelated;">` : ""}
-                    </div>
-                    <div style="flex:1;min-width:0;">
-                      <div><b>${escapeHtml(c.name)}</b> <span class="dim">Lv${c.level}</span></div>
-                      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.agi} INT ${c.int}</div>
-                    </div>
-                    <button class="primary smallBtn" data-hire="${c.id}" ${canHireMore ? "" : "disabled"}
-                      style="${canHireMore ? "" : "opacity:.6;"}">雇用</button>
-                  </div>
-                `;
-            }).join("")
+        ${list.map(c => {
+  return `
+    <div class="modalItem" style="display:flex; gap:10px; align-items:center;">
+      <div style="width:56px;height:56px;position:relative;flex:0 0 56px;">
+        <img src="${getCatBaseImage(c)}" class="catSprite colorized"
+          style="--hue:${c.hue}deg; width:56px; height:56px; image-rendering:pixelated;" />
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div><b>${escapeHtml(c.name)}</b> <span class="dim">Lv${c.level}</span></div>
+        <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.agi} INT ${c.int}</div>
+      </div>
+      <button class="primary smallBtn" data-hire="${c.id}" ${canHireMore ? "" : "disabled"}
+        style="${canHireMore ? "" : "opacity:.6;"}">雇用</button>
+    </div>
+  `;
+}).join("")}
         }
       </div>
     </div>
@@ -3111,6 +3102,7 @@ function renderCatsTab() {
             training
               ? `<img src="${getTrainingImage(c, 1)}" class="catDumbbell" data-jim="${c.id}"
                    style="position:absolute;inset:0;width:32px;height:32px;image-rendering:pixelated;pointer-events:none;" alt="" />`
+              : ""
           }
         </div>
 
@@ -3263,20 +3255,15 @@ function openCatDetailModal(catId) {
 />
 
   const html = `
-    <div class="panelCard" style="display:flex;gap:12px;align-items:center;">
-      <div class="catSpriteWrap" style="position:relative;width:64px;height:64px;flex:0 0 64px;">
-        <img
-          src="img/cat.png"
-          class="catSprite colorized"
-          style="--hue:${c.hue}deg;width:64px;height:64px;display:block;image-rendering:pixelated;"
-          alt=""
-        />
-        ${weaponImg ? `
-          <img src="${weaponImg}"
-            style="position:absolute;inset:0;width:64px;height:64px;image-rendering:pixelated;pointer-events:none;"
-            alt="" />
-        ` : ""}
-      </div>
+  <div class="panelCard" style="display:flex;gap:12px;align-items:center;">
+    <div class="catSpriteWrap" style="position:relative;width:64px;height:64px;flex:0 0 64px;">
+      <img
+        src="${getCatBaseImage(c)}"
+        class="catSprite colorized"
+        style="--hue:${c.hue}deg;width:64px;height:64px;display:block;image-rendering:pixelated;"
+        alt=""
+      />
+    </div>
 
       <div style="min-width:0;">
         <div><b>${escapeHtml(c.name)}</b> <span class="dim">Lv${c.level}</span></div>
