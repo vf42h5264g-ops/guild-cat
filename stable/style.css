@@ -584,3 +584,13 @@ img,svg,canvas{ max-width:100%; height:auto; }
 .bgCat.sleep{
   background-image:url("img/cats/cat_sleep.png");
 }
+
+/* =========================
+   Matatabi Boost
+   ========================= */
+.catSprite.matatabiBoost{
+  filter:
+    hue-rotate(var(--hue, 0deg))
+    drop-shadow(0 0 6px rgba(90, 255, 140, .9))
+    drop-shadow(0 0 12px rgba(90, 255, 140, .45));
+}
