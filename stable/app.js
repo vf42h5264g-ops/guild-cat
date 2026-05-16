@@ -2328,7 +2328,7 @@ function finishTrainingIfDone() {
       catId: job.catId,
       durationMin: job.durationMin,
       useCost: job.useCost,
-      exp: job.expGain,
+      exp: expGain,
     });
 
     pushLog(`訓練完了：枠${job.slotNo} / EXP ${job.expGain}（受取待ち）`);
