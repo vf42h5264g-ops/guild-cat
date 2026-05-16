@@ -536,3 +536,51 @@ img,svg,canvas{ max-width:100%; height:auto; }
   display:block;
   image-rendering:auto;
 }
+
+#guildScene{
+  position:relative;
+  width:100%;
+  overflow:hidden;
+  border-radius:24px;
+}
+
+#guildBg{
+  width:100%;
+  display:block;
+}
+
+#catLayer{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:10;
+}
+
+.bgCat{
+  position:absolute;
+
+  width:48px;
+  height:48px;
+
+  transform:translate(-50%,-50%);
+
+  background-size:contain;
+  background-repeat:no-repeat;
+  background-position:center;
+
+  transition:
+    left 4s linear,
+    top 4s linear;
+}
+
+.bgCat.idle{
+  background-image:url("img/cats/cat_front.png");
+}
+
+.bgCat.walk{
+  background-image:url("img/cats/cat_side.png");
+}
+
+.bgCat.sleep{
+  background-image:url("img/cats/cat_sleep.png");
+}
