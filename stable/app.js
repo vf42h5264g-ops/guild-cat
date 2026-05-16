@@ -344,6 +344,24 @@ function getTrainingImage(cat, frame = 1) {
     : "img/jim1.png";
 }
 
+function getQuestCatImage(cat) {
+  switch (cat.personality) {
+    case "ツンデレ": return "img/cats/cat_tsundere.png";
+    case "やんちゃ": return "img/cats/cat_yancha.png";
+    case "クール": return "img/cats/cat_cool.png";
+    case "あまえんぼ": return "img/cats/cat_amaenbo.png";
+    default: return getCatBaseImage(cat);
+  }
+}
+
+function getDisplayCatImage(cat) {
+  const busy = isCatBusy(cat.id);
+
+  if (busy === "quest") return getQuestCatImage(cat);
+  if (busy === "training") return getTrainingImage(cat, 1);
+
+  return getCatBaseImage(cat);
+}
 
 /* =========================
    DOM
@@ -3092,18 +3110,12 @@ function renderCatsTab() {
       <div class="catCompactRow">
         <div class="catMiniSpriteWrap">
           <img
-            src="${getCatBaseImage(c)}"
-            class="catSprite colorized"
+            src="${getDisplayCatImage(c)}"
+            class="catSprite colorized ${training ? "catDumbbell" : ""}"
+            ${training ? `data-jim="${c.id}"` : ""}
             style="--hue:${c.hue}deg;width:32px;height:32px;display:block;image-rendering:pixelated;"
             alt=""
           />
-
-          ${
-            training
-              ? `<img src="${getTrainingImage(c, 1)}" class="catDumbbell" data-jim="${c.id}"
-                   style="position:absolute;inset:0;width:32px;height:32px;image-rendering:pixelated;pointer-events:none;" alt="" />`
-              : ""
-          }
         </div>
 
         <div class="catCompactName">
