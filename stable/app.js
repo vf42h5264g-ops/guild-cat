@@ -3078,15 +3078,6 @@ function renderCatsTab() {
   const weaponImg = getWeaponImageByPersonality(c.personality);
   const training = busy === "training";
   const onQuest = busy === "quest";
-
-  const CAT_SPOTS = [
-
-  {x:18, y:74},
-  {x:35, y:68},
-  {x:52, y:76},
-  {x:72, y:70},
-
-];
      
   return `
     <div class="panelCard catCompactCard">
@@ -3175,18 +3166,28 @@ function renderCatsTab() {
   document.getElementById("btnViewCandidates")?.addEventListener("click", () => openScoutModal(false));
 }
 
+/* =========================
+   Background Cat
+   ========================= */
+const CAT_SPOTS = [
+  { x: 18, y: 74 },
+  { x: 35, y: 68 },
+  { x: 52, y: 76 },
+  { x: 72, y: 70 },
+];
+
 function createBgCat(){
+
+  const layer = document.getElementById("catLayer");
+  if (!layer) return null;
 
   const cat = document.createElement("div");
 
   cat.className = "bgCat idle";
-
   cat.style.left = "50%";
   cat.style.top = "72%";
 
-  document
-    .getElementById("catLayer")
-    .appendChild(cat);
+  layer.appendChild(cat);
 
   return cat;
 }
@@ -3459,10 +3460,10 @@ boot();
 
 const bgCat = createBgCat();
 
-setInterval(()=>{
-
-  moveBgCat(bgCat);
-
-}, 8000);
+if (bgCat) {
+  setInterval(()=>{
+    moveBgCat(bgCat);
+  }, 8000);
+}
 
 console.log("END");
