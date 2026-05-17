@@ -355,10 +355,11 @@ function getQuestCatImage(cat) {
 }
 
 function getDisplayCatImage(cat) {
+
   const busy = isCatBusy(cat.id);
 
-  if (busy === "quest") return getQuestCatImage(cat);
-  if (busy === "training") return getTrainingImage(cat, 1);
+  if (busy === "training")
+    return getTrainingImage(cat, 1);
 
   return getCatBaseImage(cat);
 }
@@ -2289,38 +2290,47 @@ function startTraining(slotNo, catId, durationMin) {
   }
   state.gold -= useCost;
 
-  if (useMatatabi) {
+  const { expMult } = getTrainingSlotMeta(slotNo);
 
-    if ((state.items?.matatabi || 0) <= 0) {
+const expGain =
+  Math.floor(
+    durationMin *
+    TRAINING.BASE_EXP_PER_MIN *
+    expMult
+  );
 
-      toast("マタタビがないにゃ");
-      return;
-    }
+const useMatatabi =
+  !!document.getElementById("useMatatabi")?.checked;
 
-    state.items.matatabi--;
+if (useMatatabi) {
+
+  if ((state.items?.matatabi || 0) <= 0) {
+
+    toast("マタタビがないにゃ");
+    return;
   }
 
-  const { expMult } = getTrainingSlotMeta(slotNo);
-  const expGain = Math.floor(durationMin * TRAINING.BASE_EXP_PER_MIN * expMult);
+  state.items.matatabi--;
+}
 
-  const useMatatabi =
-    document.getElementById("useMatatabi")?.checked;
+const now = Date.now();
 
-  const now = Date.now();
-  const endAt = now + durationMin * 60 * 1000;
+const endAt =
+  now + durationMin * 60 * 1000;
 
-  state.trainingJobs[slotNo - 1] = {
-    slotNo,
-    catId,
-    durationMin,
-    useCost,
-    expGain,
+state.trainingJobs[slotNo - 1] = {
 
-    matatabi: useMatatabi,
-    
-    startAt: now,
-    endAt,
-  };
+  slotNo,
+  catId,
+  durationMin,
+  useCost,
+  expGain,
+
+  matatabi: useMatatabi,
+
+  startAt: now,
+  endAt,
+};
 
   pushLog(`訓練開始：枠${slotNo} / ${durationMin}分 / 使用料 ${useCost.toLocaleString()}G / EXP ${expGain}`);
   renderAll();
