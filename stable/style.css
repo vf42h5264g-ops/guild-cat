@@ -647,3 +647,9 @@ img,svg,canvas{ max-width:100%; height:auto; }
   border-radius:12px;
   display:block;
 }
+
+.adBtn:disabled{
+  opacity:.35;
+  filter:grayscale(1);
+  cursor:default;
+}
