@@ -3293,6 +3293,7 @@ function moveBgCat(cat){
 
   cat.classList.remove("idle","sleep");
   cat.classList.add("walk");
+　showBgCatBubble(cat, "walk");
 
   cat.style.left = spot.x + "%";
   cat.style.top  = spot.y + "%";
@@ -3302,15 +3303,55 @@ function moveBgCat(cat){
     cat.classList.remove("walk");
 
     if(Math.random() < 0.2){
-
       cat.classList.add("sleep");
-
+      showBgCatBubble(cat, "sleep");
     }else{
-
       cat.classList.add("idle");
+      showBgCatBubble(cat, "idle");
     }
 
   }, 4000);
+}
+
+const BG_CAT_LINES = {
+  idle: [
+    "今日は静かだね",
+    "ぽかぽかする〜",
+    "なにしようかな",
+  ],
+  walk: [
+    "見回り中！",
+    "ちょっと行ってくる",
+    "お仕事お仕事〜",
+  ],
+  sleep: [
+    "すぅ…",
+    "おやすみ〜",
+    "もうだめにゃ…",
+  ],
+};
+
+function showBgCatBubble(cat, mode) {
+  if (!cat) return;
+
+  const lines = BG_CAT_LINES[mode] || BG_CAT_LINES.idle;
+  const text = lines[Math.floor(Math.random() * lines.length)];
+
+  let bubble = cat.querySelector(".bgCatBubble");
+
+  if (!bubble) {
+    bubble = document.createElement("div");
+    bubble.className = "bgCatBubble";
+    cat.appendChild(bubble);
+  }
+
+  bubble.textContent = text;
+  bubble.classList.add("show");
+
+  clearTimeout(cat._bubbleTimer);
+  cat._bubbleTimer = setTimeout(() => {
+    bubble.classList.remove("show");
+  }, 2600);
 }
 
 function openCatDetailModal(catId) {
