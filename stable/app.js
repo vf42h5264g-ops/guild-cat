@@ -3382,7 +3382,7 @@ function openCatDetailModal(catId) {
   <div class="panelCard" style="display:flex;gap:12px;align-items:center;">
     <div class="catSpriteWrap" style="position:relative;width:64px;height:64px;flex:0 0 64px;">
       <img
-        src="${getCatBaseImage(c)}"
+        src="${getCatStatusImage(c)}"
         class="catSprite colorized"
         style="--hue:${c.hue}deg;width:64px;height:64px;display:block;image-rendering:pixelated;"
         alt=""
@@ -3425,6 +3425,20 @@ function openCatDetailModal(catId) {
     closeModal();
     openFireCatModal(catId);
   });
+}
+
+function getCatStatusImage(cat) {
+  const busy = isCatBusy(cat.id);
+
+  if (busy === "quest") {
+    return "img/cats/cat_side.png";
+  }
+
+  if (busy === "training") {
+    return "img/jim1.png";
+  }
+
+  return getCatBaseImage(cat);
 }
 
 function renderTrainingTab() {
