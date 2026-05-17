@@ -367,6 +367,18 @@ function getDisplayCatImage(cat) {
   return getCatBaseImage(cat);
 }
 
+function getDetailCatImage(cat) {
+
+  const busy = isCatBusy(cat.id);
+
+  if (busy === "quest")
+    return getQuestCatImage(cat);
+
+  if (busy === "training")
+    return getTrainingImage(cat, 1);
+
+  return getCatBaseImage(cat);
+}
 /* =========================
    DOM
    ========================= */
@@ -3167,7 +3179,7 @@ function renderCatsTab() {
       <div class="catCompactRow">
         <div class="catMiniSpriteWrap">
           <img
-            src="${getDisplayCatImage(c)}"
+            src="${getDetailCatImage(c)}"
             class="catSprite colorized ${training ? "catDumbbell" : ""} ${
               (state.trainingJobs || []).some(j => j?.catId === c.id && j.matatabi)
                 ? "matatabiBoost"
