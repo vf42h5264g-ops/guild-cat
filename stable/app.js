@@ -2306,7 +2306,7 @@ if (useMatatabi) {
 
   if ((state.items?.matatabi || 0) <= 0) {
 
-    toast("マタタビがないにゃ");
+    pushLog("マタタビがないにゃ");
     return;
   }
 
@@ -3160,7 +3160,11 @@ function renderCatsTab() {
         <div class="catMiniSpriteWrap">
           <img
             src="${getDisplayCatImage(c)}"
-            class="catSprite colorized ${training ? "catDumbbell" : ""} ${training?.matatabi ? "matatabiBoost" : ""}
+            class="catSprite colorized ${training ? "catDumbbell" : ""} ${
+              (state.trainingJobs || []).some(j => j?.catId === c.id && j.matatabi)
+                ? "matatabiBoost"
+                : ""
+            }"
             ${training ? `data-jim="${c.id}"` : ""}
             style="--hue:${c.hue}deg;width:32px;height:32px;display:block;image-rendering:pixelated;"
             alt=""
