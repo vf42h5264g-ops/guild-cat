@@ -3282,12 +3282,23 @@ function moveBgCat(cat){
 
   if (spot.x < currentX) {
 
-  cat.classList.add("flip");
+    cat.classList.add("flip");
 
-} else {
+  } else {
 
-  cat.classList.remove("flip");
-}
+    cat.classList.remove("flip");
+  }
+
+  const bubble =
+    cat.querySelector(".bgCatBubble");
+
+  if (bubble) {
+
+    bubble.classList.toggle(
+      "flipFix",
+      cat.classList.contains("flip")
+    );
+  }
 
   cat.classList.remove("idle","sleep");
   cat.classList.add("walk");
