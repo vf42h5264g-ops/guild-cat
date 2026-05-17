@@ -573,6 +573,16 @@ img,svg,canvas{ max-width:100%; height:auto; }
     top 4s linear;
 }
 
+.bgCat.flip{
+  transform:
+    translate(-50%,-50%)
+    scaleX(-1);
+}
+
+.bgCat.flip .catBubble{
+  transform:scaleX(-1);
+}
+
 .bgCat.idle{
   background-image:url("img/cats/cat_front.png");
 }
