@@ -3302,8 +3302,10 @@ function moveBgCat(cat){
 
   cat.classList.remove("idle","sleep");
   cat.classList.add("walk");
+  if (Math.random() < 0.25) {
 　showBgCatBubble(cat, "walk");
-
+  }
+   
   cat.style.left = spot.x + "%";
   cat.style.top  = spot.y + "%";
 
@@ -3313,10 +3315,14 @@ function moveBgCat(cat){
 
     if(Math.random() < 0.2){
       cat.classList.add("sleep");
-      showBgCatBubble(cat, "sleep");
+      if (Math.random() < 0.25) {
+  showBgCatBubble(cat, "sleep");
+}
     }else{
       cat.classList.add("idle");
-      showBgCatBubble(cat, "idle");
+      if (Math.random() < 0.18) {
+  showBgCatBubble(cat, "idle");
+}
     }
 
   }, 4000);
