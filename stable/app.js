@@ -3280,16 +3280,14 @@ function moveBgCat(cat){
   const currentX =
     parseFloat(cat.style.left);
 
-  if(spot.x < currentX){
+  if (spot.x < currentX) {
 
-    cat.style.transform =
-      "translate(-50%,-50%) scaleX(-1)";
+  cat.classList.add("flip");
 
-  }else{
+} else {
 
-    cat.style.transform =
-      "translate(-50%,-50%) scaleX(1)";
-  }
+  cat.classList.remove("flip");
+}
 
   cat.classList.remove("idle","sleep");
   cat.classList.add("walk");
