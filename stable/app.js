@@ -1157,7 +1157,7 @@ function startTutorialFlow() {
 
 function generateCandidates(isTutorial = false) {
   const personalities = ["あまえんぼ", "ツンデレ", "クール", "やんちゃ"];
-  const names = ["ミケ", "タマ", "モモ", "コテツ", "マロン", "ユズ", "コハク", "ルナ", "ソラ", "ハル"];
+  const names = ["ミケ", "タマ", "モモ", "コテツ", "マロン", "ユズ", "コハク", "ルナ", "ソラ", "ハル","ちくわ","モカ","ココ","かにかま","きなこ"];
 
   const list = [];
   for (let i = 0; i < 3; i++) {
