@@ -759,10 +759,10 @@ function watchMatatabiAd() {
     state.items.matatabi =
       (state.items.matatabi || 0) + 1;
 
-    log("🎁 支援物資でマタタビを1個受け取った");
+    pushlog("🎁 支援物資でマタタビを1個受け取った");
 
     save();
-    render();
+    renderAll();
 
     toast("マタタビを1個もらったにゃ！");
 
