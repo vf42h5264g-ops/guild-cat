@@ -194,6 +194,11 @@ const ITEM_MASTER = {
   },
 };
 
+const AD_REWARD = {
+  DAILY_LIMIT: 3,
+  WAIT_MS: 3000
+};
+
 function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -691,6 +696,77 @@ function setTabGlow(tabKey, on) {
   const btn = document.querySelector(`.tab[data-tab="${tabKey}"]`);
   if (!btn) return;
   btn.classList.toggle("glow", !!on);
+}
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function ensureAdState() {
+
+  state.adReward ??= {
+    date: todayKey(),
+    count: 0
+  };
+
+  if (state.adReward.date !== todayKey()) {
+    state.adReward.date = todayKey();
+    state.adReward.count = 0;
+  }
+}
+
+function watchMatatabiAd() {
+
+  ensureAdState();
+
+  if (state.adReward.count >= AD_REWARD.DAILY_LIMIT) {
+    toast("今日の支援物資は受け取り済みにゃ");
+    return;
+  }
+
+  openModal(
+    "ギルド協会からのお知らせ",
+    `
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        
+        <img
+          src="img/ads/ad_matatabi_farm.png"
+          class="fakeAdImg"
+          alt=""
+        >
+
+        <div class="dim" style="text-align:center;">
+          支援物資を受け取っています...
+        </div>
+
+      </div>
+    `
+  );
+
+  setTimeout(() => {
+
+    closeModal();
+
+    ensureAdState();
+
+    if (state.adReward.count >= AD_REWARD.DAILY_LIMIT) {
+      return;
+    }
+
+    state.adReward.count++;
+
+    state.items ??= {};
+    state.items.matatabi =
+      (state.items.matatabi || 0) + 1;
+
+    log("🎁 支援物資でマタタビを1個受け取った");
+
+    save();
+    render();
+
+    toast("マタタビを1個もらったにゃ！");
+
+  }, AD_REWARD.WAIT_MS);
 }
 
 /* =========================
