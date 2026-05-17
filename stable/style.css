@@ -594,3 +594,31 @@ img,svg,canvas{ max-width:100%; height:auto; }
     drop-shadow(0 0 6px rgba(90, 255, 140, .9))
     drop-shadow(0 0 12px rgba(90, 255, 140, .45));
 }
+
+.bgCatBubble{
+  position:absolute;
+  left:50%;
+  bottom:100%;
+  transform:translateX(-50%) translateY(-6px);
+
+  max-width:120px;
+  padding:5px 8px;
+  border-radius:999px;
+
+  background:rgba(18,22,30,.92);
+  border:1px solid rgba(255,255,255,.18);
+  color:#fff;
+
+  font-size:11px;
+  font-weight:700;
+  white-space:nowrap;
+
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease, transform .25s ease;
+}
+
+.bgCatBubble.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(-12px);
+}
