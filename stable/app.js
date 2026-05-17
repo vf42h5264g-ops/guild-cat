@@ -358,6 +358,9 @@ function getDisplayCatImage(cat) {
 
   const busy = isCatBusy(cat.id);
 
+  if (busy === "quest")
+    return getQuestCatImage(cat);
+
   if (busy === "training")
     return getTrainingImage(cat, 1);
 
@@ -2260,12 +2263,20 @@ function openTrainingStartModal(slotNo) {
   });
 
   btnStart.addEventListener("click", () => {
-    closeModal();
-    startTraining(slotNo, pickCat, pickMin);
-  });
+  const useMatatabi =
+    !!document.getElementById("useMatatabi")?.checked;
+
+  if (useMatatabi && (state.items?.matatabi || 0) <= 0) {
+    pushLog("マタタビがありません");
+    return;
+  }
+
+  closeModal();
+  startTraining(slotNo, pickCat, pickMin, useMatatabi);
+});
 }
 
-function startTraining(slotNo, catId, durationMin) {
+function startTraining(slotNo, catId, durationMin, useMatatabi = false) {
   ensureTrainingState();
 
   if (state.trainingJobs[slotNo - 1]) {
@@ -2298,9 +2309,6 @@ const expGain =
     TRAINING.BASE_EXP_PER_MIN *
     expMult
   );
-
-const useMatatabi =
-  !!document.getElementById("useMatatabi")?.checked;
 
 if (useMatatabi) {
 
