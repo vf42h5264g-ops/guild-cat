@@ -580,7 +580,9 @@ img,svg,canvas{ max-width:100%; height:auto; }
 }
 
 .bgCat.flip .catBubble{
-  transform:scaleX(-1);
+  transform:
+    translateX(-50%)
+    scaleX(-1);
 }
 
 .bgCat.idle{
