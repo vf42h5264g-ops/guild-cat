@@ -3305,7 +3305,40 @@ function renderCatsTab() {
       </div>
     </div>
   </div>
+  ${(() => {
 
+  ensureAdState();
+
+  const adLeft =
+    AD_REWARD.DAILY_LIMIT -
+    state.adReward.count;
+
+  return `
+    <div class="panelCard">
+
+      <div><b>🎁 ギルド協会の支援物資</b></div>
+
+      <div class="dim" style="margin-top:6px;">
+        広告を見るとマタタビを1個もらえます
+      </div>
+
+      <div class="dim">
+        本日あと ${adLeft}/${AD_REWARD.DAILY_LIMIT} 回
+      </div>
+
+      <button
+        id="watchMatatabiAd"
+        class="primary"
+        style="margin-top:10px;width:100%;"
+        ${adLeft <= 0 ? "disabled" : ""}
+      >
+        広告を見る
+      </button>
+
+    </div>
+  `;
+
+})()}
     ${catsHtml || `<div class="panelCard"><div class="dim">ネコがいません。チュートリアルから開始してください。</div></div>`}
 
     <div class="panelCard">
@@ -3330,7 +3363,11 @@ function renderCatsTab() {
 
   document.getElementById("btnScout")?.addEventListener("click", () => scoutPayAndOpen());
   document.getElementById("btnViewCandidates")?.addEventListener("click", () => openScoutModal(false));
+
+  document.getElementById("watchMatatabiAd")
+  ?.addEventListener("click", watchMatatabiAd);
 }
+  
 
 /* =========================
    Background Cat
