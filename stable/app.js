@@ -3328,11 +3328,11 @@ function renderCatsTab() {
 
       <button
         id="watchMatatabiAd"
-        class="primary"
+        class="primary adBtn"
         style="margin-top:10px;width:100%;"
         ${adLeft <= 0 ? "disabled" : ""}
       >
-        広告を見る
+        ${adLeft <= 0 ? "本日の受取済み" : "広告を見る"}
       </button>
 
     </div>
