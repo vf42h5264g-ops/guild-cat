@@ -579,9 +579,16 @@ img,svg,canvas{ max-width:100%; height:auto; }
     scaleX(-1);
 }
 
-.bgCat.flip .catBubble{
+.bgCat.flip .bgCatBubble{
   transform:
     translateX(-50%)
+    scaleX(-1);
+}
+
+.bgCat.flip .bgCatBubble.show{
+  transform:
+    translateX(-50%)
+    translateY(-12px)
     scaleX(-1);
 }
 
