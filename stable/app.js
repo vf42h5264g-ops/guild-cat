@@ -720,7 +720,9 @@ function watchMatatabiAd() {
   ensureAdState();
 
   if (state.adReward.count >= AD_REWARD.DAILY_LIMIT) {
-    toast("今日の支援物資は受け取り済みにゃ");
+    pushLog("今日の支援物資は受け取り済みにゃ");
+    renderAll();
+    save();
     return;
   }
 
@@ -728,7 +730,6 @@ function watchMatatabiAd() {
     "ギルド協会からのお知らせ",
     `
       <div style="display:flex;flex-direction:column;gap:12px;">
-        
         <img
           src="img/ads/ad_matatabi_farm.png"
           class="fakeAdImg"
@@ -738,7 +739,6 @@ function watchMatatabiAd() {
         <div class="dim" style="text-align:center;">
           支援物資を受け取っています...
         </div>
-
       </div>
     `
   );
@@ -750,6 +750,9 @@ function watchMatatabiAd() {
     ensureAdState();
 
     if (state.adReward.count >= AD_REWARD.DAILY_LIMIT) {
+      pushLog("今日の支援物資は受け取り済みにゃ");
+      renderAll();
+      save();
       return;
     }
 
@@ -759,9 +762,11 @@ function watchMatatabiAd() {
     state.items.matatabi =
       (state.items.matatabi || 0) + 1;
 
-    pushlog("🎁 支援物資でマタタビを1個受け取った");
-
+    // ←ここ重要
     save();
+
+    pushLog("🎁 支援物資でマタタビを1個受け取った");
+
     renderAll();
 
   }, AD_REWARD.WAIT_MS);
