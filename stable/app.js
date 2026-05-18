@@ -764,8 +764,6 @@ function watchMatatabiAd() {
     save();
     renderAll();
 
-    toast("マタタビを1個もらったにゃ！");
-
   }, AD_REWARD.WAIT_MS);
 }
 
