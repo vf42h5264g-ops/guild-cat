@@ -895,10 +895,14 @@ function openDailyBonusModal() {
 
   if (day === 7) {
   body = `
-    <div class="panelCard">
-      <div style="font-size:18px;font-weight:900;">✨ 新しい日常</div>
-      <div class="dim" style="margin-top:8px;">
-        新しいセリフ、または新しいモーションを解放できます
+    <div class="panelCard dailySpecialCard">
+      <div class="dailySparkles">✨ ✨ ✨</div>
+
+      <div style="position:relative;z-index:1;">
+        <div style="font-size:18px;font-weight:900;">✨ 新しい日常</div>
+        <div class="dim" style="margin-top:8px;">
+          新しいセリフ、または新しいモーションを解放できます
+        </div>
       </div>
     </div>
   `;
