@@ -2475,15 +2475,25 @@ function openTrainingStartModal(slotNo) {
       <div id="tDur" class="modalList"></div>
     </div>
 
-    <div class="checkRow">
-      <label>
-        <input type="checkbox" id="useMatatabi">
-        🌿 マタタビを使う
-        <span class="dim">
-          (所持: ${state.items?.matatabi || 0})
-        </span>
-      </label>
-    </div>
+    <div class="checkRow ${((state.items?.matatabi || 0) <= 0) ? "disabled" : ""}">
+
+  <label>
+
+    <input
+      type="checkbox"
+      id="useMatatabi"
+      ${((state.items?.matatabi || 0) <= 0) ? "disabled" : ""}
+    >
+
+    🌿 マタタビを使う
+
+    <span class="dim">
+      (所持: ${state.items?.matatabi || 0})
+    </span>
+
+  </label>
+
+</div>
 
     <div class="modalFooter">
       <button class="ghost" id="tCancel">戻る</button>
