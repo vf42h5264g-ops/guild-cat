@@ -70,20 +70,20 @@ const LEVEL = {
   },
   gain3(personality) {
     switch (personality) {
-      case "ツンデレ": return { str: 2, agi: 1, int: 0 };
-      case "やんちゃ": return { str: 0, agi: 2, int: 1 };
-      case "クール":   return { str: 1, agi: 0, int: 2 };
-      case "あまえんぼ": return { str: 1, agi: 1, int: 1 };
-      default: return { str: 1, agi: 1, int: 1 };
+      case "ツンデレ": return { str: 2, spd: 1, int: 0 };
+      case "やんちゃ": return { str: 0, spd: 2, int: 1 };
+      case "クール":   return { str: 1, spd: 0, int: 2 };
+      case "あまえんぼ": return { str: 1, spd: 1, int: 1 };
+      default: return { str: 1, spd: 1, int: 1 };
     }
   },
   bonusPick(personality) {
     switch (personality) {
       case "ツンデレ": return "str";
-      case "やんちゃ": return "agi";
+      case "やんちゃ": return "spd";
       case "クール":   return "int";
       case "あまえんぼ": {
-        const a = ["str", "agi", "int"];
+        const a = ["str", "spd", "int"];
         return a[Math.floor(Math.random() * a.length)];
       }
       default: return "str";
@@ -688,7 +688,7 @@ function daysBetween(aKey, bKey) {
   return Math.floor(ms / (24 * 60 * 60 * 1000));
 }
 function totalPower() {
-  return (state.cats || []).reduce((sum, c) => sum + c.str + c.agi + c.int, 0);
+  return (state.cats || []).reduce((sum, c) => sum + c.str + c.spd + c.int, 0);
 }
 function catById(id) {
   return (state.cats || []).find(c => c.id === id);
@@ -1112,12 +1112,12 @@ function isCatBusy(catId) {
    ========================= */
 function makeCat(personality, name) {
   const base = 5 + Math.floor(Math.random() * 3);
-  let str = base, agi = base, intv = base;
+  let str = base, spd = base, intv = base;
 
   const g = LEVEL.gain3(personality);
   const initBoost = (x) => (x >= 2 ? 1 : 0);
   str += initBoost(g.str);
-  agi += initBoost(g.agi);
+  spd += initBoost(g.spd);
   intv += initBoost(g.int);
 
   return {
@@ -1127,7 +1127,7 @@ function makeCat(personality, name) {
     level: 1,
     exp: 0,
     str,
-    agi,
+    spd,
     int: intv,
     hue: randomHue(),
   };
@@ -1145,7 +1145,7 @@ function addExp(cat, amount) {
 
     const g = LEVEL.gain3(cat.personality);
     cat.str += g.str;
-    cat.agi += g.agi;
+    cat.spd += g.spd;
     cat.int += g.int;
 
     if (Math.random() < 0.10) {
@@ -1471,7 +1471,7 @@ function openTutorialScoutModal() {
         </div>
         <div style="min-width:0;">
           <b>${escapeHtml(c.name)}</b> <span class="dim">Lv${c.level}</span>
-          <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.agi} INT ${c.int}</div>
+          <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.spd} INT ${c.int}</div>
         </div>
       </div>
     </div>
@@ -1728,7 +1728,7 @@ function openTutorialQuestSetupModal() {
   partyList.innerHTML = idle.map(c => `
     <div class="modalItem" data-cat="${c.id}">
       <b>${escapeHtml(c.name)}</b> Lv${c.level}
-      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.agi} INT ${c.int}</div>
+      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.spd} INT ${c.int}</div>
     </div>
   `).join("");
 
@@ -2131,7 +2131,7 @@ function openQuestSetupModal(type) {
   partyList.innerHTML = idle.map(c => `
     <div class="modalItem" data-cat="${c.id}">
       <b>${escapeHtml(c.name)}</b> Lv${c.level}
-      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.agi} INT ${c.int}</div>
+      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.spd} INT ${c.int}</div>
     </div>
   `).join("");
 
@@ -2253,14 +2253,14 @@ function calcQuestChance(def, partyIds) {
 
   const getMainStat = (cat) => {
     if (def.main === "STR") return cat.str;
-    if (def.main === "SPD") return cat.agi;
+    if (def.main === "SPD") return cat.spd;
     return cat.int;
   };
 
   const getSubStat = (cat) => {
-    if (def.main === "STR") return cat.agi; // STRクエではSPDを副能力
+    if (def.main === "STR") return cat.spd; // STRクエではSPDを副能力
     if (def.main === "SPD") return cat.int; // SPDクエではINTを副能力
-    return cat.agi; // INTクエではSPDを副能力
+    return cat.spd; // INTクエではSPDを副能力
   };
 
   const getOffStat = (cat) => {
@@ -2269,7 +2269,7 @@ function calcQuestChance(def, partyIds) {
     return cat.str;
   };
 
-  const total = party.reduce((s, c) => s + c.str + c.agi + c.int, 0);
+  const total = party.reduce((s, c) => s + c.str + c.spd + c.int, 0);
   const mainSum = party.reduce((s, c) => s + getMainStat(c), 0);
   const subSum = party.reduce((s, c) => s + getSubStat(c), 0);
   const offSum = party.reduce((s, c) => s + getOffStat(c), 0);
@@ -2503,7 +2503,7 @@ function openTrainingStartModal(slotNo) {
   tCats.innerHTML = idle.map(c => `
     <div class="modalItem" data-cat="${c.id}">
       <b>${escapeHtml(c.name)}</b> Lv${c.level}
-      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.agi} INT ${c.int}</div>
+      <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.spd} INT ${c.int}</div>
     </div>
   `).join("");
 
@@ -2709,7 +2709,7 @@ function openScoutModal(fromPaidScout) {
       </div>
       <div style="flex:1;min-width:0;">
         <div><b>${escapeHtml(c.name)}</b> <span class="dim">Lv${c.level}</span></div>
-        <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.agi} INT ${c.int}</div>
+        <div class="dim">${escapeHtml(c.personality)} / STR ${c.str} SPD ${c.spd} INT ${c.int}</div>
       </div>
       <button class="primary smallBtn" data-hire="${c.id}" ${canHireMore ? "" : "disabled"}
         style="${canHireMore ? "" : "opacity:.6;"}">雇用</button>
@@ -3839,7 +3839,7 @@ function openCatDetailModal(catId) {
       <div style="min-width:0;">
         <div><b>${escapeHtml(c.name)}</b> <span class="dim">Lv${c.level}</span></div>
         <div class="dim">${escapeHtml(c.personality)} / ${statusText}</div>
-        <div class="mono catStats">STR ${c.str} / SPD ${c.agi} / INT ${c.int}</div>
+        <div class="mono catStats">STR ${c.str} / SPD ${c.spd} / INT ${c.int}</div>
       </div>
     </div>
 
