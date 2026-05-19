@@ -3556,7 +3556,17 @@ function renderCatsTab() {
         </button>
       </div>
 
-      ${canFire ? `<div class="dim" style="margin-top:10px;">解雇はRank5から可能（待機中のみ）</div>` : `<div class="dim" style="margin-top:10px;">解雇はRank5で解放</div>`}
+            ${canFire ? `<div class="dim" style="margin-top:10px;">解雇はRank5から可能（待機中のみ）</div>` : `<div class="dim" style="margin-top:10px;">解雇はRank5で解放</div>`}
+    </div>
+
+    <div class="panelCard">
+      <div><b>📖 背景ネコ図鑑</b></div>
+      <div class="dim" style="margin-top:6px;">
+        デイリーボーナスで増えた日常を確認できます
+      </div>
+      <button class="ghost smallBtn" id="btnBgDex" style="margin-top:10px;">
+        図鑑を見る
+      </button>
     </div>
   `;
 
@@ -3569,8 +3579,83 @@ function renderCatsTab() {
 
   document.getElementById("watchMatatabiAd")
   ?.addEventListener("click", watchMatatabiAd);
+
+document.getElementById("btnBgDex")
+  ?.addEventListener("click", openBgDexModal);
 }
   
+function openBgDexModal() {
+
+  const unlockedMotionIds =
+    state.bgUnlocks?.motionIds || [];
+
+  const unlockedLineIds =
+    state.bgUnlocks?.lineIds || [];
+
+  const motionHtml = BG_UNLOCK_MOTIONS.map(m => {
+
+    const unlocked =
+      unlockedMotionIds.includes(m.id);
+
+    return `
+      <div class="dexRow">
+        <span>
+          ${unlocked ? "✔" : "❓"}
+        </span>
+
+        <span>
+          ${unlocked ? escapeHtml(m.name) : "？？？"}
+        </span>
+      </div>
+    `;
+
+  }).join("");
+
+  const lineHtml = BG_UNLOCK_LINES.map((line, i) => {
+
+    const unlocked =
+      unlockedLineIds.includes(String(i));
+
+    return `
+      <div class="dexRow">
+        <span>
+          ${unlocked ? "✔" : "❓"}
+        </span>
+
+        <span>
+          ${unlocked ? escapeHtml(line) : "？？？"}
+        </span>
+      </div>
+    `;
+
+  }).join("");
+
+  const html = `
+
+    <div class="panelCard">
+
+      <div class="sectionTitle">
+        🐱 モーション図鑑
+      </div>
+
+      ${motionHtml}
+
+    </div>
+
+    <div class="panelCard" style="margin-top:12px;">
+
+      <div class="sectionTitle">
+        💬 セリフ図鑑
+      </div>
+
+      ${lineHtml}
+
+    </div>
+
+  `;
+
+  openModal("背景ネコ図鑑", html);
+}
 
 /* =========================
    Background Cat
