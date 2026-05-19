@@ -3779,20 +3779,25 @@ const BG_CAT_LINES = {
     "もうだめにゃ…",
   ],
 };
+function getBgLines(mode) {
 
+  const baseLines =
+    BG_CAT_LINES[mode] || BG_CAT_LINES.idle;
+
+  const unlockedLines =
+    (state.bgUnlocks?.lineIds || [])
+      .map(id => BG_UNLOCK_LINES[Number(id)])
+      .filter(Boolean);
+
+  return [...baseLines, ...unlockedLines];
+}
 function showBgCatBubble(cat, mode) {
   if (!cat) return;
 
-  const baseLines = BG_CAT_LINES[mode] || BG_CAT_LINES.idle;
+  const lines = getBgLines(mode);
 
-const unlockedLines =
-  (state.bgUnlocks?.lineIds || [])
-    .map(id => BG_UNLOCK_LINES[Number(id)])
-    .filter(Boolean);
-
-const lines = baseLines.concat(unlockedLines);
-
-const text = lines[Math.floor(Math.random() * lines.length)];
+  const text =
+    lines[Math.floor(Math.random() * lines.length)];
 
   let bubble = cat.querySelector(".bgCatBubble");
 
