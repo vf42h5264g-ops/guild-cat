@@ -481,3 +481,175 @@ img,svg,canvas{ max-width:100%; height:auto; }
 .rate.low{
   color:#ff5c5c; /* 赤 */
 }
+
+.catCompactCard {
+  padding: 6px 10px;
+}
+
+.catCompactRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+}
+
+.catMiniSpriteWrap {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+}
+
+.catCompactName {
+  min-width: 0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.catCompactName .dim {
+  margin-left: 4px;
+}
+
+.catCompactStatus {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.catCompactRow .smallBtn {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+}
+
+#guildBgWrap{
+  width:100%;
+  border-radius:20px;
+  overflow:hidden;
+  margin-bottom:16px;
+  border:2px solid rgba(255,255,255,.08);
+}
+
+#guildBg{
+  width:100%;
+  display:block;
+  image-rendering:auto;
+}
+
+#guildScene{
+  position:relative;
+  width:100%;
+  overflow:hidden;
+  border-radius:24px;
+}
+
+#guildBg{
+  width:100%;
+  display:block;
+}
+
+#catLayer{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:10;
+}
+
+.bgCat{
+  position:absolute;
+
+  width:48px;
+  height:48px;
+
+  transform:translate(-50%,-50%);
+
+  background-size:contain;
+  background-repeat:no-repeat;
+  background-position:center;
+
+  transition:
+    left 4s linear,
+    top 4s linear;
+}
+
+.bgCat.flip{
+  transform:
+    translate(-50%,-50%)
+    scaleX(-1);
+}
+
+.bgCat.flip .bgCatBubble{
+  transform:
+    translateX(-50%)
+    scaleX(-1);
+}
+
+.bgCat.flip .bgCatBubble.show{
+  transform:
+    translateX(-50%)
+    translateY(-12px)
+    scaleX(-1);
+}
+
+.bgCat.idle{
+  background-image:url("img/cats/cat_front.png");
+}
+
+.bgCat.walk{
+  background-image:url("img/cats/cat_side.png");
+}
+
+.bgCat.sleep{
+  background-image:url("img/cats/cat_sleep.png");
+}
+
+/* =========================
+   Matatabi Boost
+   ========================= */
+.catSprite.matatabiBoost{
+  filter:
+    hue-rotate(var(--hue, 0deg))
+    drop-shadow(0 0 6px rgba(90, 255, 140, .9))
+    drop-shadow(0 0 12px rgba(90, 255, 140, .45));
+}
+
+.bgCatBubble{
+  position:absolute;
+  left:50%;
+  bottom:100%;
+  transform:translateX(-50%) translateY(-6px);
+
+  max-width:120px;
+  padding:5px 8px;
+  border-radius:999px;
+
+  background:rgba(18,22,30,.92);
+  border:1px solid rgba(255,255,255,.18);
+  color:#fff;
+
+  font-size:11px;
+  font-weight:700;
+  white-space:nowrap;
+
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease, transform .25s ease;
+}
+
+.bgCatBubble.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(-12px);
+}
+
+.fakeAdImg{
+  width:100%;
+  border-radius:12px;
+  display:block;
+}
+
+.adBtn:disabled{
+  opacity:.35;
+  filter:grayscale(1);
+  cursor:default;
+}
