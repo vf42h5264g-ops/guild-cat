@@ -1788,7 +1788,7 @@ function startTutorialQuest(partyIds, slotIdx) {
     main: "STR",
     timeType: "S",
     durationMin: 1,
-    baseGold: 2000000000,
+    baseGold: 5000,
     target: 0,
   };
 
@@ -2370,12 +2370,12 @@ function finishQuestsIfDone() {
     } else {
       const roll = Math.random() * 100;
       if (roll <= job.pSuccess) {
-        result = (roll <= job.pSuccess * 0.8) ? "大成功" : "成功";
+        result = (roll <= job.pSuccess * 0.3) ? "大成功" : "成功";
       } else {
         result = "失敗";
       }
 
-      if (result === "大成功" && Math.random() < 0.8) {
+      if (result === "大成功" && Math.random() < 0.2) {
         addItem("matatabi", 1);
         foundItem = {
           id: "matatabi",
