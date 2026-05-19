@@ -3456,6 +3456,126 @@ function moveBgCat(cat){
   }, 4000);
 }
 
+/* =========================
+   Background Cat
+   ========================= */
+
+const BG_UNLOCK_MOTIONS = [
+
+  {
+    id: "cat_1",
+    name: "おすわり",
+    frames: ["img/cats/cat_1.png"]
+  },
+
+  {
+    id: "cat_2",
+    name: "のび～",
+    frames: ["img/cats/cat_2.png"]
+  },
+
+  {
+    id: "cat_3",
+    name: "ぺろぺろ",
+    frames: ["img/cats/cat_3.png"]
+  },
+
+  {
+    id: "cat_4",
+    name: "ふりふり",
+    frames: [
+      "img/cats/cat_4_1.png",
+      "img/cats/cat_4_2.png"
+    ]
+  },
+
+  {
+    id: "cat_5",
+    name: "きょろきょろ",
+    frames: ["img/cats/cat_5.png"]
+  },
+
+  {
+    id: "cat_6",
+    name: "うとうと",
+    frames: ["img/cats/cat_6.png"]
+  },
+
+  {
+    id: "cat_7",
+    name: "へそてん",
+    frames: ["img/cats/cat_7.png"]
+  },
+
+  {
+    id: "cat_8",
+    name: "小走り",
+    frames: [
+      "img/cats/cat_8_1.png",
+      "img/cats/cat_8_2.png"
+    ]
+  },
+
+  {
+    id: "cat_9",
+    name: "びっくり",
+    frames: ["img/cats/cat_9.png"]
+  },
+
+  {
+    id: "cat_10",
+    name: "ごろん",
+    frames: ["img/cats/cat_10.png"]
+  },
+
+  {
+    id: "cat_11",
+    name: "ナイト",
+    frames: ["img/cats/cat_11.png"]
+  },
+
+  {
+    id: "cat_12",
+    name: "シーフ",
+    frames: ["img/cats/cat_12.png"]
+  },
+
+  {
+    id: "cat_13",
+    name: "マジシャン",
+    frames: ["img/cats/cat_13.png"]
+  },
+
+  {
+    id: "cat_14",
+    name: "トレーニング",
+    frames: [
+      "img/cats/cat_14_1.png",
+      "img/cats/cat_14_2.png"
+    ]
+  },
+
+];
+
+const BG_UNLOCK_LINES = [
+
+  "今日の風は気持ちいいにゃ",
+  "なんだか静かだにゃ〜",
+  "ランタンの灯りって落ち着くにゃ",
+  "今日はゆっくり過ごしたいにゃ",
+  "床があったかいにゃ",
+  "みんな頑張ってるにゃ",
+  "ちょっとだけ眠るにゃ…",
+  "お魚の夢を見そうだにゃ",
+  "今日は誰が帰ってくるかにゃ？",
+  "この時間、好きだにゃ",
+  "なんだか安心するにゃ〜",
+  "今日も平和でうれしいにゃ",
+  "ここにいると眠くなるにゃ",
+  "ずっとこんな日が続くといいにゃ",
+
+];
+
 const BG_CAT_LINES = {
   idle: [
     "今日は静かだね",
