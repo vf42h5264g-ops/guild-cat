@@ -1169,7 +1169,7 @@ function addExp(cat, amount) {
    ========================= */
 function newGame() {
   return {
-    version: 5,
+    version: 6,
     guildRank: 1,
     gold: 3500,
 
