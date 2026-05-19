@@ -3642,6 +3642,16 @@ function moveBgCat(cat){
   }, 4000);
 }
 
+function getUnlockedBgMotions() {
+
+  const ids =
+    state.bgUnlocks?.motionIds || [];
+
+  return BG_UNLOCK_MOTIONS.filter(m =>
+    ids.includes(m.id)
+  );
+}
+
 /* =========================
    Background Cat
    ========================= */
