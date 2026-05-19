@@ -2743,7 +2743,7 @@ function openScoutModal(fromPaidScout) {
 
   document.getElementById("btnRescout")?.addEventListener("click", () => {
     closeModal();
-    scoutPayAndOpen();
+    openScoutConfirmModal();
   });
 
   document.querySelectorAll("[data-hire]").forEach(btn => {
@@ -4080,9 +4080,6 @@ function renderTrainingTab() {
       </button>
     </div>
   `;
-
-})()}
-   ensureTrainingState();
 
   const slotCount = state.trainingJobs.length;
   const usedTraining = state.trainingJobs.filter(Boolean).length;
