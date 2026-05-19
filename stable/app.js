@@ -3614,10 +3614,14 @@ function moveBgCat(cat){
     );
   }
 
-  cat.classList.remove("idle","sleep");
+  cat.classList.remove("idle", "sleep");
   cat.classList.add("walk");
+
+  clearBgCatAnim(cat);
+  cat.style.backgroundImage = "";
+
   if (Math.random() < 0.25) {
-　showBgCatBubble(cat, "walk");
+    showBgCatBubble(cat, "walk");
   }
    
   cat.style.left = spot.x + "%";
@@ -3627,17 +3631,38 @@ function moveBgCat(cat){
 
     cat.classList.remove("walk");
 
-    if(Math.random() < 0.2){
-      cat.classList.add("sleep");
-      if (Math.random() < 0.25) {
-  showBgCatBubble(cat, "sleep");
-}
-    }else{
-      cat.classList.add("idle");
-      if (Math.random() < 0.18) {
-  showBgCatBubble(cat, "idle");
-}
+    if (Math.random() < 0.2) {
+  cat.classList.add("sleep");
+  clearBgCatAnim(cat);
+  cat.style.backgroundImage = "";
+
+  if (Math.random() < 0.25) {
+    showBgCatBubble(cat, "sleep");
+  }
+
+} else {
+  const motion = Math.random() < 0.35
+    ? pickUnlockedBgMotion()
+    : null;
+
+  if (motion) {
+    cat.classList.add("idle");
+    setBgCatImage(cat, motion.frames);
+
+    if (Math.random() < 0.25) {
+      showBgCatBubble(cat, "idle");
     }
+
+  } else {
+    cat.classList.add("idle");
+    clearBgCatAnim(cat);
+    cat.style.backgroundImage = "";
+
+    if (Math.random() < 0.18) {
+      showBgCatBubble(cat, "idle");
+    }
+  }
+}
 
   }, 4000);
 }
@@ -3650,6 +3675,37 @@ function getUnlockedBgMotions() {
   return BG_UNLOCK_MOTIONS.filter(m =>
     ids.includes(m.id)
   );
+}
+
+function clearBgCatAnim(cat) {
+  if (cat._motionTimer) {
+    clearInterval(cat._motionTimer);
+    cat._motionTimer = null;
+  }
+}
+
+function setBgCatImage(cat, frames) {
+  if (!cat || !frames || frames.length === 0) return;
+
+  clearBgCatAnim(cat);
+
+  let index = 0;
+  cat.style.backgroundImage = `url("${frames[index]}")`;
+
+  if (frames.length >= 2) {
+    cat._motionTimer = setInterval(() => {
+      index = (index + 1) % frames.length;
+      cat.style.backgroundImage = `url("${frames[index]}")`;
+    }, 700);
+  }
+}
+
+function pickUnlockedBgMotion() {
+  const motions = getUnlockedBgMotions();
+
+  if (motions.length === 0) return null;
+
+  return motions[Math.floor(Math.random() * motions.length)];
 }
 
 /* =========================
