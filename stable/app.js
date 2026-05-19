@@ -815,14 +815,7 @@ function canClaimDailyBonus() {
 }
 
 function getNextDailyDay() {
-
   ensureDailyBonus();
-
-  // 開発モード時は毎回進む
-  if (DEV_DAILY_BONUS) {
-    return state.dailyBonus.day + 1;
-  }
-
   return (state.dailyBonus.day % 7) + 1;
 }
 
@@ -901,22 +894,20 @@ function openDailyBonusModal() {
   }
 
   if (day === 7) {
-    const special = unlockNextDailySpecial();
-
-    body = `
-      <div class="panelCard">
-        <div style="font-size:18px;font-weight:900;">✨ 新しい日常が増えました</div>
-        <div class="dim" style="margin-top:8px;">
-          ${special.type === "line" ? "新しいセリフ" : "新しいモーション"}：<br>
-          <b>${escapeHtml(special.text)}</b>
-        </div>
+  body = `
+    <div class="panelCard">
+      <div style="font-size:18px;font-weight:900;">✨ 新しい日常</div>
+      <div class="dim" style="margin-top:8px;">
+        新しいセリフ、または新しいモーションを解放できます
       </div>
-    `;
+    </div>
+  `;
 
-    rewardAction = () => {
-      pushLog(`✨ ログインボーナス：${special.text} を解放`);
-    };
-  }
+  rewardAction = () => {
+    const special = unlockNextDailySpecial();
+    pushLog(`✨ ログインボーナス：${special.text} を解放`);
+  };
+}
 
   const html = `
     ${body}
