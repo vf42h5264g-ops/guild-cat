@@ -620,7 +620,9 @@ img,svg,canvas{ max-width:100%; height:auto; }
   bottom:100%;
   transform:translateX(-50%) translateY(-6px);
 
-  max-width:140px;
+  width:max-content;
+  min-width:72px;
+  max-width:180px;
 
   padding:6px 10px;
 
@@ -635,7 +637,8 @@ img,svg,canvas{ max-width:100%; height:auto; }
 
   white-space:normal;
 
-  word-break:break-word;
+  word-break:keep-all;
+  overflow-wrap:break-word;
 
   line-height:1.35;
 
