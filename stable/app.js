@@ -184,6 +184,8 @@ const QUEST_RESULT_LINES = {
   },
 };
 
+const DEV_DAILY_BONUS = true;
+
 const ITEM_MASTER = {
   matatabi: {
     id: "matatabi",
@@ -197,6 +199,15 @@ const ITEM_MASTER = {
 const AD_REWARD = {
   DAILY_LIMIT: 3,
   WAIT_MS: 3000
+};
+
+const DAILY_BONUS = {
+  GOLD_TABLE: {
+    1: [1000, 2000],
+    2: [2000, 3000],
+    4: [3000, 4000],
+    5: [4000, 5000],
+  },
 };
 
 function pickRandom(arr) {
@@ -785,6 +796,153 @@ function calcTrainingUseCost(slotNo, durationMin) {
   return TRAINING.USE_COST_PER_MIN * durationMin * (slotNo - 1);
 }
 
+function randInt(min, max) {
+  return min + Math.floor(Math.random() * (max - min + 1));
+}
+
+function canClaimDailyBonus() {
+
+  ensureDailyBonus();
+
+  if (DEV_DAILY_BONUS) {
+    return true;
+  }
+
+  return (
+    state.dailyBonus.lastClaimDate !==
+    dateKey(new Date())
+  );
+}
+
+function getNextDailyDay() {
+
+  ensureDailyBonus();
+
+  // 開発モード時は毎回進む
+  if (DEV_DAILY_BONUS) {
+    return state.dailyBonus.day + 1;
+  }
+
+  return (state.dailyBonus.day % 7) + 1;
+}
+
+function unlockNextDailySpecial() {
+  ensureDailyBonus();
+
+  const unlockLine = state.dailyBonus.week % 2 === 0;
+
+  if (unlockLine && state.bgUnlocks.lineIds.length < BG_UNLOCK_LINES.length) {
+    const id = String(state.bgUnlocks.lineIds.length);
+    state.bgUnlocks.lineIds.push(id);
+
+    return {
+      type: "line",
+      text: BG_UNLOCK_LINES[Number(id)],
+    };
+  }
+
+  if (state.bgUnlocks.motionIds.length < BG_UNLOCK_MOTIONS.length) {
+    const motion = BG_UNLOCK_MOTIONS[state.bgUnlocks.motionIds.length];
+    state.bgUnlocks.motionIds.push(motion.id);
+
+    return {
+      type: "motion",
+      text: motion.name,
+    };
+  }
+
+  return {
+    type: "gold",
+    text: "追加報酬",
+  };
+}
+
+function openDailyBonusModal() {
+  const day = getNextDailyDay();
+
+  let title = `ログインボーナス ${day}日目`;
+  let body = "";
+  let rewardAction = null;
+
+  if (DAILY_BONUS.GOLD_TABLE[day]) {
+    const [min, max] = DAILY_BONUS.GOLD_TABLE[day];
+    const gold = state.guildRank * randInt(min, max);
+
+    body = `
+      <div class="panelCard">
+        <div style="font-size:18px;font-weight:900;">💰 ギルド支援金</div>
+        <div class="dim" style="margin-top:8px;">
+          ${gold.toLocaleString()}G を受け取れます
+        </div>
+      </div>
+    `;
+
+    rewardAction = () => {
+      state.gold += gold;
+      pushLog(`🎁 ログインボーナス：${gold.toLocaleString()}G`);
+    };
+  }
+
+  if (day === 3 || day === 6) {
+    body = `
+      <div class="panelCard">
+        <div style="font-size:18px;font-weight:900;">🌿 マタタビ</div>
+        <div class="dim" style="margin-top:8px;">
+          マタタビを1個受け取れます
+        </div>
+      </div>
+    `;
+
+    rewardAction = () => {
+      state.items ??= {};
+      state.items.matatabi = (state.items.matatabi || 0) + 1;
+      pushLog("🎁 ログインボーナス：マタタビを1個受け取った");
+    };
+  }
+
+  if (day === 7) {
+    const special = unlockNextDailySpecial();
+
+    body = `
+      <div class="panelCard">
+        <div style="font-size:18px;font-weight:900;">✨ 新しい日常が増えました</div>
+        <div class="dim" style="margin-top:8px;">
+          ${special.type === "line" ? "新しいセリフ" : "新しいモーション"}：<br>
+          <b>${escapeHtml(special.text)}</b>
+        </div>
+      </div>
+    `;
+
+    rewardAction = () => {
+      pushLog(`✨ ログインボーナス：${special.text} を解放`);
+    };
+  }
+
+  const html = `
+    ${body}
+    <div class="modalFooter">
+      <button class="primary" id="dailyBonusClaim">受け取る</button>
+    </div>
+  `;
+
+  openModal(title, html);
+
+  document.getElementById("dailyBonusClaim")?.addEventListener("click", () => {
+    rewardAction?.();
+
+    state.dailyBonus.lastClaimDate = dateKey(new Date());
+    state.dailyBonus.day = day;
+
+    if (day === 7) {
+      state.dailyBonus.week++;
+    }
+
+    save();
+    renderAll();
+    closeModal();
+  });
+}
+
 /* =========================
    State ensure
    ========================= */
@@ -803,6 +961,25 @@ function ensureTrainingState() {
   // 余分があれば切る（ランクダウンはないが保険）
   state.trainingSlots = state.trainingSlots.slice(0, slotCount);
   state.trainingJobs = state.trainingJobs.slice(0, slotCount);
+}
+function ensureDailyBonus() {
+  if (!state.dailyBonus) {
+    state.dailyBonus = {
+      lastClaimDate: null,
+      day: 0,
+      week: 0,
+    };
+  }
+
+  if (!state.bgUnlocks) {
+    state.bgUnlocks = {
+      motionIds: [],
+      lineIds: [],
+    };
+  }
+
+  if (!Array.isArray(state.bgUnlocks.motionIds)) state.bgUnlocks.motionIds = [];
+  if (!Array.isArray(state.bgUnlocks.lineIds)) state.bgUnlocks.lineIds = [];
 }
 function ensureItems() {
   if (!state.items) state.items = {};
@@ -1036,6 +1213,17 @@ function newGame() {
     },
 
     questOffers: null,
+
+    dailyBonus: {
+      lastClaimDate: null,
+      day: 0,
+      week: 0,
+    },
+
+    bgUnlocks: {
+      motionIds: [],
+      lineIds: [],
+    },
   };
 }
 
@@ -1186,6 +1374,12 @@ function openMain() {
   el.startScreen?.classList.add("hidden");
   el.mainScreen?.classList.remove("hidden");
   renderAll();
+
+  if (state.tutorialDone && canClaimDailyBonus()) {
+    setTimeout(() => {
+      openDailyBonusModal();
+    }, 300);
+  }
 }
 
 /* =========================
@@ -3039,6 +3233,7 @@ if (bg) {
   ensureAlpaca();
   ensureItems();
   ensureQuestOffers();
+  ensureDailyBonus();
 
   renderGuildTitle();
   renderHeaderBadges();
@@ -3597,8 +3792,16 @@ const BG_CAT_LINES = {
 function showBgCatBubble(cat, mode) {
   if (!cat) return;
 
-  const lines = BG_CAT_LINES[mode] || BG_CAT_LINES.idle;
-  const text = lines[Math.floor(Math.random() * lines.length)];
+  const baseLines = BG_CAT_LINES[mode] || BG_CAT_LINES.idle;
+
+const unlockedLines =
+  (state.bgUnlocks?.lineIds || [])
+    .map(id => BG_UNLOCK_LINES[Number(id)])
+    .filter(Boolean);
+
+const lines = baseLines.concat(unlockedLines);
+
+const text = lines[Math.floor(Math.random() * lines.length)];
 
   let bubble = cat.querySelector(".bgCatBubble");
 
