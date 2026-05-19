@@ -184,7 +184,7 @@ const QUEST_RESULT_LINES = {
   },
 };
 
-const DEV_DAILY_BONUS = true;
+const DEV_DAILY_BONUS = false;
 
 const ITEM_MASTER = {
   matatabi: {
