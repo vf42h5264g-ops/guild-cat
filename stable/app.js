@@ -3529,13 +3529,59 @@ function renderCatsTab() {
   btn.addEventListener("click", () => openCatDetailModal(btn.dataset.catDetail));
 });
 
-  document.getElementById("btnScout")?.addEventListener("click", () => scoutPayAndOpen());
+  document.getElementById("btnScout")
+  ?.addEventListener("click", openScoutConfirmModal);
   document.getElementById("btnViewCandidates")?.addEventListener("click", () => openScoutModal(false));
 
 document.getElementById("btnBgDex")
   ?.addEventListener("click", openBgDexModal);
 }
-  
+
+function openScoutConfirmModal() {
+
+  const scoutCost =
+    HIRING.refreshCost(state.guildRank);
+
+  openModal(
+    "スカウト確認",
+
+    `
+      <div class="panelCard">
+
+        <div>
+          スカウト候補を更新しますか？
+        </div>
+
+        <div class="dim" style="margin-top:8px;">
+          ${scoutCost.toLocaleString()}G 消費します
+        </div>
+
+      </div>
+
+      <div class="modalFooter">
+        <button class="ghost" id="cancelScout">
+          キャンセル
+        </button>
+
+        <button class="primary" id="confirmScout">
+          スカウトする
+        </button>
+      </div>
+    `
+  );
+
+  document.getElementById("cancelScout")
+    ?.addEventListener("click", closeModal);
+
+  document.getElementById("confirmScout")
+    ?.addEventListener("click", () => {
+
+      closeModal();
+
+      scoutPayAndOpen();
+    });
+}
+
 function openBgDexModal() {
 
   const unlockedMotionIds =
