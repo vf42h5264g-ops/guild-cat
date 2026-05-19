@@ -3992,30 +3992,28 @@ function openCatDetailModal(catId) {
 }
 
 function renderTrainingTab() {
-
-    <div class="panelCard">
-    <div class="row">
-      <div>
-        <div><b>アイテム</b></div>
-        <div class="dim">たまにクエストで手に入る</div>
-      </div>
-
-      <div class="mono">
-        🌿 ×${state.items?.matatabi || 0}
-      </div>
-    </div>
-  </div>
-  ${(() => {
-
+  ensureTrainingState();
   ensureAdState();
 
   const adLeft =
     AD_REWARD.DAILY_LIMIT -
     state.adReward.count;
 
-  return `
+  const itemAndAdHtml = `
     <div class="panelCard">
+      <div class="row">
+        <div>
+          <div><b>アイテム</b></div>
+          <div class="dim">訓練で使える支援アイテム</div>
+        </div>
 
+        <div class="mono">
+          🌿 ×${state.items?.matatabi || 0}
+        </div>
+      </div>
+    </div>
+
+    <div class="panelCard">
       <div><b>🎁 ギルド協会の支援物資</b></div>
 
       <div class="dim" style="margin-top:6px;">
@@ -4034,7 +4032,6 @@ function renderTrainingTab() {
       >
         ${adLeft <= 0 ? "本日の受取済み" : "広告を見る"}
       </button>
-
     </div>
   `;
 
@@ -4095,7 +4092,9 @@ function renderTrainingTab() {
   }
 
   el.tabTraining.innerHTML = `
-    <div class="panelCard">
+  ${itemAndAdHtml}
+
+  <div class="panelCard">
       <div><b>訓練</b> <span class="dim">1EXP/分 / 受取式 / クエストと両立不可</span></div>
       <div class="dim">空き: ${(slotCount - usedTraining)}/${slotCount}（枠2以降は開放費＋使用料あり）</div>
     </div>
@@ -4108,6 +4107,8 @@ function renderTrainingTab() {
   el.tabTraining.querySelectorAll("[data-start-slot]").forEach(btn => {
     btn.addEventListener("click", () => openTrainingStartModal(Number(btn.dataset.startSlot)));
   });
+  document.getElementById("watchMatatabiAd")
+  ?.addEventListener("click", watchMatatabiAd);
 }
 
 function renderInvestTab() {
