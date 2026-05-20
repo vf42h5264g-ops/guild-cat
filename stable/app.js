@@ -3591,23 +3591,22 @@ function openBgDexModal() {
     state.bgUnlocks?.lineIds || [];
 
   const motionHtml = BG_UNLOCK_MOTIONS.map(m => {
+  const unlocked = unlockedMotionIds.includes(m.id);
+  const img = m.frames?.[0] || "";
 
-    const unlocked =
-      unlockedMotionIds.includes(m.id);
-
-    return `
-      <div class="dexRow">
-        <span>
-          ${unlocked ? "✔" : "❓"}
-        </span>
-
-        <span>
-          ${unlocked ? escapeHtml(m.name) : "？？？"}
-        </span>
+  return `
+    <div class="dexRow dexMotionRow">
+      <div class="dexIcon ${unlocked ? "" : "locked"}"
+        style="background-image:url('${img}')">
       </div>
-    `;
 
-  }).join("");
+      <div>
+        <div>${unlocked ? "✔" : "❓"} ${unlocked ? escapeHtml(m.name) : "？？？"}</div>
+        <div class="dim">${unlocked ? "解放済み" : "未解放"}</div>
+      </div>
+    </div>
+  `;
+}).join("");
 
   const lineHtml = BG_UNLOCK_LINES.map((line, i) => {
 
