@@ -3657,12 +3657,33 @@ function openBgDexModal() {
 /* =========================
    Background Cat
    ========================= */
-const CAT_SPOTS = [
-  { x: 18, y: 74 },
-  { x: 35, y: 68 },
-  { x: 52, y: 76 },
-  { x: 72, y: 70 },
-];
+const ROOM_AREAS = {
+  1: [
+    { name: "左木箱", x1: 4,  x2: 13, y1: 60, y2: 66 },
+    { name: "左通路", x1: 24, x2: 34, y1: 68, y2: 77 },
+    { name: "中央ラグ", x1: 16, x2: 66, y1: 78, y2: 92 },
+    { name: "右イス前", x1: 82, x2: 92, y1: 76, y2: 91 },
+    { name: "右小箱", x1: 82, x2: 88, y1: 60, y2: 66 },
+  ],
+};
+
+function randRange(min, max) {
+  return min + Math.random() * (max - min);
+}
+
+function pickBgCatSpot() {
+  const areas =
+    ROOM_AREAS[state.guildRank] || ROOM_AREAS[1];
+
+  const area =
+    areas[Math.floor(Math.random() * areas.length)];
+
+  return {
+    x: randRange(area.x1, area.x2),
+    y: randRange(area.y1, area.y2),
+    area,
+  };
+}
 
 function createBgCat(){
 
@@ -3682,10 +3703,7 @@ function createBgCat(){
 
 function moveBgCat(cat){
 
-  const spot =
-    CAT_SPOTS[
-      Math.floor(Math.random() * CAT_SPOTS.length)
-    ];
+  const spot = pickBgCatSpot();
 
   const currentX =
     parseFloat(cat.style.left);
