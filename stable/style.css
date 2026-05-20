@@ -748,3 +748,49 @@ img,svg,canvas{ max-width:100%; height:auto; }
   filter:brightness(0);
   opacity:.35;
 }
+
+.endingWrap,
+.endRollWrap{
+  text-align:center;
+}
+
+.endingImage{
+  width:100%;
+  border-radius:16px;
+  image-rendering:auto;
+}
+
+.endingFadeText{
+  margin-bottom:12px;
+  font-weight:900;
+  opacity:.9;
+}
+
+.endRollWrap{
+  min-height:360px;
+  overflow:hidden;
+  position:relative;
+}
+
+.endRollText{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+  padding:40px 10px;
+  animation:endRollMove 10s linear forwards;
+}
+
+.endTitle{
+  font-size:22px;
+  font-weight:900;
+  margin:16px 0;
+}
+
+@keyframes endRollMove{
+  from{
+    transform:translateY(80px);
+  }
+  to{
+    transform:translateY(-120px);
+  }
+}
