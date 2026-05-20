@@ -530,8 +530,86 @@ function openRankStoryModal(rank, onDone) {
   });
 }
 
+function openEndingModal() {
+  let index = 1;
+
+  const html = `
+    <div class="endingWrap">
+      <div class="endingFadeText" id="endingText">
+        小さなギルドの物語を振り返ります
+      </div>
+
+      <img
+        id="endingImage"
+        class="endingImage"
+        src="img/story/rank01.png"
+        alt=""
+      >
+
+      <div class="modalFooter">
+        <button class="primary" id="endingNext">つづける</button>
+      </div>
+    </div>
+  `;
+
+  openModal("", html);
+
+  const img = document.getElementById("endingImage");
+  const text = document.getElementById("endingText");
+  const btn = document.getElementById("endingNext");
+
+  btn?.addEventListener("click", () => {
+    index++;
+
+    if (index <= 15) {
+      img.src = `img/story/rank${String(index).padStart(2, "0")}.png`;
+      text.textContent = `Rank ${index}`;
+      return;
+    }
+
+    showEndRoll();
+  });
+}
+
+function showEndRoll() {
+  const html = `
+    <div class="endRollWrap">
+      <div class="endRollText">
+        <div class="endTitle">Cozy Cat Guild</div>
+        <div>小さなギルドは、たくさんの出会いを重ねました。</div>
+        <div>依頼と訓練の日々。</div>
+        <div>帰ってくるネコたち。</div>
+        <div>少しずつ賑やかになった部屋。</div>
+        <div>そして今日も、ギルドは扉を開けます。</div>
+        <div class="endTitle">The days continue...</div>
+      </div>
+
+      <div class="modalFooter">
+        <button class="primary" id="endingDone">これからも続ける</button>
+      </div>
+    </div>
+  `;
+
+  openModal("", html);
+
+  document.getElementById("endingDone")?.addEventListener("click", () => {
+    state.endingSeen = true;
+    state.postGame = true;
+
+    save();
+    closeModal();
+    renderAll();
+
+    pushLog("エンディングを見届けた。今日もギルドは続いていく。");
+  });
+}
+
 function getGuildBg() {
-  return `img/guild/guild_rank_${String(state.guildRank).padStart(2, "0")}.png`;
+  const bgRank = state.postGame
+    ? 1
+    : Math.min(state.guildRank, 15);
+
+  return `img/guild/guild_rank_${String(bgRank).padStart(2, "0")}.png`;
 }
 
 /* =========================
@@ -1219,6 +1297,9 @@ function newGame() {
       motionIds: [],
       lineIds: [],
     },
+
+    endingSeen: false,
+    postGame: false,
   };
 }
 
@@ -1320,6 +1401,9 @@ function boot() {
   if (!Array.isArray(state.cats)) state.cats = [];
   if (typeof state.guildName !== "string") state.guildName = "Cozy Cat Guild";
 
+  if (typeof state.endingSeen !== "boolean") state.endingSeen = false;
+  if (typeof state.postGame !== "boolean") state.postGame = false;
+   
   ensureQuestState();
   ensureTrainingState();
   ensurePending();
@@ -1895,13 +1979,18 @@ function doRankUp() {
   renderAll();
   save();
 
-  openRankStoryModal(now.rank, () => {
-    openRankUpPopup(prev, now, () => {
-      if (!state.tutorialDone && state.tutorialStage >= 5 && state.guildRank >= 2) {
-        openTutorialTrainingIntroAfterRankUp();
-      }
-    });
+  if (now.rank === 16 && !state.endingSeen) {
+  openEndingModal();
+  return;
+}
+
+openRankStoryModal(now.rank, () => {
+  openRankUpPopup(prev, now, () => {
+    if (!state.tutorialDone && state.tutorialStage >= 5 && state.guildRank >= 2) {
+      openTutorialTrainingIntroAfterRankUp();
+    }
   });
+});
 }
 
 function pickRankUpRecommend(prev, now) {
