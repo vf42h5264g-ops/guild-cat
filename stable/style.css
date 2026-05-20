@@ -729,3 +729,22 @@ img,svg,canvas{ max-width:100%; height:auto; }
   padding:6px 0;
   border-bottom:1px solid rgba(255,255,255,.08);
 }
+
+.dexMotionRow{
+  gap:12px;
+}
+
+.dexIcon{
+  width:42px;
+  height:42px;
+  flex:0 0 42px;
+  background-size:contain;
+  background-repeat:no-repeat;
+  background-position:center;
+  image-rendering:pixelated;
+}
+
+.dexIcon.locked{
+  filter:brightness(0);
+  opacity:.35;
+}
