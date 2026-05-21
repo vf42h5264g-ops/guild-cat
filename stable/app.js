@@ -2929,7 +2929,15 @@ function openFireCatModal(catId) {
   const c = catById(catId);
   if (!c) return;
   if (!RANK.canFire(state.guildRank)) return;
+  if ((state.cats || []).length <= 1) {
+  pushLog("最後の1匹は解雇できません");
+  return;
+}
 
+if (c.level <= 1) {
+  pushLog("Lv1のネコは解雇できません");
+  return;
+}
   const busy = isCatBusy(catId);
   if (busy) {
     pushLog("そのネコは待機中ではありません");
@@ -3554,6 +3562,12 @@ function renderCatsTab() {
   const statusText = busy === "quest" ? "クエスト" : busy === "training" ? "訓練" : "待機";
   const dotClass = busy === "quest" ? "quest" : busy === "training" ? "training" : "";
 
+  const fireLockedReason =
+  !RANK.canFire(state.guildRank) ? "Rank5で解放" :
+  c.level <= 1 ? "Lv2から解雇可" :
+  (state.cats || []).length <= 1 ? "最後の1匹は不可" :
+  busy ? "待機中のみ解雇可" :
+  "";
   
   const training = busy === "training";
   
@@ -4260,11 +4274,14 @@ function openCatDetailModal(catId) {
       <button class="ghost" id="catDetailClose">閉じる</button>
       <button class="ghost" id="catDetailRename">名前変更</button>
       
-      ${canFire ? `
-        <button class="ghost" id="catDetailFire" ${busy ? "disabled" : ""} style="${busy ? "opacity:.6;" : ""}>
-          解雇
-        </button>
-      ` : ""}
+      <button
+        class="ghost"
+        id="catDetailFire"
+        ${canFire ? "" : "disabled"}
+        style="${canFire ? "" : "opacity:.6;"}"
+      >
+        ${canFire ? "解雇" : fireLockedReason}
+      </button>
     </div>
   `;
 
