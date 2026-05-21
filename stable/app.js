@@ -33,7 +33,7 @@ const RANK = {
     return 1;
   },
   maxQuestLevel(rank) {
-    return Math.min(10, Math.max(1, rank));
+    return Math.max(1, rank);
   },
   canFire(rank) {
     return rank >= 5;
@@ -212,6 +212,22 @@ const DAILY_BONUS = {
 
 function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function getQuestNeedTotal(level) {
+  const fixed = QUEST.NEED_TOTAL[level - 1];
+  if (fixed) return fixed;
+
+  const last = QUEST.NEED_TOTAL[QUEST.NEED_TOTAL.length - 1];
+  return Math.floor(last + Math.pow(level - 10, 1.35) * 70);
+}
+
+function getQuestDuration(level, timeKey) {
+  const fixed = QUEST.DUR_TABLE[level]?.[timeKey];
+  if (fixed) return fixed;
+
+  const base = QUEST.DUR_TABLE[10][timeKey];
+  return Math.floor(base + (level - 10) * 60);
 }
 
 function getQuestResultLine(questId, result) {
@@ -2287,11 +2303,11 @@ function openQuestSetupModal(type) {
 }
 
 function makeQuestDef(type, level, timeKey) {
-  const dur = QUEST.DUR_TABLE[level]?.[timeKey];
+  const dur = getQuestDuration(level, timeKey);
   const eff = QUEST.TIME_TYPES.find(x => x.key === timeKey)?.eff ?? 1.0;
 
   const baseGold = Math.floor(dur * QUEST.goldPerMin(level) * eff);
-  const target = QUEST.NEED_TOTAL[level - 1];
+  const target = getQuestNeedTotal(level);
 
   return {
     id: `${type.id}_lv${level}_${timeKey}`,
