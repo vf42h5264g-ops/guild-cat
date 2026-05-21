@@ -33,7 +33,7 @@ const RANK = {
     return 1;
   },
   maxQuestLevel(rank) {
-    return Math.min(10, Math.max(1, rank));
+    return Math.max(1, rank);
   },
   canFire(rank) {
     return rank >= 5;
@@ -184,7 +184,7 @@ const QUEST_RESULT_LINES = {
   },
 };
 
-const DEV_DAILY_BONUS = false;
+const DEV_DAILY_BONUS = true;
 
 const ITEM_MASTER = {
   matatabi: {
@@ -214,6 +214,22 @@ function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+function getQuestNeedTotal(level) {
+  const fixed = QUEST.NEED_TOTAL[level - 1];
+  if (fixed) return fixed;
+
+  const last = QUEST.NEED_TOTAL[QUEST.NEED_TOTAL.length - 1];
+  return Math.floor(last + Math.pow(level - 10, 1.35) * 70);
+}
+
+function getQuestDuration(level, timeKey) {
+  const fixed = QUEST.DUR_TABLE[level]?.[timeKey];
+  if (fixed) return fixed;
+
+  const base = QUEST.DUR_TABLE[10][timeKey];
+  return Math.floor(base + (level - 10) * 60);
+}
+
 function getQuestResultLine(questId, result) {
   const group = QUEST_RESULT_LINES[questId];
   if (!group) return "";
@@ -234,10 +250,10 @@ const INVEST = {
     magic: 15,
   },
   shops: {
-    insure: { name: "さかな組合", base: 0.025, var: 0.05, icon: "🐟" },
-    arms:   { name: "武具商会", base: 0.03,  var: 0.10, icon: "🗡" },
-    trade:  { name: "交易船団", base: 0.03,  var: 0.20, icon: "🚢" },
-    magic:  { name: "魔導研究所", base: 0.02, var: 0.50, icon: "🔮" },
+    insure: { name: "さかな組合", base: 0.16, var: 0.05, icon: "🐟" },
+    arms:   { name: "武具商会", base: 0.125,  var: 0.10, icon: "🗡" },
+    trade:  { name: "交易船団", base: 0.083,  var: 0.20, icon: "🚢" },
+    magic:  { name: "魔導研究所", base: 0.071, var: 0.50, icon: "🔮" },
   },
   capPerRank: {
     insure: 15000,
@@ -530,8 +546,86 @@ function openRankStoryModal(rank, onDone) {
   });
 }
 
+function openEndingModal() {
+  let index = 1;
+
+  const html = `
+    <div class="endingWrap">
+      <div class="endingFadeText" id="endingText">
+        小さなギルドの物語を振り返ります
+      </div>
+
+      <img
+        id="endingImage"
+        class="endingImage"
+        src="img/story/rank01.png"
+        alt=""
+      >
+
+      <div class="modalFooter">
+        <button class="primary" id="endingNext">つづける</button>
+      </div>
+    </div>
+  `;
+
+  openModal("", html);
+
+  const img = document.getElementById("endingImage");
+  const text = document.getElementById("endingText");
+  const btn = document.getElementById("endingNext");
+
+  btn?.addEventListener("click", () => {
+    index++;
+
+    if (index <= 15) {
+      img.src = `img/story/rank${String(index).padStart(2, "0")}.png`;
+      text.textContent = `Rank ${index}`;
+      return;
+    }
+
+    showEndRoll();
+  });
+}
+
+function showEndRoll() {
+  const html = `
+    <div class="endRollWrap">
+      <div class="endRollText">
+        <div class="endTitle">Cozy Cat Guild</div>
+        <div>小さなギルドは、たくさんの出会いを重ねました。</div>
+        <div>依頼と訓練の日々。</div>
+        <div>帰ってくるネコたち。</div>
+        <div>少しずつ賑やかになった部屋。</div>
+        <div>そして今日も、ギルドは扉を開けます。</div>
+        <div class="endTitle">The days continue...</div>
+      </div>
+
+      <div class="modalFooter">
+        <button class="primary" id="endingDone">これからも続ける</button>
+      </div>
+    </div>
+  `;
+
+  openModal("", html);
+
+  document.getElementById("endingDone")?.addEventListener("click", () => {
+    state.endingSeen = true;
+    state.postGame = true;
+
+    save();
+    closeModal();
+    renderAll();
+
+    pushLog("エンディングを見届けた。今日もギルドは続いていく。");
+  });
+}
+
 function getGuildBg() {
-  return `img/guild/guild_rank_${String(state.guildRank).padStart(2, "0")}.png`;
+  const bgRank = state.postGame
+    ? 1
+    : Math.min(state.guildRank, 15);
+
+  return `img/guild/guild_rank_${String(bgRank).padStart(2, "0")}.png`;
 }
 
 /* =========================
@@ -895,10 +989,14 @@ function openDailyBonusModal() {
 
   if (day === 7) {
   body = `
-    <div class="panelCard">
-      <div style="font-size:18px;font-weight:900;">✨ 新しい日常</div>
-      <div class="dim" style="margin-top:8px;">
-        新しいセリフ、または新しいモーションを解放できます
+    <div class="panelCard dailySpecialCard">
+      <div class="dailySparkles">✨ ✨ ✨</div>
+
+      <div style="position:relative;z-index:1;">
+        <div style="font-size:18px;font-weight:900;">✨ 新しい日常</div>
+        <div class="dim" style="margin-top:8px;">
+          新しいセリフ、または新しいモーションを解放できます
+        </div>
       </div>
     </div>
   `;
@@ -1029,23 +1127,23 @@ function getDispatchSlots() {
 function getAvailableAlpacaPurchase() {
   ensureAlpaca();
 
-  if (state.guildRank >= 11 && !state.alpaca.boughtAt11) {
-    return {
-      stage: 11,
-      cost: 150000,
-      label: "2頭目のアルパカを迎える",
-      desc: "派遣枠が1つ増えます",
-    };
-  }
-
   if (state.guildRank >= 6 && !state.alpaca.boughtAt6) {
-    return {
-      stage: 6,
-      cost: 50000,
-      label: "アルパカを迎える",
-      desc: "派遣できる数が1つ増えます",
-    };
-  }
+  return {
+    stage: 6,
+    cost: 50000,
+    label: "アルパカを迎える",
+    desc: "派遣できる数が1つ増えます",
+  };
+}
+
+if (state.guildRank >= 11 && !state.alpaca.boughtAt11) {
+  return {
+    stage: 11,
+    cost: 150000,
+    label: "2頭目のアルパカを迎える",
+    desc: "派遣枠が1つ増えます",
+  };
+}
 
   return null;
 }
@@ -1169,7 +1267,7 @@ function addExp(cat, amount) {
    ========================= */
 function newGame() {
   return {
-    version: 6,
+    version: 5,
     guildRank: 1,
     gold: 3500,
 
@@ -1215,6 +1313,9 @@ function newGame() {
       motionIds: [],
       lineIds: [],
     },
+
+    endingSeen: false,
+    postGame: false,
   };
 }
 
@@ -1316,6 +1417,9 @@ function boot() {
   if (!Array.isArray(state.cats)) state.cats = [];
   if (typeof state.guildName !== "string") state.guildName = "Cozy Cat Guild";
 
+  if (typeof state.endingSeen !== "boolean") state.endingSeen = false;
+  if (typeof state.postGame !== "boolean") state.postGame = false;
+   
   ensureQuestState();
   ensureTrainingState();
   ensurePending();
@@ -1788,7 +1892,7 @@ function startTutorialQuest(partyIds, slotIdx) {
     main: "STR",
     timeType: "S",
     durationMin: 1,
-    baseGold: 5000,
+    baseGold: 2000000000,
     target: 0,
   };
 
@@ -1891,13 +1995,18 @@ function doRankUp() {
   renderAll();
   save();
 
-  openRankStoryModal(now.rank, () => {
-    openRankUpPopup(prev, now, () => {
-      if (!state.tutorialDone && state.tutorialStage >= 5 && state.guildRank >= 2) {
-        openTutorialTrainingIntroAfterRankUp();
-      }
-    });
+  if (now.rank === 16 && !state.endingSeen) {
+  openEndingModal();
+  return;
+}
+
+openRankStoryModal(now.rank, () => {
+  openRankUpPopup(prev, now, () => {
+    if (!state.tutorialDone && state.tutorialStage >= 5 && state.guildRank >= 2) {
+      openTutorialTrainingIntroAfterRankUp();
+    }
   });
+});
 }
 
 function pickRankUpRecommend(prev, now) {
@@ -2194,11 +2303,11 @@ function openQuestSetupModal(type) {
 }
 
 function makeQuestDef(type, level, timeKey) {
-  const dur = QUEST.DUR_TABLE[level]?.[timeKey];
+  const dur = getQuestDuration(level, timeKey);
   const eff = QUEST.TIME_TYPES.find(x => x.key === timeKey)?.eff ?? 1.0;
 
   const baseGold = Math.floor(dur * QUEST.goldPerMin(level) * eff);
-  const target = QUEST.NEED_TOTAL[level - 1];
+  const target = getQuestNeedTotal(level);
 
   return {
     id: `${type.id}_lv${level}_${timeKey}`,
@@ -2370,12 +2479,12 @@ function finishQuestsIfDone() {
     } else {
       const roll = Math.random() * 100;
       if (roll <= job.pSuccess) {
-        result = (roll <= job.pSuccess * 0.3) ? "大成功" : "成功";
+        result = (roll <= job.pSuccess * 0.8) ? "大成功" : "成功";
       } else {
         result = "失敗";
       }
 
-      if (result === "大成功" && Math.random() < 0.2) {
+      if (result === "大成功" && Math.random() < 0.8) {
         addItem("matatabi", 1);
         foundItem = {
           id: "matatabi",
@@ -2475,15 +2584,25 @@ function openTrainingStartModal(slotNo) {
       <div id="tDur" class="modalList"></div>
     </div>
 
-    <div class="checkRow">
-      <label>
-        <input type="checkbox" id="useMatatabi">
-        🌿 マタタビを使う
-        <span class="dim">
-          (所持: ${state.items?.matatabi || 0})
-        </span>
-      </label>
-    </div>
+    <div class="checkRow ${((state.items?.matatabi || 0) <= 0) ? "disabled" : ""}">
+
+  <label>
+
+    <input
+      type="checkbox"
+      id="useMatatabi"
+      ${((state.items?.matatabi || 0) <= 0) ? "disabled" : ""}
+    >
+
+    🌿 マタタビを使う
+
+    <span class="dim">
+      (所持: ${state.items?.matatabi || 0})
+    </span>
+
+  </label>
+
+</div>
 
     <div class="modalFooter">
       <button class="ghost" id="tCancel">戻る</button>
@@ -2729,7 +2848,7 @@ function openScoutModal(fromPaidScout) {
 
   document.getElementById("btnRescout")?.addEventListener("click", () => {
     closeModal();
-    scoutPayAndOpen();
+    openScoutConfirmModal();
   });
 
   document.querySelectorAll("[data-hire]").forEach(btn => {
@@ -2810,7 +2929,15 @@ function openFireCatModal(catId) {
   const c = catById(catId);
   if (!c) return;
   if (!RANK.canFire(state.guildRank)) return;
+  if ((state.cats || []).length <= 1) {
+  pushLog("最後の1匹は解雇できません");
+  return;
+}
 
+if (c.level <= 1) {
+  pushLog("Lv1のネコは解雇できません");
+  return;
+}
   const busy = isCatBusy(catId);
   if (busy) {
     pushLog("そのネコは待機中ではありません");
@@ -3435,6 +3562,12 @@ function renderCatsTab() {
   const statusText = busy === "quest" ? "クエスト" : busy === "training" ? "訓練" : "待機";
   const dotClass = busy === "quest" ? "quest" : busy === "training" ? "training" : "";
 
+  const fireLockedReason =
+  !RANK.canFire(state.guildRank) ? "Rank5で解放" :
+  c.level <= 1 ? "Lv2から解雇可" :
+  (state.cats || []).length <= 1 ? "最後の1匹は不可" :
+  busy ? "待機中のみ解雇可" :
+  "";
   
   const training = busy === "training";
   
@@ -3482,52 +3615,7 @@ function renderCatsTab() {
       </div>
     </div>
 
-     <div class="panelCard">
-    <div class="row">
-      <div>
-        <div><b>アイテム</b></div>
-        <div class="dim">たまにクエストで手に入る</div>
-      </div>
-
-      <div class="mono">
-        🌿 ×${state.items?.matatabi || 0}
-      </div>
-    </div>
-  </div>
-  ${(() => {
-
-  ensureAdState();
-
-  const adLeft =
-    AD_REWARD.DAILY_LIMIT -
-    state.adReward.count;
-
-  return `
-    <div class="panelCard">
-
-      <div><b>🎁 ギルド協会の支援物資</b></div>
-
-      <div class="dim" style="margin-top:6px;">
-        広告を見るとマタタビを1個もらえます
-      </div>
-
-      <div class="dim">
-        本日あと ${adLeft}/${AD_REWARD.DAILY_LIMIT} 回
-      </div>
-
-      <button
-        id="watchMatatabiAd"
-        class="primary adBtn"
-        style="margin-top:10px;width:100%;"
-        ${adLeft <= 0 ? "disabled" : ""}
-      >
-        ${adLeft <= 0 ? "本日の受取済み" : "広告を見る"}
-      </button>
-
-    </div>
-  `;
-
-})()}
+    
     ${catsHtml || `<div class="panelCard"><div class="dim">ネコがいません。チュートリアルから開始してください。</div></div>`}
 
     <div class="panelCard">
@@ -3542,7 +3630,17 @@ function renderCatsTab() {
         </button>
       </div>
 
-      ${canFire ? `<div class="dim" style="margin-top:10px;">解雇はRank5から可能（待機中のみ）</div>` : `<div class="dim" style="margin-top:10px;">解雇はRank5で解放</div>`}
+            ${canFire ? `<div class="dim" style="margin-top:10px;">解雇はRank5から可能（待機中のみ）</div>` : `<div class="dim" style="margin-top:10px;">解雇はRank5で解放</div>`}
+    </div>
+
+    <div class="panelCard">
+      <div><b>📖 背景ネコ図鑑</b></div>
+      <div class="dim" style="margin-top:6px;">
+        デイリーボーナスで増えた日常を確認できます
+      </div>
+      <button class="ghost smallBtn" id="btnBgDex" style="margin-top:10px;">
+        図鑑を見る
+      </button>
     </div>
   `;
 
@@ -3550,23 +3648,285 @@ function renderCatsTab() {
   btn.addEventListener("click", () => openCatDetailModal(btn.dataset.catDetail));
 });
 
-  document.getElementById("btnScout")?.addEventListener("click", () => scoutPayAndOpen());
+  document.getElementById("btnScout")
+  ?.addEventListener("click", openScoutConfirmModal);
   document.getElementById("btnViewCandidates")?.addEventListener("click", () => openScoutModal(false));
 
-  document.getElementById("watchMatatabiAd")
-  ?.addEventListener("click", watchMatatabiAd);
+document.getElementById("btnBgDex")
+  ?.addEventListener("click", openBgDexModal);
 }
-  
+
+function openScoutConfirmModal() {
+
+  const scoutCost =
+    HIRING.refreshCost(state.guildRank);
+
+  openModal(
+    "スカウト確認",
+
+    `
+      <div class="panelCard">
+
+        <div>
+          スカウト候補を更新しますか？
+        </div>
+
+        <div class="dim" style="margin-top:8px;">
+          ${scoutCost.toLocaleString()}G 消費します
+        </div>
+
+      </div>
+
+      <div class="modalFooter">
+        <button class="ghost" id="cancelScout">
+          キャンセル
+        </button>
+
+        <button class="primary" id="confirmScout">
+          スカウトする
+        </button>
+      </div>
+    `
+  );
+
+  document.getElementById("cancelScout")
+    ?.addEventListener("click", closeModal);
+
+  document.getElementById("confirmScout")
+    ?.addEventListener("click", () => {
+
+      closeModal();
+
+      scoutPayAndOpen();
+    });
+}
+
+function openBgDexModal() {
+
+  const unlockedMotionIds =
+    state.bgUnlocks?.motionIds || [];
+
+  const unlockedLineIds =
+    state.bgUnlocks?.lineIds || [];
+
+  const motionHtml = BG_UNLOCK_MOTIONS.map(m => {
+  const unlocked = unlockedMotionIds.includes(m.id);
+  const img = m.frames?.[0] || "";
+
+  return `
+    <div class="dexRow dexMotionRow">
+      <div class="dexIcon ${unlocked ? "" : "locked"}"
+        style="background-image:url('${img}')">
+      </div>
+
+      <div>
+        <div>${unlocked ? "✔" : "❓"} ${unlocked ? escapeHtml(m.name) : "？？？"}</div>
+        <div class="dim">${unlocked ? "解放済み" : "未解放"}</div>
+      </div>
+    </div>
+  `;
+}).join("");
+
+  const lineHtml = BG_UNLOCK_LINES.map((line, i) => {
+
+    const unlocked =
+      unlockedLineIds.includes(String(i));
+
+    return `
+      <div class="dexRow">
+        <span>
+          ${unlocked ? "✔" : "❓"}
+        </span>
+
+        <span>
+          ${unlocked ? escapeHtml(line) : "？？？"}
+        </span>
+      </div>
+    `;
+
+  }).join("");
+
+  const html = `
+
+    <div class="panelCard">
+
+      <div class="sectionTitle">
+        🐱 モーション図鑑
+      </div>
+
+      ${motionHtml}
+
+    </div>
+
+    <div class="panelCard" style="margin-top:12px;">
+
+      <div class="sectionTitle">
+        💬 セリフ図鑑
+      </div>
+
+      ${lineHtml}
+
+    </div>
+
+  `;
+
+  openModal("背景ネコ図鑑", html);
+}
 
 /* =========================
    Background Cat
    ========================= */
-const CAT_SPOTS = [
-  { x: 18, y: 74 },
-  { x: 35, y: 68 },
-  { x: 52, y: 76 },
-  { x: 72, y: 70 },
-];
+const ROOM_AREAS = {
+  1: [
+    { name: "左木箱", x1: 4,  x2: 13, y1: 60, y2: 66 },
+    { name: "左通路", x1: 24, x2: 34, y1: 68, y2: 77 },
+    { name: "中央ラグ", x1: 16, x2: 66, y1: 78, y2: 92 },
+    { name: "右イス前", x1: 82, x2: 92, y1: 76, y2: 91 },
+    { name: "右小箱", x1: 82, x2: 88, y1: 60, y2: 66 },
+  ],
+
+  2: [
+    { name: "左木箱",   x1: 4,  x2: 13, y1: 60, y2: 66 },
+    { name: "左床",     x1: 3,  x2: 14, y1: 78, y2: 95 },
+    { name: "中央ラグ", x1: 31, x2: 67, y1: 78, y2: 95 },
+    { name: "右床",     x1: 81, x2: 94, y1: 78, y2: 95 },
+    { name: "右イス",   x1: 82, x2: 89, y1: 60, y2: 66 },
+  ],
+
+  3: [
+    { name: "左本棚前", x1: 5,  x2: 12, y1: 60, y2: 67 },
+    { name: "左床",     x1: 2,  x2: 14, y1: 79, y2: 95 },
+    { name: "中央ラグ", x1: 31, x2: 67, y1: 79, y2: 96 },
+    { name: "訓練場前", x1: 63, x2: 72, y1: 67, y2: 83 },
+    { name: "右床",     x1: 84, x2: 96, y1: 79, y2: 95 },
+  ],
+
+   4: [
+    { name: "左棚前",   x1: 5,  x2: 11, y1: 58, y2: 67 },
+    { name: "左床",     x1: 2,  x2: 14, y1: 80, y2: 96 },
+    { name: "中央ラグ", x1: 31, x2: 68, y1: 80, y2: 96 },
+    { name: "中央右",   x1: 65, x2: 72, y1: 60, y2: 70 },
+    { name: "右床",     x1: 84, x2: 96, y1: 80, y2: 96 },
+  ],
+
+   5: [
+    { name: "左棚前",   x1: 4,  x2: 11, y1: 56, y2: 67 },
+    { name: "左床",     x1: 2,  x2: 13, y1: 79, y2: 95 },
+    { name: "中央ラグ", x1: 28, x2: 65, y1: 80, y2: 96 },
+    { name: "中央右",   x1: 64, x2: 72, y1: 62, y2: 73 },
+    { name: "右床",     x1: 82, x2: 94, y1: 80, y2: 95 },
+  ],
+
+   6: [
+    { name: "左棚前",   x1: 3,  x2: 10, y1: 56, y2: 67 },
+    { name: "左床",     x1: 2,  x2: 12, y1: 79, y2: 94 },
+    { name: "中央ラグ", x1: 26, x2: 54, y1: 81, y2: 96 },
+    { name: "中央右",   x1: 63, x2: 69, y1: 66, y2: 75 },
+    { name: "右下",     x1: 82, x2: 92, y1: 88, y2: 96 },
+  ],
+
+   7: [
+    { name: "ソファ前", x1: 5,  x2: 13, y1: 74, y2: 84 },
+    { name: "左床",     x1: 20, x2: 35, y1: 88, y2: 96 },
+    { name: "中央ラグ", x1: 36, x2: 49, y1: 79, y2: 96 },
+    { name: "中央右",   x1: 63, x2: 70, y1: 66, y2: 76 },
+    { name: "右床",     x1: 82, x2: 93, y1: 88, y2: 96 },
+  ],
+
+   8: [
+    { name: "ソファ前", x1: 5,  x2: 13, y1: 74, y2: 84 },
+    { name: "左中央",   x1: 16, x2: 22, y1: 82, y2: 91 },
+    { name: "左床",     x1: 24, x2: 38, y1: 89, y2: 97 },
+    { name: "中央ラグ", x1: 37, x2: 52, y1: 79, y2: 97 },
+    { name: "中央右",   x1: 63, x2: 70, y1: 66, y2: 76 },
+    { name: "右床",     x1: 82, x2: 92, y1: 92, y2: 98 },
+  ],
+
+   9: [
+    { name: "ソファ前", x1: 5,  x2: 13, y1: 74, y2: 84 },
+    { name: "左中央",   x1: 15, x2: 21, y1: 82, y2: 91 },
+    { name: "中央左",   x1: 42, x2: 50, y1: 79, y2: 94 },
+    { name: "中央下",   x1: 52, x2: 61, y1: 92, y2: 98 },
+    { name: "中央右",   x1: 63, x2: 69, y1: 66, y2: 76 },
+    { name: "右中央",   x1: 58, x2: 66, y1: 82, y2: 91 },
+    { name: "右床",     x1: 82, x2: 92, y1: 92, y2: 98 },
+  ],
+
+   10: [
+    { name: "左下",     x1: 1,  x2: 12, y1: 92, y2: 98 },
+    { name: "ソファ前", x1: 5,  x2: 13, y1: 74, y2: 84 },
+    { name: "左中央",   x1: 15, x2: 21, y1: 82, y2: 91 },
+    { name: "中央",     x1: 42, x2: 50, y1: 79, y2: 95 },
+    { name: "中央下",   x1: 53, x2: 60, y1: 93, y2: 98 },
+    { name: "中央右",   x1: 63, x2: 69, y1: 66, y2: 76 },
+    { name: "右中央",   x1: 58, x2: 66, y1: 82, y2: 91 },
+    { name: "右床",     x1: 82, x2: 92, y1: 92, y2: 98 },
+  ],
+
+   11: [
+    { name: "ソファ前", x1: 5,  x2: 13, y1: 74, y2: 84 },
+    { name: "左中央",   x1: 16, x2: 22, y1: 82, y2: 91 },
+    { name: "中央",     x1: 43, x2: 50, y1: 80, y2: 95 },
+    { name: "中央下",   x1: 52, x2: 58, y1: 93, y2: 98 },
+    { name: "中央右",   x1: 63, x2: 69, y1: 66, y2: 76 },
+    { name: "右床",     x1: 82, x2: 92, y1: 92, y2: 98 },
+  ],
+
+   12: [
+    { name: "ソファ前", x1: 5,  x2: 13, y1: 74, y2: 84 },
+    { name: "左中央",   x1: 16, x2: 22, y1: 82, y2: 91 },
+    { name: "中央",     x1: 43, x2: 50, y1: 80, y2: 95 },
+    { name: "中央上",   x1: 51, x2: 57, y1: 56, y2: 66 },
+    { name: "中央右",   x1: 63, x2: 69, y1: 66, y2: 76 },
+    { name: "右中央",   x1: 58, x2: 66, y1: 82, y2: 91 },
+  ],
+
+   13: [
+    { name: "ソファ前", x1: 5,  x2: 13, y1: 74, y2: 84 },
+    { name: "中央左",   x1: 37, x2: 45, y1: 56, y2: 66 },
+    { name: "中央上",   x1: 54, x2: 60, y1: 56, y2: 66 },
+    { name: "中央",     x1: 43, x2: 51, y1: 80, y2: 95 },
+    { name: "右中央",   x1: 62, x2: 68, y1: 82, y2: 91 },
+    { name: "中央右",   x1: 65, x2: 71, y1: 66, y2: 76 },
+  ],
+
+   14: [
+    { name: "ソファ前", x1: 5,  x2: 13, y1: 74, y2: 84 },
+    { name: "左中央",   x1: 16, x2: 22, y1: 82, y2: 91 },
+    { name: "中央",     x1: 43, x2: 51, y1: 80, y2: 95 },
+    { name: "中央上",   x1: 54, x2: 60, y1: 56, y2: 66 },
+    { name: "右中央",   x1: 62, x2: 68, y1: 82, y2: 91 },
+    { name: "中央右",   x1: 65, x2: 71, y1: 66, y2: 76 },
+  ],
+
+   15: [
+    { name: "ソファ前", x1: 5,  x2: 13, y1: 74, y2: 84 },
+    { name: "左中央",   x1: 16, x2: 22, y1: 82, y2: 91 },
+    { name: "中央",     x1: 43, x2: 51, y1: 80, y2: 95 },
+    { name: "中央上",   x1: 41, x2: 62, y1: 57, y2: 66 },
+    { name: "右中央",   x1: 62, x2: 68, y1: 82, y2: 91 },
+    { name: "中央右",   x1: 65, x2: 71, y1: 66, y2: 76 },
+  ],
+   
+};
+
+function randRange(min, max) {
+  return min + Math.random() * (max - min);
+}
+
+function pickBgCatSpot() {
+  const areas =
+    ROOM_AREAS[state.guildRank] || ROOM_AREAS[1];
+
+  const area =
+    areas[Math.floor(Math.random() * areas.length)];
+
+  return {
+    x: randRange(area.x1, area.x2),
+    y: randRange(area.y1, area.y2),
+    area,
+  };
+}
 
 function createBgCat(){
 
@@ -3586,10 +3946,7 @@ function createBgCat(){
 
 function moveBgCat(cat){
 
-  const spot =
-    CAT_SPOTS[
-      Math.floor(Math.random() * CAT_SPOTS.length)
-    ];
+  const spot = pickBgCatSpot();
 
   const currentX =
     parseFloat(cat.style.left);
@@ -3614,10 +3971,14 @@ function moveBgCat(cat){
     );
   }
 
-  cat.classList.remove("idle","sleep");
+  cat.classList.remove("idle", "sleep");
   cat.classList.add("walk");
+
+  clearBgCatAnim(cat);
+  cat.style.backgroundImage = "";
+
   if (Math.random() < 0.25) {
-　showBgCatBubble(cat, "walk");
+    showBgCatBubble(cat, "walk");
   }
    
   cat.style.left = spot.x + "%";
@@ -3627,19 +3988,81 @@ function moveBgCat(cat){
 
     cat.classList.remove("walk");
 
-    if(Math.random() < 0.2){
-      cat.classList.add("sleep");
-      if (Math.random() < 0.25) {
-  showBgCatBubble(cat, "sleep");
-}
-    }else{
-      cat.classList.add("idle");
-      if (Math.random() < 0.18) {
-  showBgCatBubble(cat, "idle");
-}
+    if (Math.random() < 0.2) {
+  cat.classList.add("sleep");
+  clearBgCatAnim(cat);
+  cat.style.backgroundImage = "";
+
+  if (Math.random() < 0.25) {
+    showBgCatBubble(cat, "sleep");
+  }
+
+} else {
+  const motion = Math.random() < 0.35
+    ? pickUnlockedBgMotion()
+    : null;
+
+  if (motion) {
+    cat.classList.add("idle");
+    setBgCatImage(cat, motion.frames);
+
+    if (Math.random() < 0.25) {
+      showBgCatBubble(cat, "idle");
     }
 
+  } else {
+    cat.classList.add("idle");
+    clearBgCatAnim(cat);
+    cat.style.backgroundImage = "";
+
+    if (Math.random() < 0.18) {
+      showBgCatBubble(cat, "idle");
+    }
+  }
+}
+
   }, 4000);
+}
+
+function getUnlockedBgMotions() {
+
+  const ids =
+    state.bgUnlocks?.motionIds || [];
+
+  return BG_UNLOCK_MOTIONS.filter(m =>
+    ids.includes(m.id)
+  );
+}
+
+function clearBgCatAnim(cat) {
+  if (cat._motionTimer) {
+    clearInterval(cat._motionTimer);
+    cat._motionTimer = null;
+  }
+}
+
+function setBgCatImage(cat, frames) {
+  if (!cat || !frames || frames.length === 0) return;
+
+  clearBgCatAnim(cat);
+
+  let index = 0;
+  cat.style.backgroundImage = `url("${frames[index]}")`;
+
+  if (frames.length >= 2) {
+    cat._motionTimer = setInterval(() => {
+      index = (index + 1) % frames.length;
+      cat.style.backgroundImage = `url("${frames[index]}")`;
+    }, 700);
+  }
+}
+
+function pickUnlockedBgMotion() {
+  const motions = getUnlockedBgMotions();
+
+  if (motions.length === 0) return null;
+
+  return motions[Math.floor(Math.random() * motions.length)];
 }
 
 /* =========================
@@ -3851,11 +4274,14 @@ function openCatDetailModal(catId) {
       <button class="ghost" id="catDetailClose">閉じる</button>
       <button class="ghost" id="catDetailRename">名前変更</button>
       
-      ${canFire ? `
-        <button class="ghost" id="catDetailFire" ${busy ? "disabled" : ""} style="${busy ? "opacity:.6;" : ""}>
-          解雇
-        </button>
-      ` : ""}
+      <button
+        class="ghost"
+        id="catDetailFire"
+        ${canFire ? "" : "disabled"}
+        style="${canFire ? "" : "opacity:.6;"}"
+      >
+        ${canFire ? "解雇" : fireLockedReason}
+      </button>
     </div>
   `;
 
@@ -3876,6 +4302,47 @@ function openCatDetailModal(catId) {
 
 function renderTrainingTab() {
   ensureTrainingState();
+  ensureAdState();
+
+  const adLeft =
+    AD_REWARD.DAILY_LIMIT -
+    state.adReward.count;
+
+  const itemAndAdHtml = `
+    <div class="panelCard">
+      <div class="row">
+        <div>
+          <div><b>アイテム</b></div>
+          <div class="dim">訓練で使える支援アイテム</div>
+        </div>
+
+        <div class="mono">
+          🌿 ×${state.items?.matatabi || 0}
+        </div>
+      </div>
+    </div>
+
+    <div class="panelCard">
+      <div><b>🎁 ギルド協会の支援物資</b></div>
+
+      <div class="dim" style="margin-top:6px;">
+        広告を見るとマタタビを1個もらえます
+      </div>
+
+      <div class="dim">
+        本日あと ${adLeft}/${AD_REWARD.DAILY_LIMIT} 回
+      </div>
+
+      <button
+        id="watchMatatabiAd"
+        class="primary adBtn"
+        style="margin-top:10px;width:100%;"
+        ${adLeft <= 0 ? "disabled" : ""}
+      >
+        ${adLeft <= 0 ? "本日の受取済み" : "広告を見る"}
+      </button>
+    </div>
+  `;
 
   const slotCount = state.trainingJobs.length;
   const usedTraining = state.trainingJobs.filter(Boolean).length;
@@ -3931,7 +4398,9 @@ function renderTrainingTab() {
   }
 
   el.tabTraining.innerHTML = `
-    <div class="panelCard">
+  ${itemAndAdHtml}
+
+  <div class="panelCard">
       <div><b>訓練</b> <span class="dim">1EXP/分 / 受取式 / クエストと両立不可</span></div>
       <div class="dim">空き: ${(slotCount - usedTraining)}/${slotCount}（枠2以降は開放費＋使用料あり）</div>
     </div>
@@ -3944,6 +4413,8 @@ function renderTrainingTab() {
   el.tabTraining.querySelectorAll("[data-start-slot]").forEach(btn => {
     btn.addEventListener("click", () => openTrainingStartModal(Number(btn.dataset.startSlot)));
   });
+  document.getElementById("watchMatatabiAd")
+  ?.addEventListener("click", watchMatatabiAd);
 }
 
 function renderInvestTab() {
