@@ -1127,23 +1127,23 @@ function getDispatchSlots() {
 function getAvailableAlpacaPurchase() {
   ensureAlpaca();
 
-  if (state.guildRank >= 11 && !state.alpaca.boughtAt11) {
-    return {
-      stage: 11,
-      cost: 150000,
-      label: "2頭目のアルパカを迎える",
-      desc: "派遣枠が1つ増えます",
-    };
-  }
-
   if (state.guildRank >= 6 && !state.alpaca.boughtAt6) {
-    return {
-      stage: 6,
-      cost: 50000,
-      label: "アルパカを迎える",
-      desc: "派遣できる数が1つ増えます",
-    };
-  }
+  return {
+    stage: 6,
+    cost: 50000,
+    label: "アルパカを迎える",
+    desc: "派遣できる数が1つ増えます",
+  };
+}
+
+if (state.guildRank >= 11 && !state.alpaca.boughtAt11) {
+  return {
+    stage: 11,
+    cost: 150000,
+    label: "2頭目のアルパカを迎える",
+    desc: "派遣枠が1つ増えます",
+  };
+}
 
   return null;
 }
