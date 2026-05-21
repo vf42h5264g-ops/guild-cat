@@ -4245,9 +4245,16 @@ function openCatDetailModal(catId) {
 
   const busy = isCatBusy(c.id);
   const statusText = busy === "quest" ? "クエスト中" : busy === "training" ? "訓練中" : "待機中";
-  const canFire = RANK.canFire(state.guildRank);
-  
 
+  const fireLockedReason =
+    !RANK.canFire(state.guildRank) ? "Rank5で解放" :
+    c.level <= 1 ? "Lv2から解雇可" :
+    (state.cats || []).length <= 1 ? "最後の1匹は不可" :
+    busy ? "待機中のみ解雇可" :
+    "";
+
+  const canFire = fireLockedReason === "";
+  
   const html = `
   <div class="panelCard" style="display:flex;gap:12px;align-items:center;">
     <div class="catSpriteWrap" style="position:relative;width:64px;height:64px;flex:0 0 64px;">
