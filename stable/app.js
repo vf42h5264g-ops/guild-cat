@@ -651,42 +651,24 @@ function compressCats(cats) {
   return cats.map(c => ({
     i: c.id,
     n: c.name,
-
     l: c.level,
     e: c.exp,
-
     p: c.personality,
-
-    s: [
-      c.stats.STR,
-      c.stats.SPD,
-      c.stats.INT
-    ],
-
-    h: c.hue,
-
-    f: c.favorite
+    s: [c.str, c.spd, c.int],
+    h: c.hue
   }));
 }
 function decompressCats(cats) {
   return cats.map(c => ({
     id: c.i,
     name: c.n,
-
     level: c.l,
     exp: c.e,
-
     personality: c.p,
-
-    stats: {
-      STR: c.s[0],
-      SPD: c.s[1],
-      INT: c.s[2]
-    },
-
-    hue: c.h,
-
-    favorite: c.f
+    str: c.s[0],
+    spd: c.s[1],
+    int: c.s[2],
+    hue: c.h
   }));
 }
 function exportSaveCode() {
