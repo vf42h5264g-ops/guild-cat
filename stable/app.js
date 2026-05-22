@@ -650,18 +650,38 @@ function exportSaveCode() {
   save();
 
   const json = JSON.stringify(state);
-  return btoa(unescape(encodeURIComponent(json)));
+
+  const compressed =
+    pako.deflate(json);
+
+  let binary = "";
+
+  compressed.forEach(b => {
+    binary += String.fromCharCode(b);
+  });
+
+  return btoa(binary);
 }
 
 function importSaveCode(code) {
-  const json = decodeURIComponent(escape(atob(code.trim())));
-  const data = JSON.parse(json);
+
+  const binary =
+    atob(code.trim());
+
+  const bytes =
+    Uint8Array.from(binary, c => c.charCodeAt(0));
+
+  const json =
+    pako.inflate(bytes, { to: "string" });
+
+  const data =
+    JSON.parse(json);
 
   if (!data || typeof data !== "object") {
     throw new Error("invalid save data");
   }
 
-  state = data;
+  Object.assign(state, data);
 
   save();
   renderAll();
