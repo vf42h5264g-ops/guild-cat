@@ -1378,7 +1378,8 @@ function bindUI() {
   });
 
   el.btnNew?.addEventListener("click", () => {
-    // 既存の新規開始処理
+     openResetModal(); 
+     // 既存の新規開始処理
   });
 
   el.btnGuildName?.addEventListener("click", () => openGuildRenameModal());
