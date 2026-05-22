@@ -1471,7 +1471,8 @@ function openResetModal() {
   document.getElementById("resetCancel")?.addEventListener("click", closeModal);
 
   input?.addEventListener("input", () => {
-    confirmBtn.disabled = input.value !== "RESET";
+    confirmBtn.disabled =
+  input.value.trim().toUpperCase() !== "RESET";
   });
 
   confirmBtn?.addEventListener("click", () => {
