@@ -675,32 +675,36 @@ function exportSaveCode() {
   save();
 
   const saveData = {
+  guildName: state.guildName,
+  guildRank: state.guildRank,
+  gold: state.gold,
 
-    guildName: state.guildName,
-    guildRank: state.guildRank,
-    gold: state.gold,
+  cats: compressCats(state.cats),
 
-    cats: compressCats(state.cats),
+  items: state.items,
 
-    items: state.items,
+  questJobs: state.questJobs,
+  trainingSlots: state.trainingSlots,
+  trainingJobs: state.trainingJobs,
 
-    questJobs: state.questJobs,
-    trainingJobs: state.trainingJobs,
+  alpaca: state.alpaca,
+  invest: state.invest,
 
-    hire: state.hire,
+  questOffers: state.questOffers,
 
-    pendingResults: state.pendingResults,
+  dailyBonus: state.dailyBonus,
+  adReward: state.adReward,
+  bgUnlocks: state.bgUnlocks,
 
-    investments: state.investments,
+  tutorialDone: state.tutorialDone,
+  tutorialStage: state.tutorialStage,
 
-    bgUnlocks: state.bgUnlocks,
+  endingSeen: state.endingSeen,
+  postGame: state.postGame,
 
-    dailyBonus: state.dailyBonus,
-    adReward: state.adReward,
-
-    tutorialDone: state.tutorialDone,
-    postGame: state.postGame
-  };
+  // ログは復元時に空でOK
+  logs: []
+};
 
   const json =
     JSON.stringify(saveData);
