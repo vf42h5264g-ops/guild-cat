@@ -1367,11 +1367,37 @@ function openResetModal() {
   });
 }
 function bindUI() {
-   el.btnGuildName?.addEventListener("click", () => openGuildRenameModal());
+  el.btnStart?.addEventListener("click", () => {
+    openMain();
+    if (!state.tutorialDone) startTutorialFlow();
+  });
 
-   el.btnSettings?.addEventListener("click", () => {
-     openSettingsModal();
-   });
+  el.btnContinue?.addEventListener("click", () => {
+    openMain();
+    if (!state.tutorialDone) startTutorialFlow();
+  });
+
+  el.btnNew?.addEventListener("click", () => {
+    // 既存の新規開始処理
+  });
+
+  el.btnGuildName?.addEventListener("click", () => openGuildRenameModal());
+
+  el.btnSettings?.addEventListener("click", () => {
+    openSettingsModal();
+  });
+
+  el.btnRankUp?.addEventListener("click", () => doRankUp());
+  el.btnCollectAll?.addEventListener("click", () => collectAll());
+
+  document.querySelectorAll(".tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tab = btn.dataset.tab;
+      if (tab === "invest" && !RANK.canInvest(state.guildRank)) return;
+      switchTab(tab);
+    });
+  });
+}
    
 
 function boot() {
