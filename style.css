@@ -794,3 +794,25 @@ img,svg,canvas{ max-width:100%; height:auto; }
     transform:translateY(-120px);
   }
 }
+html,
+body{
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden;
+  touch-action:manipulation;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+img,
+canvas{
+  max-width:100%;
+}
+input,
+textarea,
+select,
+button{
+  font-size:16px;
+}
