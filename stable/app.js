@@ -690,7 +690,7 @@ function exportSaveCode() {
   alpaca: state.alpaca,
   invest: state.invest,
 
-  questOffers: [],
+  questOffers: null,
      
   dailyBonus: state.dailyBonus,
   adReward: state.adReward,
@@ -744,8 +744,19 @@ function importSaveCode(code) {
   data.cats =
     decompressCats(data.cats);
 }
+  if (
+  !data.questOffers ||
+  Array.isArray(data.questOffers) ||
+  typeof data.questOffers !== "object"
+) {
+  data.questOffers = null;
+}
   Object.assign(state, data);
 
+  ensureQuestOffers();
+if (!state.questOffers) {
+  rollQuestOffers();
+}
   save();
   renderAll();
 }
