@@ -1941,10 +1941,10 @@ function openSettingsModal() {
       </div>
 
       <div class="row" style="margin-top:10px;">
-        <button class="ghost smallBtn" id="btnExportSave" disabled>
+        <button class="ghost smallBtn" id="btnExportSave">
           セーブコード発行
         </button>
-        <button class="ghost smallBtn" id="btnImportSave" disabled>
+        <button class="ghost smallBtn" id="btnImportSave">
           セーブコード読込
         </button>
       </div>
