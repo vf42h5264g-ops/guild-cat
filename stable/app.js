@@ -680,6 +680,7 @@ function exportSaveCode() {
   gold: state.gold,
 
   cats: compressCats(state.cats),
+  favoriteCatId: state.favoriteCatId,
 
   items: state.items,
 
@@ -750,6 +751,9 @@ function importSaveCode(code) {
   typeof data.questOffers !== "object"
 ) {
   data.questOffers = null;
+}
+  if (!data.favoriteCatId) {
+  data.favoriteCatId = null;
 }
   Object.assign(state, data);
 
@@ -1398,6 +1402,7 @@ function newGame() {
     tutorialStage: 0,
 
     cats: [],
+    favoriteCatId: null,
 
     logs: [],
     pendingResults: [],
@@ -1524,6 +1529,9 @@ function boot() {
   if (!Array.isArray(state.cats)) state.cats = [];
   if (typeof state.guildName !== "string") state.guildName = "Cozy Cat Guild";
 
+  if (!state.favoriteCatId)
+  state.favoriteCatId = null;
+   
   if (typeof state.endingSeen !== "boolean") state.endingSeen = false;
   if (typeof state.postGame !== "boolean") state.postGame = false;
    
@@ -4496,7 +4504,13 @@ function openCatDetailModal(catId) {
     <div class="modalFooter">
       <button class="ghost" id="catDetailClose">閉じる</button>
       <button class="ghost" id="catDetailRename">名前変更</button>
-      
+      <button class="ghost" id="catDetailFavorite">
+  ${
+    state.favoriteCatId === c.id
+      ? "★ お気に入り解除"
+      : "☆ お気に入り登録"
+  }
+</button>
       <button
         class="ghost"
         id="catDetailFire"
@@ -4518,6 +4532,15 @@ function openCatDetailModal(catId) {
   });
   
   document.getElementById("catDetailFire")?.addEventListener("click", () => {
+    if (state.favoriteCatId === c.id) {
+      state.favoriteCatId = null;
+      pushLog(`${c.name} をお気に入り解除したにゃ`);
+    } else {
+      state.favoriteCatId = c.id;
+      pushLog(`${c.name} をお気に入り登録したにゃ`);
+    }
+
+    save();
     closeModal();
     openFireCatModal(catId);
   });
