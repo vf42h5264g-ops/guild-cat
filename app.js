@@ -804,7 +804,14 @@ function setTabGlow(tabKey, on) {
 }
 
 function todayKey() {
-  return new Date().toISOString().slice(0, 10);
+
+  const now = new Date();
+
+  return `${now.getFullYear()}-${
+    now.getMonth() + 1
+  }-${
+    now.getDate()
+  }`;
 }
 
 function ensureAdState() {
