@@ -696,6 +696,11 @@ function exportSaveCode() {
   adReward: state.adReward,
   bgUnlocks: state.bgUnlocks,
 
+  hire: {
+  candidates: [],
+  lastRefreshAt: 0
+},
+     
   tutorialDone: state.tutorialDone,
   tutorialStage: state.tutorialStage,
 
