@@ -646,6 +646,26 @@ function load() {
 }
 window.addEventListener("beforeunload", () => save());
 
+function exportSaveCode() {
+  save();
+
+  const json = JSON.stringify(state);
+  return btoa(unescape(encodeURIComponent(json)));
+}
+
+function importSaveCode(code) {
+  const json = decodeURIComponent(escape(atob(code.trim())));
+  const data = JSON.parse(json);
+
+  if (!data || typeof data !== "object") {
+    throw new Error("invalid save data");
+  }
+
+  state = data;
+
+  save();
+  renderAll();
+}
 /* =========================
    Logs
    ========================= */
@@ -1956,6 +1976,63 @@ function openSettingsModal() {
       closeModal();
       openResetModal();
     });
+  document.getElementById("btnExportSave")
+  ?.addEventListener("click", () => {
+    const code = exportSaveCode();
+
+    openModal("セーブコード発行", `
+      <div class="panelCard">
+        <div class="dim">
+          このコードをメモ帳などに保存してください。
+        </div>
+        <textarea readonly
+          style="width:100%;height:180px;margin-top:10px;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;">${code}</textarea>
+      </div>
+
+      <div class="modalFooter">
+        <button class="primary" id="saveCodeClose">閉じる</button>
+      </div>
+    `);
+
+    document.getElementById("saveCodeClose")
+      ?.addEventListener("click", closeModal);
+  });
+
+document.getElementById("btnImportSave")
+  ?.addEventListener("click", () => {
+    openModal("セーブコード読込", `
+      <div class="panelCard">
+        <div class="dim">
+          保存しておいたセーブコードを貼り付けてください。
+        </div>
+        <textarea id="importSaveCodeInput"
+          style="width:100%;height:180px;margin-top:10px;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;"></textarea>
+      </div>
+
+      <div class="modalFooter">
+        <button class="ghost" id="importCancel">キャンセル</button>
+        <button class="primary" id="importConfirm">読込</button>
+      </div>
+    `);
+
+    document.getElementById("importCancel")
+      ?.addEventListener("click", closeModal);
+
+    document.getElementById("importConfirm")
+      ?.addEventListener("click", () => {
+        try {
+          const code = document.getElementById("importSaveCodeInput")?.value || "";
+          importSaveCode(code);
+
+          closeModal();
+          pushLog("セーブコードから復元したにゃ");
+          renderAll();
+
+        } catch (e) {
+          pushLog("セーブコードの読込に失敗したにゃ");
+        }
+      });
+  });
 }
 /* =========================
    Guild rename
