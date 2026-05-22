@@ -649,7 +649,38 @@ window.addEventListener("beforeunload", () => save());
 function exportSaveCode() {
   save();
 
-  const json = JSON.stringify(state);
+  const saveData = {
+
+    guildName: state.guildName,
+    guildRank: state.guildRank,
+    gold: state.gold,
+
+    cats: state.cats,
+
+    items: state.items,
+
+    questJobs: state.questJobs,
+    trainingJobs: state.trainingJobs,
+
+    hire: state.hire,
+
+    logs: state.logs,
+
+    pendingResults: state.pendingResults,
+
+    investments: state.investments,
+
+    bgUnlocks: state.bgUnlocks,
+
+    dailyBonus: state.dailyBonus,
+    adReward: state.adReward,
+
+    tutorialDone: state.tutorialDone,
+    postGame: state.postGame
+  };
+
+  const json =
+    JSON.stringify(saveData);
 
   const compressed =
     pako.deflate(json);
