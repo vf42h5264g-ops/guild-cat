@@ -639,6 +639,7 @@ function save() {
     console.warn("save failed", e);
   }
 }
+
 function load() {
   const raw = localStorage.getItem(LS_SAVE);
   if (!raw) return null;
@@ -646,6 +647,48 @@ function load() {
 }
 window.addEventListener("beforeunload", () => save());
 
+function compressCats(cats) {
+  return cats.map(c => ({
+    i: c.id,
+    n: c.name,
+
+    l: c.level,
+    e: c.exp,
+
+    p: c.personality,
+
+    s: [
+      c.stats.STR,
+      c.stats.SPD,
+      c.stats.INT
+    ],
+
+    h: c.hue,
+
+    f: c.favorite
+  }));
+}
+function decompressCats(cats) {
+  return cats.map(c => ({
+    id: c.i,
+    name: c.n,
+
+    level: c.l,
+    exp: c.e,
+
+    personality: c.p,
+
+    stats: {
+      STR: c.s[0],
+      SPD: c.s[1],
+      INT: c.s[2]
+    },
+
+    hue: c.h,
+
+    favorite: c.f
+  }));
+}
 function exportSaveCode() {
   save();
 
@@ -655,7 +698,7 @@ function exportSaveCode() {
     guildRank: state.guildRank,
     gold: state.gold,
 
-    cats: state.cats,
+    cats: compressCats(state.cats),
 
     items: state.items,
 
@@ -663,8 +706,6 @@ function exportSaveCode() {
     trainingJobs: state.trainingJobs,
 
     hire: state.hire,
-
-    logs: state.logs,
 
     pendingResults: state.pendingResults,
 
@@ -711,7 +752,10 @@ function importSaveCode(code) {
   if (!data || typeof data !== "object") {
     throw new Error("invalid save data");
   }
-
+  if (data.cats) {
+  data.cats =
+    decompressCats(data.cats);
+}
   Object.assign(state, data);
 
   save();
