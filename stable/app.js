@@ -425,7 +425,8 @@ const el = {
 
   guildTitle: document.getElementById("guildTitle"),
   btnGuildName: document.getElementById("btnGuildName"),
-
+  btnSettings: document.getElementById("btnSettings"),
+   
   hud: document.getElementById("hud"),
   btnReset: document.getElementById("btnReset"),
   btnRankUp: document.getElementById("btnRankUp"),
@@ -1329,92 +1330,49 @@ function newGame() {
 /* =========================
    UI Bindings
    ========================= */
-function bindUI() {
-  el.btnStart?.addEventListener("click", () => {
-    openMain();
-    if (!state.tutorialDone) startTutorialFlow();
+function openResetModal() {
+  const html = `
+    <div class="panelCard">
+      <div><b>⚠ データリセット</b></div>
+      <div class="dim" style="margin-top:6px;">ギルド・ネコ・Gold・進行状況がすべて削除されます。</div>
+      <div class="dim" style="margin-top:6px;">実行するには <b>RESET</b> と入力してください。</div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <input id="resetInput" placeholder="RESET と入力"
+        style="width:100%;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;" />
+    </div>
+
+    <div class="modalFooter">
+      <button class="ghost" id="resetCancel">キャンセル</button>
+      <button class="primary" id="resetConfirm" disabled>完全削除</button>
+    </div>
+  `;
+
+  openModal("データリセット確認", html);
+
+  const input = document.getElementById("resetInput");
+  const confirmBtn = document.getElementById("resetConfirm");
+
+  document.getElementById("resetCancel")?.addEventListener("click", closeModal);
+
+  input?.addEventListener("input", () => {
+    confirmBtn.disabled = input.value !== "RESET";
   });
 
-  el.btnContinue?.addEventListener("click", () => {
-    openMain();
-    if (!state.tutorialDone) startTutorialFlow();
-  });
-
-  el.btnNew?.addEventListener("click", () => {
-    const html = `
-      <div class="panelCard">
-        <div><b>新しく始めますか？</b></div>
-        <div class="dim" style="margin-top:6px;">現在のデータは削除されます。</div>
-        <div class="dim" style="margin-top:6px;">実行するには <b>RESET</b> と入力してください。</div>
-      </div>
-      <div class="panelCard" style="margin-top:10px;">
-        <input id="resetInput2" placeholder="RESET と入力"
-          style="width:100%;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;" />
-      </div>
-      <div class="modalFooter">
-        <button class="ghost" id="newCancel">キャンセル</button>
-        <button class="primary" id="newConfirm" disabled>新しく始める</button>
-      </div>
-    `;
-    openModal("確認", html);
-    const input = document.getElementById("resetInput2");
-    const btn = document.getElementById("newConfirm");
-    document.getElementById("newCancel")?.addEventListener("click", closeModal);
-    input?.addEventListener("input", () => { btn.disabled = input.value !== "RESET"; });
-    btn?.addEventListener("click", () => {
-      localStorage.removeItem(LS_SAVE);
-      closeModal();
-      location.reload();
-    });
-  });
-
-  el.btnGuildName?.addEventListener("click", () => openGuildRenameModal());
-
-  el.btnReset?.addEventListener("click", () => {
-    const html = `
-      <div class="panelCard">
-        <div><b>⚠ データリセット</b></div>
-        <div class="dim" style="margin-top:6px;">ギルド・ネコ・Gold・進行状況がすべて削除されます。</div>
-        <div class="dim" style="margin-top:6px;">実行するには <b>RESET</b> と入力してください。</div>
-      </div>
-
-      <div class="panelCard" style="margin-top:10px;">
-        <input id="resetInput" placeholder="RESET と入力"
-          style="width:100%;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;" />
-      </div>
-
-      <div class="modalFooter">
-        <button class="ghost" id="resetCancel">キャンセル</button>
-        <button class="primary" id="resetConfirm" disabled>完全削除</button>
-      </div>
-    `;
-    openModal("データリセット確認", html);
-
-    const input = document.getElementById("resetInput");
-    const confirmBtn = document.getElementById("resetConfirm");
-    document.getElementById("resetCancel")?.addEventListener("click", closeModal);
-
-    input?.addEventListener("input", () => {
-      confirmBtn.disabled = input.value !== "RESET";
-    });
-    confirmBtn?.addEventListener("click", () => {
-      localStorage.removeItem(LS_SAVE);
-      closeModal();
-      location.reload();
-    });
-  });
-
-  el.btnRankUp?.addEventListener("click", () => doRankUp());
-  el.btnCollectAll?.addEventListener("click", () => collectAll());
-
-  document.querySelectorAll(".tab").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const tab = btn.dataset.tab;
-      if (tab === "invest" && !RANK.canInvest(state.guildRank)) return;
-      switchTab(tab);
-    });
+  confirmBtn?.addEventListener("click", () => {
+    localStorage.removeItem(LS_SAVE);
+    closeModal();
+    location.reload();
   });
 }
+function bindUI() {
+   el.btnGuildName?.addEventListener("click", () => openGuildRenameModal());
+
+   el.btnSettings?.addEventListener("click", () => {
+     openSettingsModal();
+   });
+   
 
 function boot() {
   state = load() || newGame();
@@ -1919,7 +1877,59 @@ function startTutorialQuest(partyIds, slotIdx) {
   renderAll();
   save();
 }
+function openSettingsModal() {
+  const html = `
+    <div class="panelCard">
+      <div style="font-size:16px;font-weight:900;">☁ 自動保存済み</div>
+      <div class="dim" style="margin-top:6px;">
+        ゲームは自動で保存されています。<br>
+        念のため、バックアップコード機能も今後追加予定です。
+      </div>
+    </div>
 
+    <div class="panelCard" style="margin-top:10px;">
+      <div><b>バックアップ</b></div>
+      <div class="dim" style="margin-top:6px;">
+        セーブコード発行・読込は次の段階で追加します。
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <button class="ghost smallBtn" id="btnExportSave" disabled>
+          セーブコード発行
+        </button>
+        <button class="ghost smallBtn" id="btnImportSave" disabled>
+          セーブコード読込
+        </button>
+      </div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div><b>その他</b></div>
+      <div class="dim" style="margin-top:6px;">
+        Version 0.6
+      </div>
+
+      <button class="ghost smallBtn" id="btnSettingsReset" style="margin-top:10px;">
+        データリセット
+      </button>
+    </div>
+
+    <div class="modalFooter">
+      <button class="primary" id="settingsClose">閉じる</button>
+    </div>
+  `;
+
+  openModal("設定", html);
+
+  document.getElementById("settingsClose")
+    ?.addEventListener("click", closeModal);
+
+  document.getElementById("btnSettingsReset")
+    ?.addEventListener("click", () => {
+      closeModal();
+      openResetModal();
+    });
+}
 /* =========================
    Guild rename
    ========================= */
