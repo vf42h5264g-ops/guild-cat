@@ -690,7 +690,7 @@ function exportSaveCode() {
   alpaca: state.alpaca,
   invest: state.invest,
 
-  questOffers: ],
+  questOffers: [],
      
   dailyBonus: state.dailyBonus,
   adReward: state.adReward,
