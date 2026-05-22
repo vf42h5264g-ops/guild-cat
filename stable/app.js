@@ -690,16 +690,13 @@ function exportSaveCode() {
   alpaca: state.alpaca,
   invest: state.invest,
 
-  questOffers: state.questOffers,
-
+  questOffers: []
+     
   dailyBonus: state.dailyBonus,
   adReward: state.adReward,
   bgUnlocks: state.bgUnlocks,
 
-  hire: {
-  candidates: [],
-  lastRefreshAt: 0
-},
+  hire: state.hire,
      
   tutorialDone: state.tutorialDone,
   tutorialStage: state.tutorialStage,
