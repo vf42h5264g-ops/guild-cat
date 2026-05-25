@@ -4622,18 +4622,9 @@ function openCatDetailModal(catId) {
 
   }); 
   document.getElementById("catDetailFire")?.addEventListener("click", () => {
-    if (state.favoriteCatId === c.id) {
-      state.favoriteCatId = null;
-      pushLog(`${c.name} をお気に入り解除したにゃ`);
-    } else {
-      state.favoriteCatId = c.id;
-      pushLog(`${c.name} をお気に入り登録したにゃ`);
-    }
-
-    save();
-    closeModal();
-    openFireCatModal(catId);
-  });
+  closeModal();
+  openFireCatModal(catId);
+});
    document.getElementById("catDetailFavorite")?.addEventListener("click", () => {
   if (state.favoriteCatId === c.id) {
     state.favoriteCatId = null;
