@@ -764,6 +764,63 @@ if (!state.questOffers) {
   save();
   renderAll();
 }
+function exportHelperCode() {
+  const cat = state.cats.find(c => c.id === state.favoriteCatId);
+
+  if (!cat) {
+    throw new Error("no favorite cat");
+  }
+
+  const helper = {
+    g: state.guildId,
+
+    n: cat.name,
+    l: cat.level,
+    p: cat.personality,
+
+    s: cat.str,
+    d: cat.spd,
+    i: cat.int,
+
+    h: cat.hue,
+  };
+
+  return btoa(
+    encodeURIComponent(
+      JSON.stringify(helper)
+    )
+  );
+}
+
+function importHelperCode(code) {
+  const json = decodeURIComponent(atob(code.trim()));
+  const h = JSON.parse(json);
+
+  if (h.g === state.guildId) {
+    throw new Error("own helper");
+  }
+
+  if (!Array.isArray(state.helpers)) {
+    state.helpers = [];
+  }
+
+  state.helpers.push({
+    id: uid(),
+    sourceGuildId: h.g,
+
+    name: h.n,
+    level: h.l,
+    personality: h.p,
+
+    str: h.s,
+    spd: h.d,
+    int: h.i,
+
+    hue: h.h,
+  });
+
+  save();
+}
 /* =========================
    Logs
    ========================= */
@@ -1398,6 +1455,7 @@ function newGame() {
     gold: 3500,
 
     guildName: "Cozy Cat Guild",
+    guildId: uid(),
     tutorialDone: false,
     tutorialStage: 0,
 
@@ -1528,7 +1586,8 @@ function boot() {
   if (typeof state.gold !== "number") state.gold = 0;
   if (!Array.isArray(state.cats)) state.cats = [];
   if (typeof state.guildName !== "string") state.guildName = "Cozy Cat Guild";
-
+  if (!state.guildId)
+  state.guildId = uid();
   if (!state.favoriteCatId)
   state.favoriteCatId = null;
    
