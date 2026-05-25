@@ -4566,8 +4566,9 @@ function openCatDetailModal(catId) {
   }
 
   save();
-  closeModal();
   renderAll();
+
+  openCatDetailModal(c.id);
 });
 }
 
