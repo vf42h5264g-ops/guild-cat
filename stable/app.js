@@ -4589,7 +4589,11 @@ function openCatZoomModal(cat) {
       >
 
       <div style="margin-top:12px;font-size:20px;">
-        ${escapeHtml(cat.name)}
+        ${
+  state.favoriteCatId === cat.id
+    ? "★ "
+    : ""
+}${escapeHtml(cat.name)}
       </div>
 
     </div>
