@@ -4537,7 +4537,12 @@ function openCatDetailModal(catId) {
     closeModal();
     openRenameCatModal(catId);
   });
-  
+  document.getElementById("catDetailZoom")
+  ?.addEventListener("click", () => {
+
+    openCatZoomModal(c);
+
+  }); 
   document.getElementById("catDetailFire")?.addEventListener("click", () => {
     if (state.favoriteCatId === c.id) {
       state.favoriteCatId = null;
@@ -4551,6 +4556,32 @@ function openCatDetailModal(catId) {
     closeModal();
     openFireCatModal(catId);
   });
+}
+
+function openCatZoomModal(cat) {
+
+  const img = getDisplayCatImage(cat);
+
+  const html = `
+    <div style="text-align:center;">
+
+      <img
+        src="${img}"
+        style="
+          width:240px;
+          image-rendering:pixelated;
+          margin-top:10px;
+        "
+      >
+
+      <div style="margin-top:12px;font-size:20px;">
+        ${escapeHtml(cat.name)}
+      </div>
+
+    </div>
+  `;
+
+  openModal("ネコ鑑賞", html);
 }
 
 function renderTrainingTab() {
