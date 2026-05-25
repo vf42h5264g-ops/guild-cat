@@ -4501,25 +4501,32 @@ function openCatDetailModal(catId) {
       <div class="dim">EXP ${c.exp}/${LEVEL.expToNext(c.level)}</div>
     </div>
 
-    <div class="modalFooter">
-      <button class="ghost" id="catDetailClose">閉じる</button>
-      <button class="ghost" id="catDetailRename">名前変更</button>
-      <button class="ghost" id="catDetailFavorite">
-  ${
-    state.favoriteCatId === c.id
-      ? "★ お気に入り解除"
-      : "☆ お気に入り登録"
-  }
-</button>
-      <button
-        class="ghost"
-        id="catDetailFire"
-        ${canFire ? "" : "disabled"}
-        style="${canFire ? "" : "opacity:.6;"}"
-      >
-        ${canFire ? "解雇" : fireLockedReason}
-      </button>
-    </div>
+    <div style="margin-top:12px;">
+  <button class="ghost" id="catDetailFavorite" style="width:100%;">
+    ${
+      state.favoriteCatId === c.id
+        ? "★ 助っ人中"
+        : "☆ 助っ人登録"
+    }
+  </button>
+</div>
+
+<div class="modalFooter">
+  <button class="ghost" id="catDetailClose">閉じる</button>
+
+  <button class="ghost" id="catDetailRename">
+    名前変更
+  </button>
+
+  <button
+    class="ghost"
+    id="catDetailFire"
+    ${canFire ? "" : "disabled"}
+    style="${canFire ? "" : "opacity:.6;"}"
+  >
+    ${canFire ? "解雇" : fireLockedReason}
+  </button>
+</div>
   `;
 
   openModal("ネコ詳細", html);
