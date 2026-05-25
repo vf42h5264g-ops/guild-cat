@@ -3673,6 +3673,11 @@ function switchTab(tab) {
 function renderQuestTab() {
   ensureQuestOffers();
   ensureAlpaca();
+
+  if (!Array.isArray(state.helpers)) {
+    state.helpers = [];
+  }
+
   if (!state.questOffers) rollQuestOffers();
 
   const types = questTypes();
@@ -3680,6 +3685,14 @@ function renderQuestTab() {
   const used = (state.questJobs || []).filter(Boolean).length;
   const maxLv = RANK.maxQuestLevel(state.guildRank);
   const alpacaOffer = getAvailableAlpacaPurchase();
+
+  const helperRows = state.helpers.map(h => `
+    <div class="panelCard" style="margin-top:8px;">
+      <div><b>${escapeHtml(h.name)}</b> <span class="dim">Lv${h.level}</span></div>
+      <div class="dim">${escapeHtml(h.personality)}</div>
+      <div class="dim">STR ${h.str} / SPD ${h.spd} / INT ${h.int}</div>
+    </div>
+  `).join("");
 
   el.tabQuest.innerHTML = `
     <div class="panelCard">
@@ -3690,6 +3703,24 @@ function renderQuestTab() {
           <div class="dim">派遣枠 ${used}/${ds}</div>
         </div>
         <div class="mono">派遣枠 ${used}/${ds}</div>
+      </div>
+    </div>
+
+    <div class="panelCard">
+      <div class="row">
+        <div>
+          <div><b>🤝 助っ人</b></div>
+          <div class="dim">登録数：${state.helpers.length}/5</div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <button class="ghost smallBtn" id="btnExportHelper">助っ人コード発行</button>
+        <button class="ghost smallBtn" id="btnImportHelper">助っ人コード読込</button>
+      </div>
+
+      <div style="margin-top:10px;">
+        ${helperRows || `<div class="dim">助っ人なし</div>`}
       </div>
     </div>
 
@@ -3711,33 +3742,80 @@ function renderQuestTab() {
       ` : ""
     }
 
-        ${types.map(t => {
-  const lv = state.questOffers[t.id];
-  const danger = getQuestDangerLabel(lv);
-  const flavor = getQuestFlavor(t.id, lv);
+    ${types.map(t => {
+      const lv = state.questOffers[t.id];
+      const danger = getQuestDangerLabel(lv);
+      const flavor = getQuestFlavor(t.id, lv);
 
-  return `
-    <div class="panelCard">
-      <div class="row">
-        <div style="min-width:0; flex:1;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <b>${t.icon} ${t.name}</b>
-            ${makeQuestLevelBadge(lv)}
+      return `
+        <div class="panelCard">
+          <div class="row">
+            <div style="min-width:0; flex:1;">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <b>${t.icon} ${t.name}</b>
+                ${makeQuestLevelBadge(lv)}
+              </div>
+
+              <div class="dim" style="margin-top:6px;">${danger}</div>
+              <div class="dim" style="margin-top:4px;">${flavor}</div>
+              <div class="dim" style="margin-top:4px;">属性：${getQuestMainLabel(t.main)}</div>
+            </div>
+
+            <button class="primary smallBtn" data-qtype="${t.id}">受注</button>
           </div>
-
-          <div class="dim" style="margin-top:6px;">${danger}</div>
-          <div class="dim" style="margin-top:4px;">${flavor}</div>
-          <div class="dim" style="margin-top:4px;">属性：${getQuestMainLabel(t.main)}</div>
         </div>
-
-        <button class="primary smallBtn" data-qtype="${t.id}">受注</button>
-      </div>
-    </div>
-  `;
-}).join("")}
+      `;
+    }).join("")}
 
     ${renderQuestRunning()}
   `;
+
+  document.getElementById("btnExportHelper")?.addEventListener("click", () => {
+    try {
+      const code = exportHelperCode();
+
+      openModal("助っ人コード発行", `
+        <div class="panelCard">
+          <div class="dim">このコードを相手に渡してください。</div>
+          <textarea readonly style="width:100%;height:150px;margin-top:10px;">${code}</textarea>
+        </div>
+        <div class="modalFooter">
+          <button class="primary" id="helperCodeClose">閉じる</button>
+        </div>
+      `);
+
+      document.getElementById("helperCodeClose")?.addEventListener("click", closeModal);
+    } catch {
+      pushLog("助っ人登録ネコがいないにゃ");
+    }
+  });
+
+  document.getElementById("btnImportHelper")?.addEventListener("click", () => {
+    openModal("助っ人コード読込", `
+      <div class="panelCard">
+        <textarea id="helperCodeInput" placeholder="助っ人コードを貼り付け"
+          style="width:100%;height:150px;"></textarea>
+      </div>
+      <div class="modalFooter">
+        <button class="ghost" id="helperImportCancel">キャンセル</button>
+        <button class="primary" id="helperImportOk">読込</button>
+      </div>
+    `);
+
+    document.getElementById("helperImportCancel")?.addEventListener("click", closeModal);
+
+    document.getElementById("helperImportOk")?.addEventListener("click", () => {
+      try {
+        const code = document.getElementById("helperCodeInput")?.value || "";
+        importHelperCode(code);
+        closeModal();
+        pushLog("助っ人を登録したにゃ");
+        renderAll();
+      } catch {
+        pushLog("助っ人コード読込失敗");
+      }
+    });
+  });
 
   el.tabQuest.querySelectorAll("[data-qtype]").forEach(btn => {
     btn.addEventListener("click", () => {
