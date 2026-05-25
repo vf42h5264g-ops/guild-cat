@@ -4556,6 +4556,19 @@ function openCatDetailModal(catId) {
     closeModal();
     openFireCatModal(catId);
   });
+   document.getElementById("catDetailFavorite")?.addEventListener("click", () => {
+  if (state.favoriteCatId === c.id) {
+    state.favoriteCatId = null;
+    pushLog(`${c.name} を助っ人登録から外したにゃ`);
+  } else {
+    state.favoriteCatId = c.id;
+    pushLog(`${c.name} を助っ人登録したにゃ`);
+  }
+
+  save();
+  closeModal();
+  renderAll();
+});
 }
 
 function openCatZoomModal(cat) {
