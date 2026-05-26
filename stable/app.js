@@ -2026,6 +2026,51 @@ function openTutorialQuestSetupModal() {
     updatePreview();
   });
 
+   helperPickList.innerHTML = (state.helpers || []).map(h => `
+  <div class="modalItem" data-helper="${h.id}">
+    <b>${escapeHtml(h.name)}</b> Lv${h.level}
+    <div class="dim">
+      ${escapeHtml(h.personality)}
+      / STR ${h.str}
+      SPD ${h.spd}
+      INT ${h.int}
+    </div>
+  </div>
+`).join("") || `
+  <div class="dim">登録助っ人なし</div>
+`;
+
+helperPickList.addEventListener("click", (e) => {
+
+  const item =
+    e.target.closest(".modalItem");
+
+  if (!item) return;
+
+  if (pickHelperId === item.dataset.helper) {
+
+    pickHelperId = null;
+
+    item.style.outline = "";
+
+  } else {
+
+    helperPickList
+      .querySelectorAll(".modalItem")
+      .forEach(x => {
+        x.style.outline = "";
+      });
+
+    pickHelperId =
+      item.dataset.helper;
+
+    item.style.outline =
+      "2px solid var(--blue)";
+  }
+
+  updatePreview();
+});
+
   function updatePreview() {
     const partyIds = Array.from(selected);
     const ok = partyIds.length > 0;
@@ -2482,6 +2527,11 @@ function openQuestSetupModal(type) {
     </div>
 
     <div class="panelCard" style="margin-top:10px;">
+      <div class="dim" style="margin-bottom:8px;">助っ人（任意・1匹まで）</div>
+      <div id="helperPickList" class="modalList"></div>
+    </div>
+    
+    <div class="panelCard" style="margin-top:10px;">
       <div class="dim" style="margin-bottom:8px;">参加ネコ（最大3）</div>
       <div id="partyList" class="modalList"></div>
     </div>
@@ -2511,6 +2561,7 @@ function openQuestSetupModal(type) {
   openModal("クエスト受注", html);
 
   const partyList = document.getElementById("partyList");
+  const helperPickList = document.getElementById("helperPickList");
   const timeList = document.getElementById("timeList");
   const qPreview = document.getElementById("qPreview");
   const btnStart = document.getElementById("qStart");
@@ -2518,6 +2569,7 @@ function openQuestSetupModal(type) {
   document.getElementById("qCancel")?.addEventListener("click", closeModal);
 
   let pickTime = null;
+  let pickHelperId = null;
   const selected = new Set();
 
   partyList.innerHTML = idle.map(c => `
@@ -2570,7 +2622,11 @@ function openQuestSetupModal(type) {
     if (!ok) return;
 
     const def = makeQuestDef(type, fixedLv, pickTime);
-    const calc = calcQuestChance(def, partyIds);
+
+    const helper =
+      (state.helpers || []).find(h => h.id === pickHelperId) || null;
+
+    const calc = calcQuestChance(def, partyIds, helper);
     qPreview.innerHTML = `
       時間: ${def.durationMin}分 / 基準Gold: ${def.baseGold.toLocaleString()}G<br>
       成功率(概算): <b>${calc.p}%</b>（属性ボーナス ${calc.attrBonus >= 0 ? "+" : ""}${calc.attrBonus}%）
@@ -2580,8 +2636,12 @@ function openQuestSetupModal(type) {
   btnStart.addEventListener("click", () => {
     const partyIds = Array.from(selected);
     const def = makeQuestDef(type, fixedLv, pickTime);
+
+    const helper =
+      (state.helpers || []).find(h => h.id === pickHelperId) || null;
+
     closeModal();
-    startQuest(def, partyIds, slotIdx);
+    startQuest(def, partyIds, slotIdx, helper);
   });
 }
 
@@ -2636,8 +2696,12 @@ function calcPersonalityBonus(def, party) {
   return bonus;
 }
 
-function calcQuestChance(def, partyIds) {
+function calcQuestChance(def, partyIds, helper = null) {
   const party = partyIds.map(catById).filter(Boolean);
+
+  if (helper) {
+    party.push(helper);
+  }
 
   if (party.length === 0) {
     return { p: 10, attrBonus: 0 };
@@ -2705,7 +2769,7 @@ function calcQuestChance(def, partyIds) {
   };
 }
 
-function startQuest(def, partyIds, slotIdx) {
+function startQuest(def, partyIds, slotIdx, helper = null) {
   ensureQuestState();
 
   for (const id of partyIds) {
@@ -2715,7 +2779,7 @@ function startQuest(def, partyIds, slotIdx) {
     }
   }
 
-  const calc = calcQuestChance(def, partyIds);
+  const calc = calcQuestChance(def, partyIds, helper);
   const goldMult = RANK.goldMult(state.guildRank);
 
   const now = Date.now();
@@ -2725,6 +2789,7 @@ function startQuest(def, partyIds, slotIdx) {
     slotNo: slotIdx + 1,
     def,
     partyIds,
+    helper,
     pSuccess: calc.p,
     goldMult,
     startAt: now,
