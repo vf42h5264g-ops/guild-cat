@@ -853,3 +853,15 @@ button{
 .helperQuestCard{
   padding:10px;
 }
+
+.helperQuestMain{
+  flex:1;
+  min-width:0;
+}
+
+.helperQuestTop{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+}
