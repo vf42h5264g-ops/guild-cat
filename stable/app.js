@@ -2556,11 +2556,6 @@ function openQuestSetupModal(type) {
 
   return `
     <div
-      helperPickList.innerHTML = (state.helpers || []).map(h => {
-  const usedToday = h.lastUsedDate === todayKey();
-
-  return `
-    <div
       class="modalItem ${usedToday ? "disabledHelper" : ""}"
       data-helper="${h.id}"
       style="${usedToday ? "opacity:.55;" : ""}"
