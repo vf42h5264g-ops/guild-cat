@@ -367,8 +367,8 @@ html,body{
 }
 
 /* 素体だけ色変え */
-.catSprite.colorized{
-  filter:hue-rotate(var(--hue)) saturate(1.35);
+.colorized{
+  filter:hue-rotate(var(--hue, 0deg)) saturate(1.35);
 }
 
 /* ステータス行：折り返し防止（カードが縦に伸びるのを防ぐ） */
