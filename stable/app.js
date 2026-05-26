@@ -2197,6 +2197,47 @@ document.getElementById("btnImportSave")
       });
   });
 }
+
+function openHelperGuideModal() {
+  const html = `
+    <div class="panelCard">
+      <div><b>🤝 助っ人とは？</b></div>
+      <div class="dim" style="margin-top:8px;line-height:1.7;">
+        他のギルドのネコを、クエストに1匹だけ連れていける機能です。<br>
+        助っ人は成功率に加算されます。
+      </div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div><b>使い方</b></div>
+      <div class="dim" style="margin-top:8px;line-height:1.7;">
+        ① ネコ詳細で「助っ人登録」する<br>
+        ② クエスト画面で「助っ人コード発行」する<br>
+        ③ 受け取ったコードを「助っ人コード読込」で登録する<br>
+        ④ クエスト受注時に助っ人を選ぶ
+      </div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div><b>ルール</b></div>
+      <div class="dim" style="margin-top:8px;line-height:1.7;">
+        ・助っ人は1クエスト1匹まで<br>
+        ・同じ助っ人は1日1回まで使用できます<br>
+        ・通常助っ人は削除できます<br>
+        ・イベント助っ人は削除できません
+      </div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="primary" id="helperGuideClose">OK</button>
+    </div>
+  `;
+
+  openModal("助っ人ガイド", html);
+
+  document.getElementById("helperGuideClose")
+    ?.addEventListener("click", closeModal);
+}
 /* =========================
    Guild rename
    ========================= */
@@ -3990,19 +4031,11 @@ function renderQuestTab() {
     <div class="panelCard">
       <div class="row">
         <div>
-          <div><b>🤝 助っ人</b></div>
-          <div class="dim" style="margin-top:6px;">
-
-            助っ人登録したコードを共有できます。
-            ※自分のネコは読み込み不可
-
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <b>🤝 助っ人</b>
+            <button class="ghost smallBtn" id="btnHelperGuide">❓</button>
           </div>
 
-          <div class="dim" style="margin-top:4px;">
-
-            助っ人使用回数は1日1回まで
-
-          </div>
           <div class="dim">登録数：${state.helpers.length}/3</div>
         </div>
       </div>
@@ -4117,8 +4150,7 @@ function renderQuestTab() {
     });
   });
 
-  document.getElementById("btnBuyAlpaca")?.addEventListener("click", () => {
-     el.tabQuest
+  el.tabQuest
   .querySelectorAll("[data-remove-helper]")
   .forEach(btn => {
 
@@ -4132,8 +4164,15 @@ function renderQuestTab() {
     });
 
   });
-     if (alpacaOffer) buyAlpaca(alpacaOffer.stage);
-  });
+
+document.getElementById("btnBuyAlpaca")
+?.addEventListener("click", () => {
+
+  if (alpacaOffer) {
+    buyAlpaca(alpacaOffer.stage);
+  }
+
+});
 }
 
 function renderQuestRunning() {
