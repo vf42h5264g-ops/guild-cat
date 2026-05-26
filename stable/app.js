@@ -4143,6 +4143,9 @@ function renderQuestTab() {
     });
   });
 
+  document.getElementById("btnHelperGuide")
+  ?.addEventListener("click", openHelperGuideModal);
+
   el.tabQuest.querySelectorAll("[data-qtype]").forEach(btn => {
     btn.addEventListener("click", () => {
       const t = types.find(x => x.id === btn.dataset.qtype);
