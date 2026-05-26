@@ -3824,12 +3824,36 @@ function renderQuestTab() {
   const alpacaOffer = getAvailableAlpacaPurchase();
 
   const helperRows = state.helpers.map(h => `
-    <div class="panelCard" style="margin-top:8px;">
-      <div><b>${escapeHtml(h.name)}</b> <span class="dim">Lv${h.level}</span></div>
-      <div class="dim">${escapeHtml(h.personality)}</div>
-      <div class="dim">STR ${h.str} / SPD ${h.spd} / INT ${h.int}</div>
+  <div class="panelCard helperQuestCard" style="margin-top:8px;">
+    <div class="helperQuestRow">
+      <img
+        class="helperQuestIcon colorized"
+        src="${getQuestCatImage(h)}"
+        style="--hue:${h.hue || 0}deg;"
+        alt=""
+      >
+
+      <div style="min-width:0;">
+        <div>
+          <b>${escapeHtml(h.name)}</b>
+          <span class="dim">Lv${h.level}</span>
+        </div>
+
+        <div class="dim">${escapeHtml(h.personality)}</div>
+
+        <div class="dim">
+          STR ${h.str} / SPD ${h.spd} / INT ${h.int}
+        </div>
+
+        <div class="dim">
+          ${h.lastUsedDate === todayKey()
+            ? "🔴 本日使用済み"
+            : "🟢 使用可能"}
+        </div>
+      </div>
     </div>
-  `).join("");
+  </div>
+`).join("");
 
   el.tabQuest.innerHTML = `
     <div class="panelCard">
