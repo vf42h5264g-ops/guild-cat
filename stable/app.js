@@ -2556,32 +2556,23 @@ function openQuestSetupModal(type) {
 
   return `
     <div
-      class="modalItem helperItem ${usedToday ? "disabledHelper" : ""}"
+      helperPickList.innerHTML = (state.helpers || []).map(h => {
+  const usedToday = h.lastUsedDate === todayKey();
+
+  return `
+    <div
+      class="modalItem ${usedToday ? "disabledHelper" : ""}"
       data-helper="${h.id}"
       style="${usedToday ? "opacity:.55;" : ""}"
     >
-      <img
-        class="helperIcon colorized"
-        src="${getCatBaseImage(h)}"
-        style="--hue:${h.hue || 0}deg;"
-        alt=""
-      >
+      <b>${escapeHtml(h.name)}</b> Lv${h.level}
 
-      <div class="helperInfo">
-        <b>${escapeHtml(h.name)}</b>
-        <span class="dim">Lv${h.level}</span>
+      <div class="dim">
+        ${escapeHtml(h.personality)} / STR ${h.str} SPD ${h.spd} INT ${h.int}
+      </div>
 
-        <div class="dim">
-          ${escapeHtml(h.personality)}
-        </div>
-
-        <div class="dim">
-          STR ${h.str} SPD ${h.spd} INT ${h.int}
-        </div>
-
-        <div class="dim">
-          ${usedToday ? "🔴 本日使用済み" : "🟢 使用可能"}
-        </div>
+      <div class="dim">
+        ${usedToday ? "🔴 本日使用済み" : "🟢 使用可能"}
       </div>
     </div>
   `;
@@ -2592,6 +2583,17 @@ function openQuestSetupModal(type) {
 helperPickList.addEventListener("click", (e) => {
   const item = e.target.closest(".modalItem");
   if (!item) return;
+
+  const helper = (state.helpers || []).find(
+    h => h.id === item.dataset.helper
+  );
+
+  if (!helper) return;
+
+  if (helper.lastUsedDate === todayKey()) {
+    pushLog("この助っ人は本日使用済みにゃ");
+    return;
+  }
 
   if (pickHelperId === item.dataset.helper) {
     pickHelperId = null;
@@ -2797,6 +2799,10 @@ function startQuest(def, partyIds, slotIdx, helper = null) {
 
   const now = Date.now();
   const endAt = now + def.durationMin * 60 * 1000;
+
+  if (helper) {
+    helper.lastUsedDate = todayKey();
+  }
 
   state.questJobs[slotIdx] = {
     slotNo: slotIdx + 1,
