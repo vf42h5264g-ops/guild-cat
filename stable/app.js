@@ -4723,10 +4723,11 @@ function openCatZoomModal(cat) {
 
       <img
         src="${img}"
+        class="colorized"
         style="
+          --hue:${cat.hue}deg;
           width:240px;
           image-rendering:pixelated;
-          margin-top:10px;
         "
       >
 
