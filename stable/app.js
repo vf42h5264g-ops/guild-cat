@@ -3769,7 +3769,7 @@ function renderQuestTab() {
       <div class="row">
         <div>
           <div><b>🤝 助っ人</b></div>
-          <div class="dim">登録数：${state.helpers.length}/5</div>
+          <div class="dim">登録数：${state.helpers.length}/3</div>
         </div>
       </div>
 
