@@ -2552,15 +2552,15 @@ function openQuestSetupModal(type) {
   });
 
   helperPickList.innerHTML = (state.helpers || []).map(h => `
-  <div class="modalItem" data-helper="${h.id}">
-    <b>${escapeHtml(h.name)}</b> Lv${h.level}
-    <div class="dim">
-      ${escapeHtml(h.personality)} / STR ${h.str} SPD ${h.spd} INT ${h.int}
+    <div class="modalItem" data-helper="${h.id}">
+      <b>${escapeHtml(h.name)}</b> Lv${h.level}
+      <div class="dim">
+        ${escapeHtml(h.personality)} / STR ${h.str} SPD ${h.spd} INT ${h.int}
+      </div>
     </div>
-  </div>
-`).join("") || `
-  <div class="dim">登録助っ人なし</div>
-`;
+  `).join("") || `
+    <div class="dim">登録助っ人なし</div>
+  `;
 
 helperPickList.addEventListener("click", (e) => {
   const item = e.target.closest(".modalItem");
