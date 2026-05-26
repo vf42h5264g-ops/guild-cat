@@ -3824,24 +3824,39 @@ function renderQuestTab() {
         alt=""
       >
 
-      <div style="min-width:0;">
-        <div>
-          <b>${escapeHtml(h.name)}</b>
-          <span class="dim">Lv${h.level}</span>
-        </div>
+      <div class="helperQuestMain">
 
-        <div class="dim">${escapeHtml(h.personality)}</div>
+  <div class="helperQuestTop">
 
-        <div class="dim">
-          STR ${h.str} / SPD ${h.spd} / INT ${h.int}
-        </div>
+    <b>${escapeHtml(h.name)}</b>
 
-        <div class="dim">
-          ${h.lastUsedDate === todayKey()
-            ? "🔴 本日使用済み"
-            : "🟢 使用可能"}
-        </div>
-      </div>
+    <span class="dim">
+      Lv${h.level}
+    </span>
+
+    <span class="dim">
+      ${escapeHtml(h.personality)}
+    </span>
+
+    <span class="dim">
+      ${
+        h.lastUsedDate === todayKey()
+          ? "🔴使用済"
+          : "🟢使用可"
+      }
+    </span>
+
+  </div>
+
+  <div class="dim" style="margin-top:6px;">
+
+    STR ${h.str}
+    / SPD ${h.spd}
+    / INT ${h.int}
+
+  </div>
+
+</div>
     </div>
   </div>
 `).join("");
