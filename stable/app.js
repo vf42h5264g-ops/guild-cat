@@ -1003,6 +1003,25 @@ function ensureAdState() {
   }
 }
 
+function ensureHelperDailyUse() {
+
+  state.helperDailyUse ??= {
+    date: todayKey(),
+    count: 0
+  };
+
+  if (
+    state.helperDailyUse.date !== todayKey()
+  ) {
+
+    state.helperDailyUse.date =
+      todayKey();
+
+    state.helperDailyUse.count = 0;
+  }
+
+}
+
 function watchMatatabiAd() {
 
   ensureAdState();
@@ -1462,6 +1481,11 @@ function newGame() {
     cats: [],
     favoriteCatId: null,
     helpers: [],
+
+    helperDailyUse: {
+      date: todayKey(),
+      count: 0
+    },
 
     logs: [],
     pendingResults: [],
@@ -2841,6 +2865,26 @@ function calcQuestChance(def, partyIds, helper = null) {
 }
 
 function startQuest(def, partyIds, slotIdx, helper = null) {
+
+  ensureHelperDailyUse();
+
+  if (helper) {
+
+    const limit =
+      (state.helpers || []).length;
+
+    if (
+      state.helperDailyUse.count >= limit
+    ) {
+
+      pushLog(
+        "今日の助っ人使用回数を使い切ったにゃ"
+      );
+
+      return;
+    }
+
+  }
   ensureQuestState();
 
   for (const id of partyIds) {
@@ -2859,7 +2903,9 @@ function startQuest(def, partyIds, slotIdx, helper = null) {
   if (helper) {
     helper.lastUsedDate = todayKey();
   }
-
+  if (helper) {
+  state.helperDailyUse.count++;
+}
   state.questJobs[slotIdx] = {
     slotNo: slotIdx + 1,
     def,
@@ -3942,6 +3988,7 @@ function switchTab(tab) {
 function renderQuestTab() {
   ensureQuestOffers();
   ensureAlpaca();
+  ensureHelperDailyUse();
 
   if (!Array.isArray(state.helpers)) {
     state.helpers = [];
@@ -3994,11 +4041,7 @@ function renderQuestTab() {
     </span>
 
     <span class="dim">
-      ${
-        h.lastUsedDate === todayKey()
-          ? "🔴使用済"
-          : "🟢使用可"
-      }
+      🟢助っ人
     </span>
 
   </div>
@@ -4037,6 +4080,12 @@ function renderQuestTab() {
           </div>
 
           <div class="dim">登録数：${state.helpers.length}/3</div>
+          <div class="dim" style="margin-top:4px;">
+            本日の助っ人使用回数：
+            ${state.helperDailyUse.count}
+            /
+            ${state.helpers.length}
+          </div>
         </div>
       </div>
 
