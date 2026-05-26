@@ -2558,10 +2558,40 @@ function openQuestSetupModal(type) {
     <div class="modalItem ${usedToday ? "disabledHelper" : ""}"
       data-helper="${h.id}"
       style="${usedToday ? "opacity:.55;" : ""}">
-      <b>${escapeHtml(h.name)}</b> <span class="dim">Lv${h.level}</span>
-      <div class="dim">${escapeHtml(h.personality)} / STR ${h.str} SPD ${h.spd} INT ${h.int}</div>
-      <div class="dim">${usedToday ? "🔴 本日使用済み" : "🟢 使用可能"}</div>
-    </div>
+      <div style="
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+">
+
+  <b>${escapeHtml(h.name)}</b>
+
+  <span class="dim">
+    Lv${h.level}
+  </span>
+
+  <span class="dim">
+    ${
+      usedToday
+        ? "🔴使用済"
+        : "🟢使用可"
+    }
+  </span>
+
+</div>
+
+<div class="dim" style="margin-top:6px;">
+
+  ${escapeHtml(h.personality)}
+
+  / STR ${h.str}
+
+  / SPD ${h.spd}
+
+  / INT ${h.int}
+
+</div>
   `;
 }).join("") || `<div class="dim">登録助っ人なし</div>`;
 
