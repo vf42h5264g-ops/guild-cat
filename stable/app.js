@@ -4631,6 +4631,14 @@ function openCatDetailModal(catId) {
         style="--hue:${c.hue}deg;width:64px;height:64px;display:block;image-rendering:pixelated;"
         alt=""
       />
+
+      <button
+        class="ghost smallBtn"
+        id="catDetailZoom"
+        style="position:absolute;right:-6px;bottom:-6px;border-radius:999px;"
+      >
+        🔍
+      </button>
     </div>
 
       <div style="min-width:0;">
