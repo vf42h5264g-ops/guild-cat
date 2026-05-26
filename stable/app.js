@@ -1461,6 +1461,7 @@ function newGame() {
 
     cats: [],
     favoriteCatId: null,
+    helpers: [],
 
     logs: [],
     pendingResults: [],
@@ -2026,51 +2027,6 @@ function openTutorialQuestSetupModal() {
     updatePreview();
   });
 
-   helperPickList.innerHTML = (state.helpers || []).map(h => `
-  <div class="modalItem" data-helper="${h.id}">
-    <b>${escapeHtml(h.name)}</b> Lv${h.level}
-    <div class="dim">
-      ${escapeHtml(h.personality)}
-      / STR ${h.str}
-      SPD ${h.spd}
-      INT ${h.int}
-    </div>
-  </div>
-`).join("") || `
-  <div class="dim">登録助っ人なし</div>
-`;
-
-helperPickList.addEventListener("click", (e) => {
-
-  const item =
-    e.target.closest(".modalItem");
-
-  if (!item) return;
-
-  if (pickHelperId === item.dataset.helper) {
-
-    pickHelperId = null;
-
-    item.style.outline = "";
-
-  } else {
-
-    helperPickList
-      .querySelectorAll(".modalItem")
-      .forEach(x => {
-        x.style.outline = "";
-      });
-
-    pickHelperId =
-      item.dataset.helper;
-
-    item.style.outline =
-      "2px solid var(--blue)";
-  }
-
-  updatePreview();
-});
-
   function updatePreview() {
     const partyIds = Array.from(selected);
     const ok = partyIds.length > 0;
@@ -2595,6 +2551,36 @@ function openQuestSetupModal(type) {
     updatePreview();
   });
 
+  helperPickList.innerHTML = (state.helpers || []).map(h => `
+  <div class="modalItem" data-helper="${h.id}">
+    <b>${escapeHtml(h.name)}</b> Lv${h.level}
+    <div class="dim">
+      ${escapeHtml(h.personality)} / STR ${h.str} SPD ${h.spd} INT ${h.int}
+    </div>
+  </div>
+`).join("") || `
+  <div class="dim">登録助っ人なし</div>
+`;
+
+helperPickList.addEventListener("click", (e) => {
+  const item = e.target.closest(".modalItem");
+  if (!item) return;
+
+  if (pickHelperId === item.dataset.helper) {
+    pickHelperId = null;
+    item.style.outline = "";
+  } else {
+    helperPickList.querySelectorAll(".modalItem").forEach(x => {
+      x.style.outline = "";
+    });
+
+    pickHelperId = item.dataset.helper;
+    item.style.outline = "2px solid var(--blue)";
+  }
+
+  updatePreview();
+});
+   
   timeList.innerHTML = QUEST.TIME_TYPES.map(t => `
     <div class="modalItem" data-time="${t.key}">
       <b>${t.key}（${t.label}）</b>
