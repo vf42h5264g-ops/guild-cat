@@ -3951,7 +3951,13 @@ function renderCatsTab() {
         </div>
 
         <div class="catCompactName">
-          <b>${escapeHtml(c.name)}</b>
+          <b>
+            ${
+              state.favoriteCatId === c.id
+                ? "★ "
+                : ""
+            }${escapeHtml(c.name)}
+          </b>
           <span class="dim">Lv${c.level} / ${escapeHtml(c.personality)}</span>
         </div>
 
