@@ -3357,6 +3357,76 @@ if (c.level <= 1) {
   });
 }
 
+function openRemoveHelperModal(helperId) {
+
+  const helper =
+    (state.helpers || []).find(
+      h => h.id === helperId
+    );
+
+  if (!helper) return;
+
+  const html = `
+    <div class="panelCard">
+
+      <div>
+        <b>${escapeHtml(helper.name)}</b>
+        を助っ人一覧から削除しますか？
+      </div>
+
+      <div class="dim" style="margin-top:8px;">
+        この操作は取り消せません。
+      </div>
+
+    </div>
+
+    <div class="modalFooter">
+
+      <button
+        class="ghost"
+        id="helperRemoveCancel"
+      >
+        キャンセル
+      </button>
+
+      <button
+        class="primary"
+        id="helperRemoveConfirm"
+      >
+        削除
+      </button>
+
+    </div>
+  `;
+
+  openModal("助っ人削除", html);
+
+  document
+    .getElementById("helperRemoveCancel")
+    ?.addEventListener("click", closeModal);
+
+  document
+    .getElementById("helperRemoveConfirm")
+    ?.addEventListener("click", () => {
+
+      state.helpers =
+        state.helpers.filter(
+          h => h.id !== helperId
+        );
+
+      pushLog(
+        `${helper.name} を助っ人一覧から削除したにゃ`
+      );
+
+      save();
+
+      closeModal();
+
+      renderQuestTab();
+
+    });
+
+}
 /* =========================
    Pending / Collect
    ========================= */
@@ -3847,6 +3917,20 @@ function renderQuestTab() {
   const helperRows = state.helpers.map(h => `
   <div class="panelCard helperQuestCard" style="margin-top:8px;">
     <div class="helperQuestRow">
+
+  ${
+    h.official
+      ? ""
+      : `
+        <button
+          class="ghost smallBtn"
+          data-remove-helper="${h.id}"
+          style="margin-left:auto;"
+        >
+          削除
+        </button>
+      `
+  }
       <img
         class="helperQuestIcon colorized"
         src="${getQuestCatImage(h)}"
@@ -4022,7 +4106,21 @@ function renderQuestTab() {
   });
 
   document.getElementById("btnBuyAlpaca")?.addEventListener("click", () => {
-    if (alpacaOffer) buyAlpaca(alpacaOffer.stage);
+     el.tabQuest
+  .querySelectorAll("[data-remove-helper]")
+  .forEach(btn => {
+
+    btn.addEventListener("click", () => {
+
+      const helperId =
+        btn.dataset.removeHelper;
+
+      openRemoveHelperModal(helperId);
+
+    });
+
+  });
+     if (alpacaOffer) buyAlpaca(alpacaOffer.stage);
   });
 }
 
