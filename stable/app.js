@@ -3991,6 +3991,18 @@ function renderQuestTab() {
       <div class="row">
         <div>
           <div><b>🤝 助っ人</b></div>
+          <div class="dim" style="margin-top:6px;">
+
+            助っ人登録したコードを共有できます。
+            ※自分のネコは読み込み不可
+
+          </div>
+
+          <div class="dim" style="margin-top:4px;">
+
+            助っ人使用回数は1日1回まで
+
+          </div>
           <div class="dim">登録数：${state.helpers.length}/3</div>
         </div>
       </div>
