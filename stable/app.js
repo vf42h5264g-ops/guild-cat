@@ -2551,29 +2551,19 @@ function openQuestSetupModal(type) {
     updatePreview();
   });
 
-  helperPickList.innerHTML = (state.helpers || []).map(h => {
+ helperPickList.innerHTML = (state.helpers || []).map(h => {
   const usedToday = h.lastUsedDate === todayKey();
 
   return `
-    <div
-      class="modalItem ${usedToday ? "disabledHelper" : ""}"
+    <div class="modalItem ${usedToday ? "disabledHelper" : ""}"
       data-helper="${h.id}"
-      style="${usedToday ? "opacity:.55;" : ""}"
-    >
-      <b>${escapeHtml(h.name)}</b> Lv${h.level}
-
-      <div class="dim">
-        ${escapeHtml(h.personality)} / STR ${h.str} SPD ${h.spd} INT ${h.int}
-      </div>
-
-      <div class="dim">
-        ${usedToday ? "🔴 本日使用済み" : "🟢 使用可能"}
-      </div>
+      style="${usedToday ? "opacity:.55;" : ""}">
+      <b>${escapeHtml(h.name)}</b> <span class="dim">Lv${h.level}</span>
+      <div class="dim">${escapeHtml(h.personality)} / STR ${h.str} SPD ${h.spd} INT ${h.int}</div>
+      <div class="dim">${usedToday ? "🔴 本日使用済み" : "🟢 使用可能"}</div>
     </div>
   `;
-}).join("") || `
-  <div class="dim">登録助っ人なし</div>
-`;
+}).join("") || `<div class="dim">登録助っ人なし</div>`;
 
 helperPickList.addEventListener("click", (e) => {
   const item = e.target.closest(".modalItem");
