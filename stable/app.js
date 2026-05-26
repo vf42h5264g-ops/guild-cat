@@ -2551,35 +2551,41 @@ function openQuestSetupModal(type) {
     updatePreview();
   });
 
-  helperPickList.innerHTML = (state.helpers || []).map(h => `
-  <div class="modalItem helperItem" data-helper="${h.id}">
+  helperPickList.innerHTML = (state.helpers || []).map(h => {
+  const usedToday = h.lastUsedDate === todayKey();
 
-    <img
-      class="helperIcon colorized"
-      src="${getCatBaseImage(h)}"
-      style="--hue:${h.hue || 0}deg;"
-      alt=""
+  return `
+    <div
+      class="modalItem helperItem ${usedToday ? "disabledHelper" : ""}"
+      data-helper="${h.id}"
+      style="${usedToday ? "opacity:.55;" : ""}"
     >
+      <img
+        class="helperIcon colorized"
+        src="${getCatBaseImage(h)}"
+        style="--hue:${h.hue || 0}deg;"
+        alt=""
+      >
 
-    <div class="helperInfo">
+      <div class="helperInfo">
+        <b>${escapeHtml(h.name)}</b>
+        <span class="dim">Lv${h.level}</span>
 
-      <b>${escapeHtml(h.name)}</b>
-      <span class="dim">Lv${h.level}</span>
+        <div class="dim">
+          ${escapeHtml(h.personality)}
+        </div>
 
-      <div class="dim">
-        ${escapeHtml(h.personality)}
+        <div class="dim">
+          STR ${h.str} SPD ${h.spd} INT ${h.int}
+        </div>
+
+        <div class="dim">
+          ${usedToday ? "🔴 本日使用済み" : "🟢 使用可能"}
+        </div>
       </div>
-
-      <div class="dim">
-        STR ${h.str}
-        SPD ${h.spd}
-        INT ${h.int}
-      </div>
-
     </div>
-
-  </div>
-`).join("") || `
+  `;
+}).join("") || `
   <div class="dim">登録助っ人なし</div>
 `;
 
