@@ -2358,7 +2358,7 @@ function addTestEventHelper() {
 
     name: "祝祭のルナ",
     level: 12,
-    personality: "クール",
+    personality: "イベント",
 
     str: 42,
     spd: 35,
