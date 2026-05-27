@@ -196,6 +196,8 @@ const ITEM_MASTER = {
   },
 };
 
+const HELPER_MAX = 3;
+
 const AD_REWARD = {
   DAILY_LIMIT: 3,
   WAIT_MS: 3000
@@ -2840,8 +2842,7 @@ function startQuest(def, partyIds, slotIdx, helper = null) {
 
   if (helper) {
 
-    const limit =
-      (state.helpers || []).length;
+    const limit = HELPER_MAX;
 
     if (
       state.helperDailyUse.count >= limit
@@ -4051,7 +4052,7 @@ function renderQuestTab() {
             本日の助っ人使用回数：
             ${state.helperDailyUse.count}
             /
-            ${state.helpers.length}
+            ${HELPER_MAX}
           </div>
         </div>
       </div>
