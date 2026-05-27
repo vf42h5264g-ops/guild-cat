@@ -4101,10 +4101,7 @@ function renderQuestTab() {
         <button class="ghost smallBtn" id="btnExportHelper">助っ人コード発行</button>
         <button class="ghost smallBtn" id="btnImportHelper">助っ人コード読込</button>
       </div>
-      <div class="panelCard" style="margin-top:10px;">
-
-  <img
-    src="img/helper_support.png"
+      
     alt=""
     style="
       width:100%;
