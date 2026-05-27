@@ -2897,7 +2897,8 @@ function startQuest(def, partyIds, slotIdx, helper = null) {
 
   if (helper) {
 
-    const limit = getHelperMax();
+    const limit =
+      getHelperMax() + state.helperAdBonus.count;
 
     if (
       state.helperDailyUse.count >= limit
