@@ -846,7 +846,38 @@ function pushLog(text) {
   logUnread++;
   renderHeaderBadges();
   renderLogs();
+
+　showToast(text);
+   
   save();
+}
+function showToast(text) {
+  const toast = document.createElement("div");
+
+  toast.textContent = text;
+  toast.style.cssText = `
+    position:fixed;
+    left:50%;
+    bottom:24px;
+    transform:translateX(-50%);
+    z-index:9999;
+    max-width:calc(100% - 32px);
+    background:#202838;
+    color:#fff;
+    border:1px solid #3a465c;
+    border-radius:999px;
+    padding:10px 14px;
+    font-weight:800;
+    font-size:14px;
+    box-shadow:0 8px 24px rgba(0,0,0,.35);
+    text-align:center;
+  `;
+
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.remove();
+  }, 2200);
 }
 function renderLogs() {
   const open = !el.logPanel?.classList.contains("hidden");
