@@ -1547,6 +1547,7 @@ function newGame() {
     favoriteCatId: null,
     helpers: [],
 
+    helperListOpen: false,
     helperAdBonus: {
       date: todayKey(),
       count: 0
@@ -4237,7 +4238,31 @@ function renderQuestTab() {
   </div>
 
 </div>
-      <details style="margin-top:10px;">
+      <div style="margin-top:10px;">
+
+  <button
+    class="ghost smallBtn"
+    id="btnToggleHelpers"
+    style="width:100%;"
+  >
+    ${
+      state.helperListOpen
+        ? "▼ 助っ人一覧を閉じる"
+        : "▶ 助っ人一覧を開く"
+    }
+  </button>
+
+  ${
+    state.helperListOpen
+      ? `
+        <div style="margin-top:10px;">
+          ${helperRows || `<div class="dim">助っ人なし</div>`}
+        </div>
+      `
+      : ""
+  }
+
+</div>
 
         <summary
           style="
@@ -4431,6 +4456,18 @@ document.getElementById("btnHelperAd")
     renderQuestTab();
 
   }, 3000);
+
+});
+
+   document.getElementById("btnToggleHelpers")
+?.addEventListener("click", () => {
+
+  state.helperListOpen =
+    !state.helperListOpen;
+
+  save();
+
+  renderQuestTab();
 
 });
 }
