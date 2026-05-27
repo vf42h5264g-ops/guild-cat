@@ -207,6 +207,8 @@ const AD_REWARD = {
   WAIT_MS: 3000
 };
 
+const HELPER_AD_DAILY_LIMIT = 3;
+
 const DAILY_BONUS = {
   GOLD_TABLE: {
     1: [1000, 2000],
@@ -4125,26 +4127,30 @@ function renderQuestTab() {
 
           <div class="dim">登録数：${state.helpers.length}/${getHelperMax()}</div>
           <div class="dim" style="margin-top:4px;">
-            本日の助っ人使用回数：
-            ${state.helperDailyUse.count}
-            /
-            ${getHelperMax()}
+            本日あと ${getHelperUseLeft()}/${getHelperUseLimit()} 回
           </div>
         </div>
       </div>
 
       <div class="row" style="margin-top:10px;">
-        <button class="ghost smallBtn" id="btnExportHelper">助っ人コード発行</button>
-        <button class="ghost smallBtn" id="btnImportHelper">助っ人コード読込</button>
-      </div>
+  <button class="ghost smallBtn" id="btnExportHelper">
+    助っ人コード発行
+  </button>
 
-    <button
-      class="primary"
-      id="btnHelperAd"
-      style="width:100%;"
-    >
-      ▶ 助っ人支援を見る
-    </button>
+  <button class="ghost smallBtn" id="btnImportHelper">
+    助っ人コード読込
+  </button>
+</div>
+
+<div style="margin-top:10px;">
+
+  <button
+    class="primary"
+    id="btnHelperAd"
+    style="width:100%;"
+  >
+    ▶ 助っ人支援を見る
+  </button>
 
   <div
     class="dim"
@@ -4154,6 +4160,21 @@ function renderQuestTab() {
     "
   >
     視聴で助っ人使用回数 +1
+    /
+    本日あと
+    ${HELPER_AD_DAILY_LIMIT - state.helperAdBonus.count}
+    /
+    ${HELPER_AD_DAILY_LIMIT}
+    回
+  </div>
+
+</div>
+    style="
+      margin-top:8px;
+      text-align:center;
+    "
+  >
+    視聴で助っ人使用回数 +1 / 本日あと ${HELPER_AD_DAILY_LIMIT - state.helperAdBonus.count}/${HELPER_AD_DAILY_LIMIT} 回
   </div>
 
 </div>
@@ -4294,7 +4315,7 @@ document.getElementById("btnHelperAd")
 
   ensureHelperAdBonus();
 
-  if (state.helperAdBonus.count >= 3) {
+  if (state.helperAdBonus.count >= HELPER_AD_DAILY_LIMIT) {
     pushLog("今日はこれ以上支援を受けられないにゃ");
     return;
   }
@@ -4322,7 +4343,7 @@ document.getElementById("btnHelperAd")
 
     ensureHelperAdBonus();
 
-    if (state.helperAdBonus.count >= 3) {
+    if (state.helperAdBonus.count >= HELPER_AD_DAILY_LIMIT) {
       pushLog("今日はこれ以上支援を受けられないにゃ");
       renderQuestTab();
       save();
