@@ -1679,6 +1679,12 @@ function bindUI() {
 function boot() {
   state = load() || newGame();
 
+  state.helpers = (state.helpers || []).filter(h => {
+  if (!h.official) return true;
+  if (!h.expiresAt) return true;
+  return Date.now() < h.expiresAt;
+});
+   
   if (typeof state.guildRank !== "number") state.guildRank = 1;
   if (typeof state.gold !== "number") state.gold = 0;
   if (!Array.isArray(state.cats)) state.cats = [];
@@ -2370,7 +2376,8 @@ function addTestEventHelper() {
     int: 58,
 
     hue: 0,
-
+    expiresAt:
+      Date.now() + (12 * 60 * 60 * 1000),
   });
 
   pushLog("イベント助っ人を受け取ったにゃ");
@@ -4145,6 +4152,16 @@ function renderQuestTab() {
     / INT ${h.int}
 
   </div>
+
+  ${
+  h.expiresAt
+    ? `
+      <div class="dim" style="margin-top:4px;">
+        あと ${formatRemain(h.expiresAt - Date.now())}
+      </div>
+    `
+    : ""
+}
 
 </div>
     </div>
