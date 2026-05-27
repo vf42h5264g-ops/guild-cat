@@ -4169,15 +4169,6 @@ function renderQuestTab() {
   </div>
 
 </div>
-    style="
-      margin-top:8px;
-      text-align:center;
-    "
-  >
-    視聴で助っ人使用回数 +1 / 本日あと ${HELPER_AD_DAILY_LIMIT - state.helperAdBonus.count}/${HELPER_AD_DAILY_LIMIT} 回
-  </div>
-
-</div>
       <div style="margin-top:10px;">
         ${helperRows || `<div class="dim">助っ人なし</div>`}
       </div>
