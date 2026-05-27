@@ -2737,7 +2737,6 @@ function openQuestSetupModal(type) {
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
         <b>${escapeHtml(h.name)}</b>
         <span class="dim">Lv${h.level}</span>
-        <span class="dim">🟢助っ人</span>
       </div>
 
       <div class="dim" style="margin-top:6px;">
@@ -4134,10 +4133,6 @@ function renderQuestTab() {
 
     <span class="dim">
       ${escapeHtml(h.personality)}
-    </span>
-
-    <span class="dim">
-      🟢助っ人
     </span>
 
   </div>
