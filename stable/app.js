@@ -4101,7 +4101,42 @@ function renderQuestTab() {
         <button class="ghost smallBtn" id="btnExportHelper">助っ人コード発行</button>
         <button class="ghost smallBtn" id="btnImportHelper">助っ人コード読込</button>
       </div>
+      <div class="panelCard" style="margin-top:10px;">
 
+  <img
+    src="img/helper_support.png"
+    alt=""
+    style="
+      width:100%;
+      border-radius:14px;
+      display:block;
+      image-rendering:auto;
+    "
+  >
+
+  <div style="margin-top:10px;">
+
+    <button
+      class="primary"
+      id="btnHelperAd"
+      style="width:100%;"
+    >
+      ▶ 助っ人支援を見る
+    </button>
+
+  </div>
+
+  <div
+    class="dim"
+    style="
+      margin-top:8px;
+      text-align:center;
+    "
+  >
+    視聴で助っ人使用回数 +1
+  </div>
+
+</div>
       <div style="margin-top:10px;">
         ${helperRows || `<div class="dim">助っ人なし</div>`}
       </div>
@@ -4231,6 +4266,33 @@ document.getElementById("btnBuyAlpaca")
   if (alpacaOffer) {
     buyAlpaca(alpacaOffer.stage);
   }
+
+});
+
+document.getElementById("btnHelperAd")
+?.addEventListener("click", () => {
+
+  ensureHelperAdBonus();
+
+  if (state.helperAdBonus.count >= 3) {
+
+    pushLog(
+      "今日はこれ以上支援を受けられないにゃ"
+    );
+
+    return;
+
+  }
+
+  state.helperAdBonus.count++;
+
+  pushLog(
+    "助っ人使用回数が1回増えたにゃ"
+  );
+
+  save();
+
+  renderQuestTab();
 
 });
 }
