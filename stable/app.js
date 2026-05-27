@@ -4275,24 +4275,48 @@ document.getElementById("btnHelperAd")
   ensureHelperAdBonus();
 
   if (state.helperAdBonus.count >= 3) {
-
-    pushLog(
-      "今日はこれ以上支援を受けられないにゃ"
-    );
-
+    pushLog("今日はこれ以上支援を受けられないにゃ");
     return;
-
   }
 
-  state.helperAdBonus.count++;
+  openModal("助っ人支援", `
+    <div class="panelCard">
+      <img
+        src="img/helper_support.png"
+        alt=""
+        style="
+          width:100%;
+          border-radius:14px;
+          display:block;
+        "
+      >
 
-  pushLog(
-    "助っ人使用回数が1回増えたにゃ"
-  );
+      <div class="dim" style="margin-top:10px;text-align:center;">
+        助っ人支援を受け取っています...
+      </div>
+    </div>
+  `);
 
-  save();
+  setTimeout(() => {
+    closeModal();
 
-  renderQuestTab();
+    ensureHelperAdBonus();
+
+    if (state.helperAdBonus.count >= 3) {
+      pushLog("今日はこれ以上支援を受けられないにゃ");
+      renderQuestTab();
+      save();
+      return;
+    }
+
+    state.helperAdBonus.count++;
+
+    pushLog("助っ人使用回数が1回増えたにゃ");
+
+    save();
+    renderQuestTab();
+
+  }, 3000);
 
 });
 }
