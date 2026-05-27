@@ -4110,8 +4110,6 @@ function renderQuestTab() {
       ▶ 助っ人支援を見る
     </button>
 
-  </div>
-
   <div
     class="dim"
     style="
