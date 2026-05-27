@@ -2334,6 +2334,51 @@ function openHelperGuideModal() {
   document.getElementById("helperGuideClose")
     ?.addEventListener("click", closeModal);
 }
+
+function addTestEventHelper() {
+
+  state.helpers ??= [];
+
+  const exists = state.helpers.some(
+    h => h.eventId === "event_test_1"
+  );
+
+  if (exists) {
+    pushLog("イベント助っ人は既に配布済みにゃ");
+    return;
+  }
+
+  state.helpers.push({
+
+    id: uid(),
+
+    official: true,
+
+    eventId: "event_test_1",
+
+    eventImage: "img/event/event_1.png",
+
+    name: "祝祭のルナ",
+
+    level: 12,
+
+    personality: "クール",
+
+    str: 42,
+    spd: 35,
+    int: 58,
+
+    hue: 0,
+
+  });
+
+  pushLog("イベント助っ人を受け取ったにゃ");
+
+  save();
+
+  renderAll();
+
+}
 /* =========================
    Guild rename
    ========================= */
@@ -4067,7 +4112,7 @@ function renderQuestTab() {
   }
       <img
         class="helperQuestIcon colorized"
-        src="${getQuestCatImage(h)}"
+        src="${h.eventImage || getQuestCatImage(h)}"
         style="--hue:${h.hue || 0}deg;"
         alt=""
       >
