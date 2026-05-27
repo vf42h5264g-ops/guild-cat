@@ -1061,7 +1061,17 @@ function ensureHelperDailyUse() {
   }
 
 }
+function ensureHelperAdBonus() {
+  state.helperAdBonus ??= {
+    date: todayKey(),
+    count: 0
+  };
 
+  if (state.helperAdBonus.date !== todayKey()) {
+    state.helperAdBonus.date = todayKey();
+    state.helperAdBonus.count = 0;
+  }
+}
 function watchMatatabiAd() {
 
   ensureAdState();
@@ -1522,6 +1532,11 @@ function newGame() {
     favoriteCatId: null,
     helpers: [],
 
+    helperAdBonus: {
+      date: todayKey(),
+      count: 0
+    },
+     
     helperSlotBonus: 0,
 
     helperDailyUse: {
@@ -3997,6 +4012,7 @@ function renderQuestTab() {
   ensureQuestOffers();
   ensureAlpaca();
   ensureHelperDailyUse();
+  ensureHelperAdBonus();
 
   if (!Array.isArray(state.helpers)) {
     state.helpers = [];
