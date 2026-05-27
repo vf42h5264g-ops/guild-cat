@@ -196,7 +196,11 @@ const ITEM_MASTER = {
   },
 };
 
-const HELPER_MAX = 3;
+const HELPER_BASE_MAX = 3;
+
+function getHelperMax() {
+  return HELPER_BASE_MAX + (state.helperSlotBonus || 0);
+}
 
 const AD_REWARD = {
   DAILY_LIMIT: 3,
@@ -806,6 +810,9 @@ function importHelperCode(code) {
     state.helpers = [];
   }
 
+  if (state.helpers.length >= getHelperMax()) {
+    throw new Error("helper full");
+  }
   state.helpers.push({
     id: uid(),
     sourceGuildId: h.g,
@@ -1483,6 +1490,8 @@ function newGame() {
     cats: [],
     favoriteCatId: null,
     helpers: [],
+
+    helperSlotBonus: 0,
 
     helperDailyUse: {
       date: todayKey(),
@@ -2842,7 +2851,7 @@ function startQuest(def, partyIds, slotIdx, helper = null) {
 
   if (helper) {
 
-    const limit = HELPER_MAX;
+    const limit = getHelperMax();
 
     if (
       state.helperDailyUse.count >= limit
@@ -4047,12 +4056,12 @@ function renderQuestTab() {
             <button class="ghost smallBtn" id="btnHelperGuide">❓</button>
           </div>
 
-          <div class="dim">登録数：${state.helpers.length}/3</div>
+          <div class="dim">登録数：${state.helpers.length}/${getHelperMax()}</div>
           <div class="dim" style="margin-top:4px;">
             本日の助っ人使用回数：
             ${state.helperDailyUse.count}
             /
-            ${HELPER_MAX}
+            ${getHelperMax()}
           </div>
         </div>
       </div>
