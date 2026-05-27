@@ -4125,9 +4125,22 @@ function renderQuestTab() {
             <button class="ghost smallBtn" id="btnHelperGuide">❓</button>
           </div>
 
-          <div class="dim">登録数：${state.helpers.length}/${getHelperMax()}</div>
-          <div class="dim" style="margin-top:4px;">
-            本日あと ${getHelperUseLeft()}/${getHelperUseLimit()} 回
+          <div
+            class="dim"
+            style="
+              margin-top:4px;
+              display:flex;
+              gap:12px;
+              flex-wrap:wrap;
+            "
+          >
+            <span>
+              登録 ${state.helpers.length}/${getHelperMax()}
+            </span>
+
+            <span>
+              使用 ${getHelperUseLeft()}/${getHelperUseLimit()}
+            </span>
           </div>
         </div>
       </div>
