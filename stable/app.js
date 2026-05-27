@@ -1072,6 +1072,19 @@ function ensureHelperAdBonus() {
     state.helperAdBonus.count = 0;
   }
 }
+function getHelperUseLimit() {
+  ensureHelperDailyUse();
+  ensureHelperAdBonus();
+
+  return getHelperMax() + state.helperAdBonus.count;
+}
+
+function getHelperUseLeft() {
+  return Math.max(
+    0,
+    getHelperUseLimit() - state.helperDailyUse.count
+  );
+}
 function watchMatatabiAd() {
 
   ensureAdState();
@@ -2605,7 +2618,9 @@ function openQuestSetupModal(type) {
     </div>
 
     <div class="panelCard" style="margin-top:10px;">
-      <div class="dim" style="margin-bottom:8px;">助っ人（任意・1匹まで）</div>
+      <div class="dim" style="margin-bottom:8px;">
+        助っ人（任意・1匹まで / 本日あと ${getHelperUseLeft()} 回）
+      </div>
       <div id="helperPickList" class="modalList"></div>
     </div>
     
@@ -2701,6 +2716,11 @@ helperPickList.addEventListener("click", (e) => {
   );
 
   if (!helper) return;
+
+  if (getHelperUseLeft() <= 0) {
+    pushLog("今日の助っ人使用回数を使い切ったにゃ");
+    return;
+  }
 
   if (pickHelperId === item.dataset.helper) {
     pickHelperId = null;
@@ -2897,8 +2917,7 @@ function startQuest(def, partyIds, slotIdx, helper = null) {
 
   if (helper) {
 
-    const limit =
-      getHelperMax() + state.helperAdBonus.count;
+    const limit = getHelperUseLimit();
 
     if (
       state.helperDailyUse.count >= limit
