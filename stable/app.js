@@ -2343,49 +2343,37 @@ function openHelperGuideModal() {
 }
 
 function addTestEventHelper() {
-
   state.helpers ??= [];
+  state.eventHelperClaims ??= {};
 
-  const exists = state.helpers.some(
-    h => h.eventId === "event_test_1"
-  );
-
-  if (exists) {
-    pushLog("イベント助っ人は既に配布済みにゃ");
+  if (state.eventHelperClaims.event_test_1) {
     return;
   }
 
   state.helpers.push({
-
     id: uid(),
-
     official: true,
-
     eventId: "event_test_1",
-
     eventImage: "img/event/event_1.png",
 
     name: "祝祭のルナ",
-
     level: 12,
-
     personality: "クール",
 
     str: 42,
     spd: 35,
     int: 58,
-
     hue: 0,
-    expiresAt:
-      Date.now() + (12 * 60 * 60 * 1000),
+
+    expiresAt: Date.now() + (12 * 60 * 60 * 1000),
   });
+
+  state.eventHelperClaims.event_test_1 = true;
 
   pushLog("イベント助っ人を受け取ったにゃ");
 
   save();
-
   renderAll();
-
 }
 /* =========================
    Guild rename
