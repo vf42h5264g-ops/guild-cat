@@ -2772,6 +2772,15 @@ helperPickList.addEventListener("click", (e) => {
 
   if (!helper) return;
 
+  const alreadyHelping = (state.questJobs || []).some(
+    q => q?.helper?.id === helper.id
+  );
+
+  if (alreadyHelping) {
+    pushLog("この助っ人は別のクエストを手伝い中にゃ");
+    return;
+  }
+
   if (getHelperUseLeft() <= 0) {
     pushLog("今日の助っ人使用回数を使い切ったにゃ");
     return;
