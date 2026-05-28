@@ -218,6 +218,25 @@ const DAILY_BONUS = {
   },
 };
 
+const EVENT_HELPERS = [
+  {
+    eventId: "event_test_1",
+    eventImage: "img/event/event_1.png",
+
+    name: "祝祭のルナ",
+    level: 12,
+    personality: "イベント",
+
+    str: 42,
+    spd: 35,
+    int: 58,
+    hue: 0,
+
+    startDate: "2026-05-28",
+    endDate: "2026-05-28",
+  },
+];
+
 function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -1709,7 +1728,7 @@ function boot() {
   ensureAlpaca();
   ensureItems();
   ensureQuestOffers();
-  addTestEventHelper();
+  applyEventHelpers();
 
   const tips = ["やる気はあるにゃ。", "急がば回れ、にゃ。", "訓練は裏切らないにゃ。", "Goldは正義にゃ。"];
   if (el.dailyTip) el.dailyTip.textContent = tips[Math.floor(Math.random() * tips.length)];
@@ -2346,52 +2365,48 @@ function openHelperGuideModal() {
     ?.addEventListener("click", closeModal);
 }
 
-function addTestEventHelper() {
+function applyEventHelpers() {
   state.helpers ??= [];
   state.eventHelperClaims ??= {};
 
-  if (state.eventHelperClaims.event_test_1) {
-    return;
+  const now = Date.now();
+
+  state.helpers = state.helpers.filter(h => {
+    if (!h.official) return true;
+    if (!h.endDate) return true;
+
+    const end =
+      new Date(h.endDate + "T23:59:59").getTime();
+
+    return now <= end;
+  });
+
+  for (const event of EVENT_HELPERS) {
+    const start =
+      new Date(event.startDate + "T00:00:00").getTime();
+
+    const end =
+      new Date(event.endDate + "T23:59:59").getTime();
+
+    if (now < start || now > end) continue;
+
+    if (state.eventHelperClaims[event.eventId]) continue;
+
+    const helper = {
+      id: uid(),
+      official: true,
+      ...event,
+    };
+
+    state.helpers.push(helper);
+    state.eventHelperClaims[event.eventId] = true;
+
+    pushLog(`${helper.name} がイベント助っ人としてやってきたにゃ`);
+
+    openEventHelperGiftModal(helper);
   }
 
-  const helper = {
-
-    id: uid(),
-
-    official: true,
-
-    eventId: "event_test_1",
-
-    eventImage: "img/event/event_1.png",
-
-    name: "祝祭のルナ",
-
-    level: 12,
-
-    personality: "イベント",
-
-    str: 42,
-    spd: 35,
-    int: 58,
-
-    hue: 0,
-
-    startDate: "2026-05-28",
-    endDate: "2026-05-28",
-
-  };
-
-  state.helpers.push(helper);
-
-  state.eventHelperClaims.event_test_1 = true;
-
-  pushLog("イベント助っ人を受け取ったにゃ");
-
-  openEventHelperGiftModal(helper);
-
   save();
-
-  renderAll();
 }
 
 function openEventHelperGiftModal(helper) {
