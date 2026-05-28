@@ -4221,11 +4221,8 @@ const renderHelperCard = h => `
             `
             : ""
         }
-
       </div>
-
     </div>
-
   </div>
 `;
 
@@ -4234,70 +4231,6 @@ const normalHelperRows =
 
 const eventHelperRows =
   eventHelpers.map(renderHelperCard).join("");
-  <div class="panelCard helperQuestCard" style="margin-top:8px;">
-    <div class="helperQuestRow">
-
-  ${
-    h.official
-      ? ""
-      : `
-        <button
-          class="ghost smallBtn"
-          data-remove-helper="${h.id}"
-          style="margin-left:auto;"
-        >
-          削除
-        </button>
-      `
-  }
-      <img
-        class="helperQuestIcon colorized"
-        src="${h.eventImage || getQuestCatImage(h)}"
-        style="--hue:${h.hue || 0}deg;"
-        alt=""
-      >
-
-      <div class="helperQuestMain">
-
-  <div class="helperQuestTop">
-
-    <b>${escapeHtml(h.name)}</b>
-
-    <span class="dim">
-      Lv${h.level}
-    </span>
-
-    <span class="dim">
-      ${escapeHtml(h.personality)}
-    </span>
-
-  </div>
-
-  <div class="dim" style="margin-top:6px;">
-
-    STR ${h.str}
-    / SPD ${h.spd}
-    / INT ${h.int}
-
-  </div>
-
-  ${
-  h.expiresAt
-    ? `
-      <div class="dim" style="margin-top:4px;">
-        開催期間：
-        ${h.startDate}
-        ～
-        ${h.endDate}
-      </div>
-    `
-    : ""
-}
-
-</div>
-    </div>
-  </div>
-`).join("");
 
   el.tabQuest.innerHTML = `
     <div class="panelCard">
