@@ -1769,7 +1769,6 @@ function boot() {
   ensureAlpaca();
   ensureItems();
   ensureQuestOffers();
-  applyEventHelpers();
 
   const tips = ["やる気はあるにゃ。", "急がば回れ、にゃ。", "訓練は裏切らないにゃ。", "Goldは正義にゃ。"];
   if (el.dailyTip) el.dailyTip.textContent = tips[Math.floor(Math.random() * tips.length)];
@@ -1778,7 +1777,7 @@ function boot() {
   showStartScreen();
 
   maybeGenerateDividendsOnLogin();
-
+  applyEventHelpers();
   renderAll();
 
   setInterval(tick, 1000);
