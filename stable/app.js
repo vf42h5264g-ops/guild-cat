@@ -5664,6 +5664,120 @@ function renderInvestTab() {
   });
 }
 
+function renderDexTab() {
+
+  ensureCatDex();
+
+  const normalRows =
+    state.catDex.normal.map(c => `
+      <div class="panelCard" style="margin-top:8px;">
+
+        <div style="
+          display:flex;
+          gap:10px;
+          align-items:center;
+        ">
+
+          <img
+            src="${c.image}"
+            class="helperQuestIcon colorized"
+            style="--hue:${c.hue || 0}deg;"
+            alt=""
+          >
+
+          <div>
+
+            <div>
+              <b>${escapeHtml(c.name)}</b>
+            </div>
+
+            <div class="dim">
+              ${escapeHtml(c.personality)}
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    `).join("");
+
+  const eventRows =
+    state.catDex.event.map(c => `
+      <div class="panelCard" style="margin-top:8px;">
+
+        <div style="
+          display:flex;
+          gap:10px;
+          align-items:center;
+        ">
+
+          <img
+            src="${c.image}"
+            class="helperQuestIcon"
+            alt=""
+          >
+
+          <div>
+
+            <div>
+              <b>${escapeHtml(c.name)}</b>
+            </div>
+
+            <div class="dim">
+              イベントネコ
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    `).join("");
+
+  el.tabDex.innerHTML = `
+
+    <div class="panelCard">
+
+      <div>
+        <b>📖 ネコ図鑑</b>
+      </div>
+
+      <div class="dim" style="margin-top:6px;">
+        集めたネコが登録されます
+      </div>
+
+    </div>
+
+    <div style="margin-top:14px;">
+
+      <div class="helperSectionTitle">
+        通常ネコ
+      </div>
+
+      ${
+        normalRows ||
+        `<div class="dim">未登録</div>`
+      }
+
+    </div>
+
+    <div style="margin-top:18px;">
+
+      <div class="helperSectionTitle">
+        イベントネコ
+      </div>
+
+      ${
+        eventRows ||
+        `<div class="dim">未登録</div>`
+      }
+
+    </div>
+
+  `;
+}
+
 /* =========================
    Tick
    ========================= */
