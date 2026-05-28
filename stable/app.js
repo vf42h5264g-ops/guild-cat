@@ -4264,23 +4264,6 @@ function renderQuestTab() {
 
 </div>
 
-        <summary
-          style="
-            cursor:pointer;
-            font-weight:800;
-            padding:6px 0;
-          "
-        >
-          助っ人一覧
-        </summary>
-
-        <div style="margin-top:10px;">
-          ${helperRows || `<div class="dim">助っ人なし</div>`}
-        </div>
-
-      </details>
-    </div>
-
     ${
       alpacaOffer ? `
         <div class="panelCard">
