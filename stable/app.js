@@ -4211,6 +4211,16 @@ const renderHelperCard = h => `
         </div>
 
         ${
+          h.official && h.startDate && h.endDate
+            ? `
+              <div class="dim" style="margin-top:4px;">
+                開催期間：${h.startDate} ～ ${h.endDate}
+              </div>
+            `
+            : ""
+        }
+
+        ${
           h.expiresAt
             ? `
               <div class="dim" style="margin-top:4px;">
@@ -4333,7 +4343,7 @@ const eventHelperRows =
     ? `
       <div style="margin-top:10px;">
 
-        <div class="dim" style="margin-bottom:6px;">
+        <div class="helperSectionTitle normal">
           🤝 通常助っ人
         </div>
 
@@ -4349,9 +4359,9 @@ ${
     ? `
       <div style="margin-top:14px;">
 
-        <div class="dim" style="margin-bottom:6px;">
-          🎁 イベント助っ人
-        </div>
+       <div class="helperSectionTitle event">
+        🎁 イベント助っ人
+      </div> 
 
         ${eventHelperRows}
 
