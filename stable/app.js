@@ -4895,20 +4895,20 @@ function openCatDexModal() {
   ensureCatDex();
 
   const normalRows = state.catDex.normal.map(c => `
-    <div class="dexRow">
-      <img
-        src="${c.image}"
-        class="helperQuestIcon colorized"
-        style="--hue:${c.hue || 0}deg;"
-        alt=""
-      >
-
-      <div>
-        <div><b>${escapeHtml(c.name)}</b></div>
-        <div class="dim">${escapeHtml(c.personality)}</div>
-      </div>
-    </div>
-  `).join("");
+  <div class="dexCatIcon">
+    <img
+      src="${c.image}"
+      class="colorized"
+      style="
+        --hue:${c.hue || 0}deg;
+        width:48px;
+        height:48px;
+        image-rendering:pixelated;
+      "
+      alt=""
+    >
+  </div>
+`).join("");
 
   const eventRows = state.catDex.event.map(c => `
     <div class="dexRow">
