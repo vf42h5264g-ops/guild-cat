@@ -1973,7 +1973,7 @@ function finishTutorialCats(firstCat) {
   }
 
   state.cats.push(firstCat);
-  registerCatDex(cat);
+  registerCatDex(firstCat);
 
   const personalities = ["あまえんぼ", "ツンデレ", "クール", "やんちゃ"];
   const remain = personalities.filter(p => p !== firstCat.personality);
@@ -1982,7 +1982,8 @@ function finishTutorialCats(firstCat) {
   const extra1 = makeCat(remain[0], randomName());
   const extra2 = makeCat(remain[1], randomName());
   state.cats.push(extra1, extra2);
-  registerCatDex(cat);
+  registerCatDex(extra1);
+  registerCatDex(extra2);
 
   state.tutorialStage = 1;
 
@@ -3572,7 +3573,7 @@ function hireCat(catId) {
 
   const hired = state.hire.candidates.splice(idx, 1)[0];
   state.cats.push(hired);
-  registerCatDex(cat);
+  registerCatDex(hired);
   pushLog(`${hired.name} を雇用！（${cost.toLocaleString()}G）`);
   renderAll();
   save();
