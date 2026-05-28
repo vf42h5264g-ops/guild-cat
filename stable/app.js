@@ -4746,11 +4746,11 @@ function renderCatsTab() {
     </div>
 
     <div class="panelCard">
-      <div><b>📖 背景ネコ図鑑</b></div>
+      <div><b>📖 ネコ図鑑</b></div>
       <div class="dim" style="margin-top:6px;">
-        デイリーボーナスで増えた日常を確認できます
+        出会ったネコやイベントネコを確認できます
       </div>
-      <button class="ghost smallBtn" id="btnBgDex" style="margin-top:10px;">
+      <button class="ghost smallBtn" id="btnCatDex" style="margin-top:10px;">
         図鑑を見る
       </button>
     </div>
@@ -4764,8 +4764,8 @@ function renderCatsTab() {
   ?.addEventListener("click", openScoutConfirmModal);
   document.getElementById("btnViewCandidates")?.addEventListener("click", () => openScoutModal(false));
 
-document.getElementById("btnBgDex")
-  ?.addEventListener("click", openBgDexModal);
+document.getElementById("btnCatDex")
+  ?.addEventListener("click", openCatDexModal);
 }
 
 function openScoutConfirmModal() {
