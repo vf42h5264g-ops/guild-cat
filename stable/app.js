@@ -2353,31 +2353,83 @@ function addTestEventHelper() {
     return;
   }
 
-  state.helpers.push({
+  const helper = {
+
     id: uid(),
+
     official: true,
+
     eventId: "event_test_1",
+
     eventImage: "img/event/event_1.png",
 
     name: "祝祭のルナ",
+
     level: 12,
+
     personality: "イベント",
 
     str: 42,
     spd: 35,
     int: 58,
+
     hue: 0,
 
     startDate: "2026-05-28",
-    endDate: "2026-05-28",
-  });
+    endDate: "2026-05-29",
+
+  };
+
+  state.helpers.push(helper);
 
   state.eventHelperClaims.event_test_1 = true;
 
   pushLog("イベント助っ人を受け取ったにゃ");
 
+  openEventHelperGiftModal(helper);
+
   save();
+
   renderAll();
+}
+
+function openEventHelperGiftModal(helper) {
+  const html = `
+    <div class="panelCard" style="text-align:center;">
+
+      <div style="font-size:18px;font-weight:900;">
+        🎁 期間限定助っ人！
+      </div>
+
+      <img
+        src="${helper.eventImage || getQuestCatImage(helper)}"
+        alt=""
+        style="
+          width:160px;
+          margin-top:12px;
+          image-rendering:pixelated;
+        "
+      >
+
+      <div style="margin-top:10px;font-size:18px;font-weight:900;">
+        ${escapeHtml(helper.name)} がやってきた！
+      </div>
+
+      <div class="dim" style="margin-top:6px;">
+        開催期間：${helper.startDate} ～ ${helper.endDate}
+      </div>
+
+    </div>
+
+    <div class="modalFooter">
+      <button class="primary" id="eventHelperGiftClose">OK</button>
+    </div>
+  `;
+
+  openModal("イベント助っ人", html);
+
+  document.getElementById("eventHelperGiftClose")
+    ?.addEventListener("click", closeModal);
 }
 /* =========================
    Guild rename
