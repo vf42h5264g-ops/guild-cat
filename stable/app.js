@@ -834,7 +834,7 @@ function importHelperCode(code) {
   if (state.helpers.length >= getHelperMax()) {
     throw new Error("helper full");
   }
-  state.helpers.push({
+  const helper = {
     id: uid(),
     sourceGuildId: h.g,
 
@@ -847,7 +847,11 @@ function importHelperCode(code) {
     int: h.i,
 
     hue: h.h,
-  });
+    };
+
+    state.helpers.push(helper);
+
+    registerCatDex(helper);
 
   save();
 }
@@ -1355,6 +1359,43 @@ function ensureDailyBonus() {
 
   if (!Array.isArray(state.bgUnlocks.motionIds)) state.bgUnlocks.motionIds = [];
   if (!Array.isArray(state.bgUnlocks.lineIds)) state.bgUnlocks.lineIds = [];
+}
+function ensureCatDex() {
+  state.catDex ??= {
+    normal: [],
+    event: [],
+  };
+
+  if (!Array.isArray(state.catDex.normal)) {
+    state.catDex.normal = [];
+  }
+
+  if (!Array.isArray(state.catDex.event)) {
+    state.catDex.event = [];
+  }
+}
+
+function registerCatDex(cat) {
+  ensureCatDex();
+
+  const key = cat.official
+    ? `${cat.eventId || cat.name}`
+    : `${cat.personality}_${cat.hue}`;
+
+  const list = cat.official
+    ? state.catDex.event
+    : state.catDex.normal;
+
+  if (list.some(x => x.key === key)) return;
+
+  list.push({
+    key,
+    name: cat.name,
+    personality: cat.personality,
+    hue: cat.hue || 0,
+    image: cat.eventImage || getQuestCatImage(cat),
+    event: !!cat.official,
+  });
 }
 function ensureItems() {
   if (!state.items) state.items = {};
@@ -1933,6 +1974,7 @@ function finishTutorialCats(firstCat) {
   }
 
   state.cats.push(firstCat);
+  registerCatDex(cat);
 
   const personalities = ["あまえんぼ", "ツンデレ", "クール", "やんちゃ"];
   const remain = personalities.filter(p => p !== firstCat.personality);
@@ -1941,6 +1983,7 @@ function finishTutorialCats(firstCat) {
   const extra1 = makeCat(remain[0], randomName());
   const extra2 = makeCat(remain[1], randomName());
   state.cats.push(extra1, extra2);
+  registerCatDex(cat);
 
   state.tutorialStage = 1;
 
@@ -2399,6 +2442,7 @@ function applyEventHelpers() {
     };
 
     state.helpers.push(helper);
+    registerCatDex(helper);
     state.eventHelperClaims[event.eventId] = true;
 
     pushLog(`${helper.name} がイベント助っ人としてやってきたにゃ`);
@@ -3522,6 +3566,7 @@ function hireCat(catId) {
 
   const hired = state.hire.candidates.splice(idx, 1)[0];
   state.cats.push(hired);
+  registerCatDex(cat);
   pushLog(`${hired.name} を雇用！（${cost.toLocaleString()}G）`);
   renderAll();
   save();
