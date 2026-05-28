@@ -4936,7 +4936,6 @@ const normalRows = personalities.map(p => `
 
       <div>
         <div><b>${escapeHtml(c.name)}</b></div>
-        <div class="dim">イベントネコ</div>
       </div>
     </div>
   `).join("");
