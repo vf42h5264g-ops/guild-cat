@@ -4098,7 +4098,84 @@ function renderQuestTab() {
   const maxLv = RANK.maxQuestLevel(state.guildRank);
   const alpacaOffer = getAvailableAlpacaPurchase();
 
-  const helperRows = state.helpers.map(h => `
+  const normalHelpers =
+  state.helpers.filter(h => !h.official);
+
+const eventHelpers =
+  state.helpers.filter(h => h.official);
+
+const renderHelperCard = h => `
+  <div class="panelCard helperQuestCard" style="margin-top:8px;">
+
+    <div class="helperQuestRow">
+
+      ${
+        h.official
+          ? ""
+          : `
+            <button
+              class="ghost smallBtn"
+              data-remove-helper="${h.id}"
+              style="margin-left:auto;"
+            >
+              削除
+            </button>
+          `
+      }
+
+      <img
+        class="helperQuestIcon colorized"
+        src="${h.eventImage || getQuestCatImage(h)}"
+        style="--hue:${h.hue || 0}deg;"
+        alt=""
+      >
+
+      <div class="helperQuestMain">
+
+        <div class="helperQuestTop">
+
+          <b>${escapeHtml(h.name)}</b>
+
+          <span class="dim">
+            Lv${h.level}
+          </span>
+
+          <span class="dim">
+            ${escapeHtml(h.personality)}
+          </span>
+
+        </div>
+
+        <div class="dim" style="margin-top:6px;">
+
+          STR ${h.str}
+          / SPD ${h.spd}
+          / INT ${h.int}
+
+        </div>
+
+        ${
+          h.expiresAt
+            ? `
+              <div class="dim" style="margin-top:4px;">
+                あと ${formatRemain(h.expiresAt - Date.now())}
+              </div>
+            `
+            : ""
+        }
+
+      </div>
+
+    </div>
+
+  </div>
+`;
+
+const normalHelperRows =
+  normalHelpers.map(renderHelperCard).join("");
+
+const eventHelperRows =
+  eventHelpers.map(renderHelperCard).join("");
   <div class="panelCard helperQuestCard" style="margin-top:8px;">
     <div class="helperQuestRow">
 
@@ -4256,7 +4333,43 @@ function renderQuestTab() {
     state.helperListOpen
       ? `
         <div style="margin-top:10px;">
-          ${helperRows || `<div class="dim">助っ人なし</div>`}
+          ${
+  normalHelpers.length > 0
+    ? `
+      <div style="margin-top:10px;">
+
+        <div class="dim" style="margin-bottom:6px;">
+          🤝 通常助っ人
+        </div>
+
+        ${normalHelperRows}
+
+      </div>
+    `
+    : ""
+}
+
+${
+  eventHelpers.length > 0
+    ? `
+      <div style="margin-top:14px;">
+
+        <div class="dim" style="margin-bottom:6px;">
+          🎁 イベント助っ人
+        </div>
+
+        ${eventHelperRows}
+
+      </div>
+    `
+    : ""
+}
+
+${
+  state.helpers.length <= 0
+    ? `<div class="dim">助っ人なし</div>`
+    : ""
+}
         </div>
       `
       : ""
