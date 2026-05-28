@@ -1682,8 +1682,10 @@ function boot() {
 
   state.helpers = (state.helpers || []).filter(h => {
   if (!h.official) return true;
-  if (!h.expiresAt) return true;
-  return Date.now() < h.expiresAt;
+  if (!h.endDate) return true;
+
+  return Date.now() <=
+    new Date(h.endDate + "T23:59:59").getTime();
 });
    
   if (typeof state.guildRank !== "number") state.guildRank = 1;
@@ -2366,7 +2368,8 @@ function addTestEventHelper() {
     int: 58,
     hue: 0,
 
-    expiresAt: Date.now() + (12 * 60 * 60 * 1000),
+    startDate: "2026-05-28",
+    endDate: "2026-05-29",
   });
 
   state.eventHelperClaims.event_test_1 = true;
@@ -4158,7 +4161,10 @@ const renderHelperCard = h => `
           h.expiresAt
             ? `
               <div class="dim" style="margin-top:4px;">
-                あと ${formatRemain(h.expiresAt - Date.now())}
+                開催期間：
+                ${h.startDate}
+                ～
+                ${h.endDate}
               </div>
             `
             : ""
@@ -4227,7 +4233,10 @@ const eventHelperRows =
   h.expiresAt
     ? `
       <div class="dim" style="margin-top:4px;">
-        あと ${formatRemain(h.expiresAt - Date.now())}
+        開催期間：
+        ${h.startDate}
+        ～
+        ${h.endDate}
       </div>
     `
     : ""
