@@ -2412,7 +2412,14 @@ function applyEventHelpers() {
   state.helpers ??= [];
   state.eventHelperClaims ??= {};
 
+  // 初心者混乱防止：イベント助っ人はRank2以降に配布
+  if (!state.tutorialDone || state.guildRank < 2) {
+    return;
+  }
+
   const now = Date.now();
+
+  // 以下そのまま
 
   state.helpers = state.helpers.filter(h => {
     if (!h.official) return true;
