@@ -865,3 +865,22 @@ button{
   gap:6px;
   flex-wrap:wrap;
 }
+
+.helperSectionTitle{
+  font-weight:900;
+  font-size:15px;
+  margin-bottom:8px;
+  padding:6px 10px;
+  border-radius:999px;
+  display:inline-block;
+}
+
+.helperSectionTitle.normal{
+  color:#ffd98a;
+  background:rgba(255, 200, 90, .12);
+}
+
+.helperSectionTitle.event{
+  color:#ff9fd6;
+  background:rgba(255, 120, 200, .14);
+}
