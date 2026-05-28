@@ -4894,19 +4894,35 @@ function openBgDexModal() {
 function openCatDexModal() {
   ensureCatDex();
 
-  const normalRows = state.catDex.normal.map(c => `
-  <div class="dexCatIcon">
-    <img
-      src="${c.image}"
-      class="colorized"
-      style="
-        --hue:${c.hue || 0}deg;
-        width:48px;
-        height:48px;
-        image-rendering:pixelated;
-      "
-      alt=""
-    >
+  const personalities = ["ツンデレ", "やんちゃ", "クール", "あまえんぼ"];
+const hues = CAT_HUES;
+
+const normalRows = personalities.map(p => `
+  <div class="dexGridRow">
+    <div class="dexGridLabel">${escapeHtml(p)}</div>
+
+    ${hues.map(hue => {
+      const found = state.catDex.normal.find(
+        c => c.personality === p && Number(c.hue) === Number(hue)
+      );
+
+      return `
+        <div class="dexCatIcon ${found ? "" : "locked"}">
+          ${
+            found
+              ? `
+                <img
+                  src="${found.image}"
+                  class="colorized"
+                  style="--hue:${hue}deg;width:42px;height:42px;image-rendering:pixelated;"
+                  alt=""
+                >
+              `
+              : "？"
+          }
+        </div>
+      `;
+    }).join("")}
   </div>
 `).join("");
 
