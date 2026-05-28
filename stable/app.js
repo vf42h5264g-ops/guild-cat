@@ -4934,9 +4934,33 @@ function openCatDexModal() {
       <div class="sectionTitle">🎁 イベントネコ</div>
       ${eventRows || `<div class="dim">未登録</div>`}
     </div>
+
+    <div class="panelCard" style="margin-top:12px;">
+
+  <div class="sectionTitle">
+    🏠 背景ネコ
+  </div>
+
+  <button
+    class="ghost smallBtn"
+    id="btnOpenBgDex"
+    style="margin-top:10px;"
+  >
+    背景ネコ図鑑を見る
+  </button>
+
+</div>
   `;
 
   openModal("ネコ図鑑", html);
+  document.getElementById("btnOpenBgDex")
+  ?.addEventListener("click", () => {
+
+    closeModal();
+
+    openBgDexModal();
+
+  });
 }
 /* =========================
    Background Cat
