@@ -1724,13 +1724,6 @@ function boot() {
   setInterval(tick, 1000);
   setInterval(toggleDumbbells, 500);
 
-  state.helpers = state.helpers.filter(
-    h => h.eventId !== "event_test_1"
-  );
-
-  state.eventHelperClaims = {};
-
-  save();
 }
 
 /* =========================
