@@ -2371,30 +2371,30 @@ document.getElementById("btnImportSave")
 function openHelperGuideModal() {
   const html = `
     <div class="panelCard">
-      <div><b>🤝 助っ人とは？</b></div>
+      <div><b>🐾 すけっととは？</b></div>
       <div class="dim" style="margin-top:8px;line-height:1.7;">
         他のギルドのネコを、クエストに1匹だけ連れていける機能です。<br>
-        助っ人は成功率に加算されます。
+        すけっとは成功率に加算されます。
       </div>
     </div>
 
     <div class="panelCard" style="margin-top:10px;">
       <div><b>使い方</b></div>
       <div class="dim" style="margin-top:8px;line-height:1.7;">
-        ① ネコ詳細で「助っ人登録」する<br>
-        ② クエスト画面で「助っ人コード発行」する<br>
-        ③ 受け取ったコードを「助っ人コード読込」で登録する<br>
-        ④ クエスト受注時に助っ人を選ぶ
+        ① ネコ詳細で「すけっと登録」する<br>
+        ② クエスト画面で「すけっとコード発行」する<br>
+        ③ 受け取ったコードを「すけっとコード読込」で登録する<br>
+        ④ クエスト受注時にすけっとを選ぶ
       </div>
     </div>
 
     <div class="panelCard" style="margin-top:10px;">
       <div><b>ルール</b></div>
       <div class="dim" style="margin-top:8px;line-height:1.7;">
-        ・助っ人は1クエスト1匹まで<br>
-        ・同じ助っ人を同時に他のクエストには選べません<br>
-        ・通常助っ人は削除できます<br>
-        ・イベント助っ人は削除できません※期間で自動消去
+        ・すけっとは1クエスト1匹まで<br>
+        ・同じすけっとを同時に他のクエストには選べません<br>
+        ・通常すけっとは削除できます<br>
+        ・イベントすけっとは削除できません※期間で自動消去
       </div>
     </div>
 
@@ -2403,7 +2403,7 @@ function openHelperGuideModal() {
     </div>
   `;
 
-  openModal("助っ人ガイド", html);
+  openModal("すけっとガイド", html);
 
   document.getElementById("helperGuideClose")
     ?.addEventListener("click", closeModal);
@@ -2453,7 +2453,7 @@ function applyEventHelpers() {
     registerCatDex(helper);
     state.eventHelperClaims[event.eventId] = true;
 
-    pushLog(`${helper.name} がイベント助っ人としてやってきたにゃ`);
+    pushLog(`${helper.name} がイベントすけっととしてやってきたにゃ`);
 
     openEventHelperGiftModal(helper);
   }
@@ -2466,7 +2466,7 @@ function openEventHelperGiftModal(helper) {
     <div class="panelCard" style="text-align:center;">
 
       <div style="font-size:18px;font-weight:900;">
-        🎁 期間限定助っ人！
+        🎁 期間限定すけっと！
       </div>
 
       <img
@@ -2494,7 +2494,7 @@ function openEventHelperGiftModal(helper) {
     </div>
   `;
 
-  openModal("イベント助っ人", html);
+  openModal("イベントすけっと", html);
 
   document.getElementById("eventHelperGiftClose")
     ?.addEventListener("click", closeModal);
@@ -2785,7 +2785,7 @@ function openQuestSetupModal(type) {
 
     <div class="panelCard" style="margin-top:10px;">
       <div class="dim" style="margin-bottom:8px;">
-        助っ人（任意・1匹まで / 本日あと ${getHelperUseLeft()} 回）
+        すけっと（任意・1匹まで / 本日あと ${getHelperUseLeft()} 回）
       </div>
       <div id="helperPickList" class="modalList"></div>
     </div>
@@ -2881,7 +2881,7 @@ function openQuestSetupModal(type) {
       </div>
     </div>
   `;
-}).join("") || `<div class="dim">登録助っ人なし</div>`;
+}).join("") || `<div class="dim">登録すけっとなし</div>`;
 
 helperPickList.addEventListener("click", (e) => {
   const item = e.target.closest(".modalItem");
@@ -2898,12 +2898,12 @@ helperPickList.addEventListener("click", (e) => {
   );
 
   if (alreadyHelping) {
-    pushLog("この助っ人は別のクエストを手伝い中にゃ");
+    pushLog("このすけっとは別のクエストを手伝い中にゃ");
     return;
   }
 
   if (getHelperUseLeft() <= 0) {
-    pushLog("今日の助っ人使用回数を使い切ったにゃ");
+    pushLog("今日のすけっと使用回数を使い切ったにゃ");
     return;
   }
 
@@ -3123,7 +3123,7 @@ function startQuest(def, partyIds, slotIdx, helper = null) {
     ) {
 
       pushLog(
-        "今日の助っ人使用回数を使い切ったにゃ"
+        "今日のすけっと使用回数を使い切ったにゃ"
       );
 
       return;
@@ -3701,7 +3701,7 @@ function openRemoveHelperModal(helperId) {
 
       <div>
         <b>${escapeHtml(helper.name)}</b>
-        を助っ人一覧から削除しますか？
+        をすけっと一覧から削除しますか？
       </div>
 
       <div class="dim" style="margin-top:8px;">
@@ -3729,7 +3729,7 @@ function openRemoveHelperModal(helperId) {
     </div>
   `;
 
-  openModal("助っ人削除", html);
+  openModal("すけっと削除", html);
 
   document
     .getElementById("helperRemoveCancel")
@@ -3745,7 +3745,7 @@ function openRemoveHelperModal(helperId) {
         );
 
       pushLog(
-        `${helper.name} を助っ人一覧から削除したにゃ`
+        `${helper.name} をすけっと一覧から削除したにゃ`
       );
 
       save();
@@ -4351,7 +4351,7 @@ const eventHelperRows =
       <div class="row">
         <div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <b>🤝 助っ人</b>
+            <b>🐾 すけっと</b>
             <button class="ghost smallBtn" id="btnHelperGuide">❓</button>
           </div>
 
@@ -4377,11 +4377,11 @@ const eventHelperRows =
 
       <div class="row" style="margin-top:10px;">
   <button class="ghost smallBtn" id="btnExportHelper">
-    助っ人コード発行
+    すけっとコード発行
   </button>
 
   <button class="ghost smallBtn" id="btnImportHelper">
-    助っ人コード読込
+    すけっとコード読込
   </button>
 </div>
 
@@ -4392,7 +4392,7 @@ const eventHelperRows =
     id="btnHelperAd"
     style="width:100%;"
   >
-    ▶ 助っ人支援を見る
+    ▶ すけっと支援を見る
   </button>
 
   <div
@@ -4402,7 +4402,7 @@ const eventHelperRows =
       text-align:center;
     "
   >
-    視聴で助っ人使用回数 +1
+    視聴ですけっと使用回数 +1
     /
     本日あと
     ${HELPER_AD_DAILY_LIMIT - state.helperAdBonus.count}
@@ -4421,8 +4421,8 @@ const eventHelperRows =
   >
     ${
       state.helperListOpen
-        ? "▼ 助っ人一覧を閉じる"
-        : "▶ 助っ人一覧を開く"
+        ? "▼ すけっと一覧を閉じる"
+        : "▶ すけっと一覧を開く"
     }
   </button>
 
@@ -4436,7 +4436,7 @@ const eventHelperRows =
       <div style="margin-top:10px;">
 
         <div class="helperSectionTitle normal">
-          🤝 通常助っ人
+          🐾 通常すけっと
         </div>
 
         ${normalHelperRows}
@@ -4452,7 +4452,7 @@ ${
       <div style="margin-top:14px;">
 
        <div class="helperSectionTitle event">
-        🎁 イベント助っ人
+        🎁 イベントすけっと
       </div> 
 
         ${eventHelperRows}
@@ -4464,7 +4464,7 @@ ${
 
 ${
   state.helpers.length <= 0
-    ? `<div class="dim">助っ人なし</div>`
+    ? `<div class="dim">すけっとなし</div>`
     : ""
 }
         </div>
@@ -4524,7 +4524,7 @@ ${
     try {
       const code = exportHelperCode();
 
-      openModal("助っ人コード発行", `
+      openModal("すけっとコード発行", `
         <div class="panelCard">
           <div class="dim">このコードを相手に渡してください。</div>
           <textarea readonly style="width:100%;height:150px;margin-top:10px;">${code}</textarea>
@@ -4536,14 +4536,14 @@ ${
 
       document.getElementById("helperCodeClose")?.addEventListener("click", closeModal);
     } catch {
-      pushLog("助っ人登録ネコがいないにゃ");
+      pushLog("すけっと登録ネコがいないにゃ");
     }
   });
 
   document.getElementById("btnImportHelper")?.addEventListener("click", () => {
-    openModal("助っ人コード読込", `
+    openModal("すけっとコード読込", `
       <div class="panelCard">
-        <textarea id="helperCodeInput" placeholder="助っ人コードを貼り付け"
+        <textarea id="helperCodeInput" placeholder="すけっとコードを貼り付け"
           style="width:100%;height:150px;"></textarea>
       </div>
       <div class="modalFooter">
@@ -4559,10 +4559,10 @@ ${
         const code = document.getElementById("helperCodeInput")?.value || "";
         importHelperCode(code);
         closeModal();
-        pushLog("助っ人を登録したにゃ");
+        pushLog("すけっとを登録したにゃ");
         renderAll();
       } catch {
-        pushLog("助っ人コード読込失敗");
+        pushLog("すけっとコード読込失敗");
       }
     });
   });
@@ -4611,7 +4611,7 @@ document.getElementById("btnHelperAd")
     return;
   }
 
-  openModal("助っ人支援", `
+  openModal("すけっと支援", `
     <div class="panelCard">
       <img
         src="img/helper_support.png"
@@ -4624,7 +4624,7 @@ document.getElementById("btnHelperAd")
       >
 
       <div class="dim" style="margin-top:10px;text-align:center;">
-        助っ人支援を受け取っています...
+        すけっと支援を受け取っています...
       </div>
     </div>
   `);
@@ -4643,7 +4643,7 @@ document.getElementById("btnHelperAd")
 
     state.helperAdBonus.count++;
 
-    pushLog("助っ人使用回数が1回増えたにゃ");
+    pushLog("すけっと使用回数が1回増えたにゃ");
 
     save();
     renderQuestTab();
@@ -5521,8 +5521,8 @@ function openCatDetailModal(catId) {
   <button class="ghost" id="catDetailFavorite" style="width:100%;">
     ${
       state.favoriteCatId === c.id
-        ? "★ 助っ人中"
-        : "☆ 助っ人登録"
+        ? "★ すけっと中"
+        : "☆ すけっと登録"
     }
   </button>
 </div>
@@ -5566,10 +5566,10 @@ function openCatDetailModal(catId) {
    document.getElementById("catDetailFavorite")?.addEventListener("click", () => {
   if (state.favoriteCatId === c.id) {
     state.favoriteCatId = null;
-    pushLog(`${c.name} を助っ人登録から外したにゃ`);
+    pushLog(`${c.name} をすけっと登録から外したにゃ`);
   } else {
     state.favoriteCatId = c.id;
-    pushLog(`${c.name} を助っ人登録したにゃ`);
+    pushLog(`${c.name} をすけっと登録したにゃ`);
   }
 
   save();
