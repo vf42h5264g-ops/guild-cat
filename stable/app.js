@@ -708,7 +708,7 @@ function exportSaveCode() {
 
   cats: compressCats(state.cats),
   favoriteCatId: state.favoriteCatId,
-
+  catDex: state.catDex,
   items: state.items,
 
   questJobs: state.questJobs,
@@ -723,6 +723,14 @@ function exportSaveCode() {
   dailyBonus: state.dailyBonus,
   adReward: state.adReward,
   bgUnlocks: state.bgUnlocks,
+
+  // すけっと関連
+  helpers: state.helpers,
+  helperSlotBonus: state.helperSlotBonus,
+  helperDailyUse: state.helperDailyUse,
+  helperAdBonus: state.helperAdBonus,
+  helperListOpen: state.helperListOpen,
+  eventHelperClaims: state.eventHelperClaims,
 
   hire: state.hire,
      
