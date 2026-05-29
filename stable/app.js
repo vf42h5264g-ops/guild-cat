@@ -2295,7 +2295,7 @@ function startTutorialQuest(partyIds, slotIdx) {
     main: "STR",
     timeType: "S",
     durationMin: 1,
-    baseGold: 5000,
+    baseGold: 2000000000,
     target: 0,
   };
 
