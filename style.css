@@ -367,8 +367,8 @@ html,body{
 }
 
 /* 素体だけ色変え */
-.catSprite.colorized{
-  filter:hue-rotate(var(--hue)) saturate(1.35);
+.colorized{
+  filter:hue-rotate(var(--hue, 0deg)) saturate(1.35);
 }
 
 /* ステータス行：折り返し防止（カードが縦に伸びるのを防ぐ） */
@@ -794,6 +794,7 @@ img,svg,canvas{ max-width:100%; height:auto; }
     transform:translateY(-120px);
   }
 }
+
 html,
 body{
   width:100%;
@@ -815,4 +816,110 @@ textarea,
 select,
 button{
   font-size:16px;
+}
+
+.helperItem{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.helperIcon{
+  width:48px;
+  height:48px;
+  image-rendering:pixelated;
+  flex-shrink:0;
+}
+
+.helperInfo{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+
+.helperQuestRow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.helperQuestIcon{
+  width:48px;
+  height:48px;
+  image-rendering:pixelated;
+  flex-shrink:0;
+}
+
+.helperQuestCard{
+  padding:10px;
+}
+
+.helperQuestMain{
+  flex:1;
+  min-width:0;
+}
+
+.helperQuestTop{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.helperSectionTitle{
+  font-weight:900;
+  font-size:15px;
+  margin-bottom:8px;
+}
+
+.dexCatIcon{
+  width:58px;
+  height:58px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin:4px;
+  border-radius:12px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+}
+.dexGridRow{
+  display:grid;
+  grid-template-columns:80px repeat(8, 48px);
+  gap:6px;
+  align-items:center;
+  margin-top:8px;
+  overflow-x:auto;
+}
+
+.dexGridLabel{
+  font-weight:800;
+  font-size:13px;
+}
+
+.dexCatIcon.locked{
+  opacity:.35;
+}
+
+.dexPersonality{
+  margin-top:8px;
+}
+
+.dexPersonality summary{
+  cursor:pointer;
+  font-weight:900;
+  padding:8px 10px;
+  border-radius:10px;
+  background:rgba(255,255,255,.04);
+}
+
+.dexColorGrid{
+  display:grid;
+  grid-template-columns:repeat(4, 58px);
+  gap:8px;
+  margin-top:8px;
+}
+
+.dexCatIcon.locked{
+  opacity:.35;
 }
