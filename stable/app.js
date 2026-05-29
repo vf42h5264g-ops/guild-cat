@@ -792,12 +792,41 @@ function importSaveCode(code) {
 }
   Object.assign(state, data);
 
-  ensureQuestOffers();
+ensureItems();
+ensureCatDex();
+ensureQuestState();
+ensureTrainingState();
+ensurePending();
+ensureHire();
+ensureTutorial();
+ensureInvest();
+ensureAlpaca();
+ensureDailyBonus();
+ensureQuestOffers();
+ensureAdState();
+ensureHelperDailyUse();
+ensureHelperAdBonus();
+
+if (!Array.isArray(state.helpers)) {
+  state.helpers = [];
+}
+
+if (typeof state.helperSlotBonus !== "number") {
+  state.helperSlotBonus = 0;
+}
+
+if (typeof state.helperListOpen !== "boolean") {
+  state.helperListOpen = false;
+}
+
+state.eventHelperClaims ??= {};
+
 if (!state.questOffers) {
   rollQuestOffers();
 }
-  save();
-  renderAll();
+
+save();
+renderAll();
 }
 function exportHelperCode() {
   const cat = state.cats.find(c => c.id === state.favoriteCatId);
