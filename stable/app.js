@@ -1594,7 +1594,7 @@ function addExp(cat, amount) {
    ========================= */
 function newGame() {
   return {
-    version: 5,
+    version: 0.7,
     guildRank: 1,
     gold: 3500,
 
@@ -2286,7 +2286,7 @@ function openSettingsModal() {
     <div class="panelCard" style="margin-top:10px;">
       <div><b>その他</b></div>
       <div class="dim" style="margin-top:6px;">
-        Version 0.6
+        Version 0.7
       </div>
 
       <button class="ghost smallBtn" id="btnSettingsReset" style="margin-top:10px;">
