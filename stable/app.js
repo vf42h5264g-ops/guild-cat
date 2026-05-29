@@ -2376,15 +2376,32 @@ function openSettingsModal() {
         <div class="dim">
           このコードをメモ帳などに保存してください。
         </div>
-        <textarea readonly
-          style="width:100%;height:180px;margin-top:10px;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;">${code}</textarea>
+        <textarea
+          id="saveCodeTextarea"
+          readonly
+          style="width:100%;height:180px;margin-top:10px;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;"
+        >${code}</textarea>
+
+        <button class="ghost smallBtn" id="btnCopySaveCode" style="margin-top:10px;width:100%;">
+          コードをコピー
+        </button>
       </div>
 
       <div class="modalFooter">
         <button class="primary" id="saveCodeClose">閉じる</button>
       </div>
     `);
+    document.getElementById("btnCopySaveCode")
+      ?.addEventListener("click", async () => {
+        const text = document.getElementById("saveCodeTextarea")?.value || "";
 
+        try {
+          await navigator.clipboard.writeText(text);
+          pushLog("セーブコードをコピーしたにゃ");
+        } catch {
+          pushLog("コピーに失敗したにゃ。手動で選択してコピーしてね");
+        }
+      });
     document.getElementById("saveCodeClose")
       ?.addEventListener("click", closeModal);
   });
@@ -4585,13 +4602,31 @@ ${
       openModal("すけっとコード発行", `
         <div class="panelCard">
           <div class="dim">このコードを相手に渡してください。</div>
-          <textarea readonly style="width:100%;height:150px;margin-top:10px;">${code}</textarea>
+          <textarea
+            id="helperCodeTextarea"
+            readonly
+            style="width:100%;height:150px;margin-top:10px;"
+          >${code}</textarea>
+
+          <button class="ghost smallBtn" id="btnCopyHelperCode" style="margin-top:10px;width:100%;">
+            コードをコピー
+          </button>
         </div>
         <div class="modalFooter">
           <button class="primary" id="helperCodeClose">閉じる</button>
         </div>
       `);
+      document.getElementById("btnCopyHelperCode")
+        ?.addEventListener("click", async () => {
+          const text = document.getElementById("helperCodeTextarea")?.value || "";
 
+          try {
+            await navigator.clipboard.writeText(text);
+            pushLog("すけっとコードをコピーしたにゃ");
+          } catch {
+           pushLog("コピーに失敗したにゃ。手動で選択してコピーしてね");
+          }
+        });
       document.getElementById("helperCodeClose")?.addEventListener("click", closeModal);
     } catch {
       pushLog("すけっと登録ネコがいないにゃ");
