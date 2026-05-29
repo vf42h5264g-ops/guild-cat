@@ -233,7 +233,7 @@ const EVENT_HELPERS = [
     hue: 0,
 
     startDate: "2026-05-29",
-    endDate: "2026-05-29",
+    endDate: "2026-05-31",
   },
 ];
 
