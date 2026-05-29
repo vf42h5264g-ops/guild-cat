@@ -900,3 +900,26 @@ button{
 .dexCatIcon.locked{
   opacity:.35;
 }
+
+.dexPersonality{
+  margin-top:8px;
+}
+
+.dexPersonality summary{
+  cursor:pointer;
+  font-weight:900;
+  padding:8px 10px;
+  border-radius:10px;
+  background:rgba(255,255,255,.04);
+}
+
+.dexColorGrid{
+  display:grid;
+  grid-template-columns:repeat(4, 58px);
+  gap:8px;
+  margin-top:8px;
+}
+
+.dexCatIcon.locked{
+  opacity:.35;
+}
