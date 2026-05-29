@@ -823,35 +823,56 @@ function importHelperCode(code) {
   const json = decodeURIComponent(atob(code.trim()));
   const h = JSON.parse(json);
 
+  if (!Array.isArray(state.helpers)) {
+    state.helpers = [];
+  }
+
   if (h.g === state.guildId) {
     throw new Error("own helper");
   }
 
-  if (!Array.isArray(state.helpers)) {
-    state.helpers = [];
+  // 同じギルドのすけっと重複禁止
+  if (state.helpers.some(x => x.sourceGuildId === h.g)) {
+    throw new Error("duplicate helper");
   }
 
   if (state.helpers.length >= getHelperMax()) {
     throw new Error("helper full");
   }
+
+  const validPersonalities = [
+    "ツンデレ",
+    "やんちゃ",
+    "クール",
+    "あまえんぼ"
+  ];
+
+  if (!validPersonalities.includes(h.p)) {
+    throw new Error("invalid personality");
+  }
+
+  const level = clamp(1, 99, Number(h.l));
+  const str = clamp(1, 999, Number(h.s));
+  const spd = clamp(1, 999, Number(h.d));
+  const intv = clamp(1, 999, Number(h.i));
+
   const helper = {
     id: uid(),
     sourceGuildId: h.g,
 
-    name: h.n,
-    level: h.l,
+    name: String(h.n || "ななしのすけっと").slice(0, 12),
+    level,
     personality: h.p,
 
-    str: h.s,
-    spd: h.d,
-    int: h.i,
+    str,
+    spd,
+    int: intv,
 
-    hue: h.h,
-    };
+    hue: Number(h.h) || 0,
+  };
 
-    state.helpers.push(helper);
-
-    registerCatDex(helper);
+  state.helpers.push(helper);
+  registerCatDex(helper);
 
   save();
 }
