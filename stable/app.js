@@ -4663,41 +4663,65 @@ ${
     }
   });
 
-  document.getElementById("btnImportHelper")?.addEventListener("click", () => {
-    openModal("すけっとコード読込", `
-      <div class="panelCard">
-        <textarea id="helperCodeInput" placeholder="すけっとコードを貼り付け"
-  style="width:100%;height:150px;"></textarea>
+ document.getElementById("btnImportHelper")?.addEventListener("click", () => {
+  openModal("すけっとコード読込", `
+    <div class="panelCard">
+      <textarea
+        id="helperCodeInput"
+        placeholder="すけっとコードを貼り付け"
+        style="width:100%;height:150px;"
+      ></textarea>
 
-<button
-  class="ghost"
-  id="pasteHelperCodeBtn"
-  style="margin-top:10px;width:100%;"
->
-  📋 クリップボードから貼り付け
-</button>
-      </div>
-      <div class="modalFooter">
-        <button class="ghost" id="helperImportCancel">キャンセル</button>
-        <button class="primary" id="helperImportOk">読込</button>
-      </div>
-    `);
+      <button
+        class="ghost"
+        id="pasteHelperCodeBtn"
+        style="margin-top:10px;width:100%;"
+      >
+        📋 クリップボードから貼り付け
+      </button>
+    </div>
 
-    document.getElementById("helperImportCancel")?.addEventListener("click", closeModal);
+    <div class="modalFooter">
+      <button class="ghost" id="helperImportCancel">キャンセル</button>
+      <button class="primary" id="helperImportOk">読込</button>
+    </div>
+  `);
 
-document.getElementById("pasteHelperCodeBtn")
-  ?.addEventListener("click", async () => {
-    try {
-      const text = await navigator.clipboard.readText();
+  document
+    .getElementById("helperImportCancel")
+    ?.addEventListener("click", closeModal);
 
-      document.getElementById("helperCodeInput").value = text;
+  document
+    .getElementById("pasteHelperCodeBtn")
+    ?.addEventListener("click", async () => {
+      try {
+        const text = await navigator.clipboard.readText();
 
-      toast("貼り付けたにゃ");
-    } catch {
-      toast("貼り付けできなかったにゃ");
-    }
-  });
+        document.getElementById("helperCodeInput").value = text;
 
+        toast("貼り付けたにゃ");
+      } catch {
+        toast("貼り付けできなかったにゃ");
+      }
+    });
+
+  document
+    .getElementById("helperImportOk")
+    ?.addEventListener("click", () => {
+      try {
+        const code =
+          document.getElementById("helperCodeInput")?.value || "";
+
+        importHelperCode(code);
+
+        closeModal();
+        pushLog("すけっとを登録したにゃ");
+        renderAll();
+      } catch {
+        pushLog("すけっとコード読込失敗");
+      }
+    });
+});
   document.getElementById("btnHelperGuide")
   ?.addEventListener("click", openHelperGuideModal);
 
