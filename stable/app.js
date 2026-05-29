@@ -2392,9 +2392,9 @@ function openHelperGuideModal() {
       <div><b>ルール</b></div>
       <div class="dim" style="margin-top:8px;line-height:1.7;">
         ・助っ人は1クエスト1匹まで<br>
-        ・同じ助っ人は1日1回まで使用できます<br>
+        ・同じ助っ人を同時に他のクエストには選べません<br>
         ・通常助っ人は削除できます<br>
-        ・イベント助っ人は削除できません
+        ・イベント助っ人は削除できません※期間で自動消去
       </div>
     </div>
 
