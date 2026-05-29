@@ -2167,6 +2167,7 @@ function openTutorialQuestSetupModal() {
 
   const partyList = document.getElementById("partyList");
   const qPreview = document.getElementById("qPreview");
+  const partyPowerPreview = document.getElementById("partyPowerPreview");
   const btnStart = document.getElementById("qStart");
 
   document.getElementById("qCancel")?.addEventListener("click", closeModal);
@@ -2795,12 +2796,22 @@ function openQuestSetupModal(type) {
     </div>
 
     <div class="panelCard" style="margin-top:10px;">
-      <div class="dim" style="margin-bottom:8px;">難易度Lv（自動）</div>
-      <div class="row">
-        <div><b>Lv${fixedLv}</b></div>
-        <div class="dim">必要総戦力: ${getQuestNeedTotal(fixedLv)}</div>
-      </div>
+  <div class="dim" style="margin-bottom:8px;">難易度Lv（自動）</div>
+  <div class="row">
+    <div><b>Lv${fixedLv}</b></div>
+    <div class="dim">
+      必要戦力: <b>${getQuestNeedTotal(fixedLv)}</b>
     </div>
+  </div>
+
+  <div
+    id="partyPowerPreview"
+    class="dim"
+    style="margin-top:8px;"
+  >
+    現在の戦力: 0 / ${getQuestNeedTotal(fixedLv)}
+  </div>
+</div>
 
     <div class="panelCard" style="margin-top:10px;">
       <div class="dim" style="margin-bottom:8px;">時間タイプ</div>
@@ -2822,6 +2833,7 @@ function openQuestSetupModal(type) {
   const helperPickList = document.getElementById("helperPickList");
   const timeList = document.getElementById("timeList");
   const qPreview = document.getElementById("qPreview");
+  const partyPowerPreview = document.getElementById("partyPowerPreview");
   const btnStart = document.getElementById("qStart");
 
   document.getElementById("qCancel")?.addEventListener("click", closeModal);
@@ -2930,6 +2942,20 @@ helperPickList.addEventListener("click", (e) => {
     const partyIds = Array.from(selected);
     const ok = partyIds.length > 0 && !!pickTime;
     btnStart.disabled = !ok;
+
+    const party = partyIds.map(catById).filter(Boolean);
+    const currentPower = party.reduce(
+      (sum, c) => sum + c.str + c.spd + c.int,
+      0
+    );
+
+    const needPower = getQuestNeedTotal(fixedLv);
+
+    if (partyPowerPreview) {
+      partyPowerPreview.innerHTML = `
+        現在の戦力: <b>${currentPower}</b> / 必要戦力: <b>${needPower}</b>
+      `;
+    }
 
     qPreview.innerHTML = `
       <div class="dim">【${type.icon} ${type.name}】 Lv${fixedLv} / ${pickTime ?? "?"}</div>
