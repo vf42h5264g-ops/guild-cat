@@ -2414,7 +2414,15 @@ document.getElementById("btnImportSave")
           保存しておいたセーブコードを貼り付けてください。
         </div>
         <textarea id="importSaveCodeInput"
-          style="width:100%;height:180px;margin-top:10px;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;"></textarea>
+  style="width:100%;height:180px;margin-top:10px;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;"></textarea>
+
+<button
+  class="ghost"
+  id="pasteSaveCodeBtn"
+  style="margin-top:10px;width:100%;"
+>
+  📋 クリップボードから貼り付け
+</button>
       </div>
 
       <div class="modalFooter">
@@ -2424,7 +2432,29 @@ document.getElementById("btnImportSave")
     `);
 
     document.getElementById("importCancel")
-      ?.addEventListener("click", closeModal);
+  ?.addEventListener("click", closeModal);
+
+document.getElementById("pasteSaveCodeBtn")
+  ?.addEventListener("click", async () => {
+
+    try {
+
+      const text =
+        await navigator.clipboard.readText();
+
+      document.getElementById(
+        "importSaveCodeInput"
+      ).value = text;
+
+      toast("貼り付けたにゃ");
+
+    } catch {
+
+      toast("貼り付けできなかったにゃ");
+
+    }
+
+  });
 
     document.getElementById("importConfirm")
       ?.addEventListener("click", () => {
@@ -4637,7 +4667,15 @@ ${
     openModal("すけっとコード読込", `
       <div class="panelCard">
         <textarea id="helperCodeInput" placeholder="すけっとコードを貼り付け"
-          style="width:100%;height:150px;"></textarea>
+  style="width:100%;height:150px;"></textarea>
+
+<button
+  class="ghost"
+  id="pasteHelperCodeBtn"
+  style="margin-top:10px;width:100%;"
+>
+  📋 クリップボードから貼り付け
+</button>
       </div>
       <div class="modalFooter">
         <button class="ghost" id="helperImportCancel">キャンセル</button>
@@ -4647,17 +4685,17 @@ ${
 
     document.getElementById("helperImportCancel")?.addEventListener("click", closeModal);
 
-    document.getElementById("helperImportOk")?.addEventListener("click", () => {
-      try {
-        const code = document.getElementById("helperCodeInput")?.value || "";
-        importHelperCode(code);
-        closeModal();
-        pushLog("すけっとを登録したにゃ");
-        renderAll();
-      } catch {
-        pushLog("すけっとコード読込失敗");
-      }
-    });
+document.getElementById("pasteHelperCodeBtn")
+  ?.addEventListener("click", async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+
+      document.getElementById("helperCodeInput").value = text;
+
+      toast("貼り付けたにゃ");
+    } catch {
+      toast("貼り付けできなかったにゃ");
+    }
   });
 
   document.getElementById("btnHelperGuide")
