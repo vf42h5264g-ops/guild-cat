@@ -2741,23 +2741,22 @@ function getQuestMainLabel(main) {
   return main;
 }
 function rollQuestOffers() {
-  const cap = RANK.maxQuestLevel(state.guildRank); // 1..10
-  let minLv = Math.max(1, cap - 2);
-
-  let low = minLv;
-  let high = cap;
-  while (high - low + 1 < 3 && low > 1) low--;
-  while (high - low + 1 < 3 && high < 10) high++;
-
-  const pool = [];
-  for (let lv = low; lv <= high; lv++) pool.push(lv);
-  shuffleArray(pool);
+  const cap = RANK.maxQuestLevel(state.guildRank);
 
   const types = questTypes();
   const offers = {};
-  for (let i = 0; i < types.length; i++) {
-    offers[types[i].id] = pool[i];
+
+  // どれか1種類は必ず現在の最高Lvにする
+  const shuffledTypes = [...types];
+  shuffleArray(shuffledTypes);
+
+  offers[shuffledTypes[0].id] = cap;
+
+  // 残り2種類は Lv1〜最高Lv からランダム
+  for (let i = 1; i < shuffledTypes.length; i++) {
+    offers[shuffledTypes[i].id] = randInt(1, cap);
   }
+
   state.questOffers = offers;
   save();
 }
@@ -2799,7 +2798,7 @@ function openQuestSetupModal(type) {
       <div class="dim" style="margin-bottom:8px;">難易度Lv（自動）</div>
       <div class="row">
         <div><b>Lv${fixedLv}</b></div>
-        <div class="dim">必要総戦力: ${QUEST.NEED_TOTAL[fixedLv - 1]}</div>
+        <div class="dim">必要総戦力: ${getQuestNeedTotal(fixedLv)}</div>
       </div>
     </div>
 
