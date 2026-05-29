@@ -4898,32 +4898,34 @@ function openCatDexModal() {
 const hues = CAT_HUES;
 
 const normalRows = personalities.map(p => `
-  <div class="dexGridRow">
-    <div class="dexGridLabel">${escapeHtml(p)}</div>
+  <details class="dexPersonality">
+    <summary>${escapeHtml(p)}</summary>
 
-    ${hues.map(hue => {
-      const found = state.catDex.normal.find(
-        c => c.personality === p && Number(c.hue) === Number(hue)
-      );
+    <div class="dexColorGrid">
+      ${hues.map(hue => {
+        const found = state.catDex.normal.find(
+          c => c.personality === p && Number(c.hue) === Number(hue)
+        );
 
-      return `
-        <div class="dexCatIcon ${found ? "" : "locked"}">
-          ${
-            found
-              ? `
-                <img
-                  src="${found.image}"
-                  class="colorized"
-                  style="--hue:${hue}deg;width:42px;height:42px;image-rendering:pixelated;"
-                  alt=""
-                >
-              `
-              : "？"
-          }
-        </div>
-      `;
-    }).join("")}
-  </div>
+        return `
+          <div class="dexCatIcon ${found ? "" : "locked"}">
+            ${
+              found
+                ? `
+                  <img
+                    src="${found.image}"
+                    class="colorized"
+                    style="--hue:${hue}deg;width:42px;height:42px;image-rendering:pixelated;"
+                    alt=""
+                  >
+                `
+                : "？"
+            }
+          </div>
+        `;
+      }).join("")}
+    </div>
+  </details>
 `).join("");
 
   const eventRows = state.catDex.event.map(c => `
