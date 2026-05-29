@@ -196,10 +196,18 @@ const ITEM_MASTER = {
   },
 };
 
+const HELPER_BASE_MAX = 3;
+
+function getHelperMax() {
+  return HELPER_BASE_MAX + (state.helperSlotBonus || 0);
+}
+
 const AD_REWARD = {
   DAILY_LIMIT: 3,
   WAIT_MS: 3000
 };
+
+const HELPER_AD_DAILY_LIMIT = 3;
 
 const DAILY_BONUS = {
   GOLD_TABLE: {
@@ -209,6 +217,25 @@ const DAILY_BONUS = {
     5: [4000, 5000],
   },
 };
+
+const EVENT_HELPERS = [
+  {
+    eventId: "event_test_1",
+    eventImage: "img/event/event_1.png",
+
+    name: "祝祭のルナ",
+    level: 12,
+    personality: "イベント",
+
+    str: 42,
+    spd: 35,
+    int: 58,
+    hue: 0,
+
+    startDate: "2026-05-29",
+    endDate: "2026-05-29",
+  },
+];
 
 function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -425,7 +452,8 @@ const el = {
 
   guildTitle: document.getElementById("guildTitle"),
   btnGuildName: document.getElementById("btnGuildName"),
-
+  btnSettings: document.getElementById("btnSettings"),
+   
   hud: document.getElementById("hud"),
   btnReset: document.getElementById("btnReset"),
   btnRankUp: document.getElementById("btnRankUp"),
@@ -638,6 +666,7 @@ function save() {
     console.warn("save failed", e);
   }
 }
+
 function load() {
   const raw = localStorage.getItem(LS_SAVE);
   if (!raw) return null;
@@ -645,6 +674,245 @@ function load() {
 }
 window.addEventListener("beforeunload", () => save());
 
+function compressCats(cats) {
+  return cats.map(c => ({
+    i: c.id,
+    n: c.name,
+    l: c.level,
+    e: c.exp,
+    p: c.personality,
+    s: [c.str, c.spd, c.int],
+    h: c.hue
+  }));
+}
+function decompressCats(cats) {
+  return cats.map(c => ({
+    id: c.i,
+    name: c.n,
+    level: c.l,
+    exp: c.e,
+    personality: c.p,
+    str: c.s[0],
+    spd: c.s[1],
+    int: c.s[2],
+    hue: c.h
+  }));
+}
+function exportSaveCode() {
+  save();
+
+  const saveData = {
+  guildName: state.guildName,
+  guildRank: state.guildRank,
+  gold: state.gold,
+
+  cats: compressCats(state.cats),
+  favoriteCatId: state.favoriteCatId,
+  catDex: state.catDex,
+  items: state.items,
+
+  questJobs: state.questJobs,
+  trainingSlots: state.trainingSlots,
+  trainingJobs: state.trainingJobs,
+
+  alpaca: state.alpaca,
+  invest: state.invest,
+
+  questOffers: null,
+     
+  dailyBonus: state.dailyBonus,
+  adReward: state.adReward,
+  bgUnlocks: state.bgUnlocks,
+
+  // すけっと関連
+  helpers: state.helpers,
+  helperSlotBonus: state.helperSlotBonus,
+  helperDailyUse: state.helperDailyUse,
+  helperAdBonus: state.helperAdBonus,
+  helperListOpen: state.helperListOpen,
+  eventHelperClaims: state.eventHelperClaims,
+
+  hire: state.hire,
+     
+  tutorialDone: state.tutorialDone,
+  tutorialStage: state.tutorialStage,
+
+  endingSeen: state.endingSeen,
+  postGame: state.postGame,
+
+  // ログは復元時に空でOK
+  logs: []
+};
+
+  const json =
+    JSON.stringify(saveData);
+
+  const compressed =
+    pako.deflate(json);
+
+  let binary = "";
+
+  compressed.forEach(b => {
+    binary += String.fromCharCode(b);
+  });
+
+  return btoa(binary);
+}
+
+function importSaveCode(code) {
+
+  const binary =
+    atob(code.trim());
+
+  const bytes =
+    Uint8Array.from(binary, c => c.charCodeAt(0));
+
+  const json =
+    pako.inflate(bytes, { to: "string" });
+
+  const data =
+    JSON.parse(json);
+
+  if (!data || typeof data !== "object") {
+    throw new Error("invalid save data");
+  }
+  if (data.cats) {
+  data.cats =
+    decompressCats(data.cats);
+}
+  if (
+  !data.questOffers ||
+  Array.isArray(data.questOffers) ||
+  typeof data.questOffers !== "object"
+) {
+  data.questOffers = null;
+}
+  if (!data.favoriteCatId) {
+  data.favoriteCatId = null;
+}
+  Object.assign(state, data);
+
+ensureItems();
+ensureCatDex();
+ensureQuestState();
+ensureTrainingState();
+ensurePending();
+ensureHire();
+ensureTutorial();
+ensureInvest();
+ensureAlpaca();
+ensureDailyBonus();
+ensureQuestOffers();
+ensureAdState();
+ensureHelperDailyUse();
+ensureHelperAdBonus();
+
+if (!Array.isArray(state.helpers)) {
+  state.helpers = [];
+}
+
+if (typeof state.helperSlotBonus !== "number") {
+  state.helperSlotBonus = 0;
+}
+
+if (typeof state.helperListOpen !== "boolean") {
+  state.helperListOpen = false;
+}
+
+state.eventHelperClaims ??= {};
+
+if (!state.questOffers) {
+  rollQuestOffers();
+}
+
+save();
+renderAll();
+}
+function exportHelperCode() {
+  const cat = state.cats.find(c => c.id === state.favoriteCatId);
+
+  if (!cat) {
+    throw new Error("no favorite cat");
+  }
+
+  const helper = {
+    g: state.guildId,
+
+    n: cat.name,
+    l: cat.level,
+    p: cat.personality,
+
+    s: cat.str,
+    d: cat.spd,
+    i: cat.int,
+
+    h: cat.hue,
+  };
+
+  return btoa(
+    encodeURIComponent(
+      JSON.stringify(helper)
+    )
+  );
+}
+
+function importHelperCode(code) {
+  const json = decodeURIComponent(atob(code.trim()));
+  const h = JSON.parse(json);
+
+  if (!Array.isArray(state.helpers)) {
+    state.helpers = [];
+  }
+
+  if (h.g === state.guildId) {
+    throw new Error("own helper");
+  }
+
+  // 同じギルドのすけっと重複禁止
+  if (state.helpers.some(x => x.sourceGuildId === h.g)) {
+    throw new Error("duplicate helper");
+  }
+
+  if (state.helpers.length >= getHelperMax()) {
+    throw new Error("helper full");
+  }
+
+  const validPersonalities = [
+    "ツンデレ",
+    "やんちゃ",
+    "クール",
+    "あまえんぼ"
+  ];
+
+  if (!validPersonalities.includes(h.p)) {
+    throw new Error("invalid personality");
+  }
+
+  const level = clamp(1, 99, Number(h.l));
+  const str = clamp(1, 999, Number(h.s));
+  const spd = clamp(1, 999, Number(h.d));
+  const intv = clamp(1, 999, Number(h.i));
+
+  const helper = {
+    id: uid(),
+    sourceGuildId: h.g,
+
+    name: String(h.n || "ななしのすけっと").slice(0, 12),
+    level,
+    personality: h.p,
+
+    str,
+    spd,
+    int: intv,
+
+    hue: Number(h.h) || 0,
+  };
+
+  state.helpers.push(helper);
+  registerCatDex(helper);
+
+  save();
+}
 /* =========================
    Logs
    ========================= */
@@ -661,7 +929,38 @@ function pushLog(text) {
   logUnread++;
   renderHeaderBadges();
   renderLogs();
+
+　showToast(text);
+   
   save();
+}
+function showToast(text) {
+  const toast = document.createElement("div");
+
+  toast.textContent = text;
+  toast.style.cssText = `
+    position:fixed;
+    left:50%;
+    bottom:24px;
+    transform:translateX(-50%);
+    z-index:9999;
+    max-width:calc(100% - 32px);
+    background:#202838;
+    color:#fff;
+    border:1px solid #3a465c;
+    border-radius:999px;
+    padding:10px 14px;
+    font-weight:800;
+    font-size:14px;
+    box-shadow:0 8px 24px rgba(0,0,0,.35);
+    text-align:center;
+  `;
+
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.remove();
+  }, 2200);
 }
 function renderLogs() {
   const open = !el.logPanel?.classList.contains("hidden");
@@ -827,6 +1126,48 @@ function ensureAdState() {
   }
 }
 
+function ensureHelperDailyUse() {
+
+  state.helperDailyUse ??= {
+    date: todayKey(),
+    count: 0
+  };
+
+  if (
+    state.helperDailyUse.date !== todayKey()
+  ) {
+
+    state.helperDailyUse.date =
+      todayKey();
+
+    state.helperDailyUse.count = 0;
+  }
+
+}
+function ensureHelperAdBonus() {
+  state.helperAdBonus ??= {
+    date: todayKey(),
+    count: 0
+  };
+
+  if (state.helperAdBonus.date !== todayKey()) {
+    state.helperAdBonus.date = todayKey();
+    state.helperAdBonus.count = 0;
+  }
+}
+function getHelperUseLimit() {
+  ensureHelperDailyUse();
+  ensureHelperAdBonus();
+
+  return getHelperMax() + state.helperAdBonus.count;
+}
+
+function getHelperUseLeft() {
+  return Math.max(
+    0,
+    getHelperUseLimit() - state.helperDailyUse.count
+  );
+}
 function watchMatatabiAd() {
 
   ensureAdState();
@@ -1077,6 +1418,43 @@ function ensureDailyBonus() {
   if (!Array.isArray(state.bgUnlocks.motionIds)) state.bgUnlocks.motionIds = [];
   if (!Array.isArray(state.bgUnlocks.lineIds)) state.bgUnlocks.lineIds = [];
 }
+function ensureCatDex() {
+  state.catDex ??= {
+    normal: [],
+    event: [],
+  };
+
+  if (!Array.isArray(state.catDex.normal)) {
+    state.catDex.normal = [];
+  }
+
+  if (!Array.isArray(state.catDex.event)) {
+    state.catDex.event = [];
+  }
+}
+
+function registerCatDex(cat) {
+  ensureCatDex();
+
+  const key = cat.official
+    ? `${cat.eventId || cat.name}`
+    : `${cat.personality}_${cat.hue}`;
+
+  const list = cat.official
+    ? state.catDex.event
+    : state.catDex.normal;
+
+  if (list.some(x => x.key === key)) return;
+
+  list.push({
+    key,
+    name: cat.name,
+    personality: cat.personality,
+    hue: cat.hue || 0,
+    image: cat.eventImage || getQuestCatImage(cat),
+    event: !!cat.official,
+  });
+}
 function ensureItems() {
   if (!state.items) state.items = {};
 
@@ -1274,15 +1652,31 @@ function addExp(cat, amount) {
    ========================= */
 function newGame() {
   return {
-    version: 5,
+    version: 0.7,
     guildRank: 1,
     gold: 3500,
 
     guildName: "Cozy Cat Guild",
+    guildId: uid(),
     tutorialDone: false,
     tutorialStage: 0,
 
     cats: [],
+    favoriteCatId: null,
+    helpers: [],
+
+    helperListOpen: false,
+    helperAdBonus: {
+      date: todayKey(),
+      count: 0
+    },
+     
+    helperSlotBonus: 0,
+
+    helperDailyUse: {
+      date: todayKey(),
+      count: 0
+    },
 
     logs: [],
     pendingResults: [],
@@ -1329,6 +1723,43 @@ function newGame() {
 /* =========================
    UI Bindings
    ========================= */
+function openResetModal() {
+  const html = `
+    <div class="panelCard">
+      <div><b>⚠ データリセット</b></div>
+      <div class="dim" style="margin-top:6px;">ギルド・ネコ・Gold・進行状況がすべて削除されます。</div>
+      <div class="dim" style="margin-top:6px;">実行するには <b>RESET</b> と入力してください。</div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <input id="resetInput" placeholder="RESET と入力"
+        style="width:100%;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;" />
+    </div>
+
+    <div class="modalFooter">
+      <button class="ghost" id="resetCancel">キャンセル</button>
+      <button class="primary" id="resetConfirm" disabled>完全削除</button>
+    </div>
+  `;
+
+  openModal("データリセット確認", html);
+
+  const input = document.getElementById("resetInput");
+  const confirmBtn = document.getElementById("resetConfirm");
+
+  document.getElementById("resetCancel")?.addEventListener("click", closeModal);
+
+  input?.addEventListener("input", () => {
+    confirmBtn.disabled =
+  input.value.trim().toUpperCase() !== "RESET";
+  });
+
+  confirmBtn?.addEventListener("click", () => {
+    localStorage.removeItem(LS_SAVE);
+    closeModal();
+    location.reload();
+  });
+}
 function bindUI() {
   el.btnStart?.addEventListener("click", () => {
     openMain();
@@ -1341,67 +1772,14 @@ function bindUI() {
   });
 
   el.btnNew?.addEventListener("click", () => {
-    const html = `
-      <div class="panelCard">
-        <div><b>新しく始めますか？</b></div>
-        <div class="dim" style="margin-top:6px;">現在のデータは削除されます。</div>
-        <div class="dim" style="margin-top:6px;">実行するには <b>RESET</b> と入力してください。</div>
-      </div>
-      <div class="panelCard" style="margin-top:10px;">
-        <input id="resetInput2" placeholder="RESET と入力"
-          style="width:100%;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;" />
-      </div>
-      <div class="modalFooter">
-        <button class="ghost" id="newCancel">キャンセル</button>
-        <button class="primary" id="newConfirm" disabled>新しく始める</button>
-      </div>
-    `;
-    openModal("確認", html);
-    const input = document.getElementById("resetInput2");
-    const btn = document.getElementById("newConfirm");
-    document.getElementById("newCancel")?.addEventListener("click", closeModal);
-    input?.addEventListener("input", () => { btn.disabled = input.value !== "RESET"; });
-    btn?.addEventListener("click", () => {
-      localStorage.removeItem(LS_SAVE);
-      closeModal();
-      location.reload();
-    });
+     openResetModal(); 
+     // 既存の新規開始処理
   });
 
   el.btnGuildName?.addEventListener("click", () => openGuildRenameModal());
 
-  el.btnReset?.addEventListener("click", () => {
-    const html = `
-      <div class="panelCard">
-        <div><b>⚠ データリセット</b></div>
-        <div class="dim" style="margin-top:6px;">ギルド・ネコ・Gold・進行状況がすべて削除されます。</div>
-        <div class="dim" style="margin-top:6px;">実行するには <b>RESET</b> と入力してください。</div>
-      </div>
-
-      <div class="panelCard" style="margin-top:10px;">
-        <input id="resetInput" placeholder="RESET と入力"
-          style="width:100%;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;" />
-      </div>
-
-      <div class="modalFooter">
-        <button class="ghost" id="resetCancel">キャンセル</button>
-        <button class="primary" id="resetConfirm" disabled>完全削除</button>
-      </div>
-    `;
-    openModal("データリセット確認", html);
-
-    const input = document.getElementById("resetInput");
-    const confirmBtn = document.getElementById("resetConfirm");
-    document.getElementById("resetCancel")?.addEventListener("click", closeModal);
-
-    input?.addEventListener("input", () => {
-      confirmBtn.disabled = input.value !== "RESET";
-    });
-    confirmBtn?.addEventListener("click", () => {
-      localStorage.removeItem(LS_SAVE);
-      closeModal();
-      location.reload();
-    });
+  el.btnSettings?.addEventListener("click", () => {
+    openSettingsModal();
   });
 
   el.btnRankUp?.addEventListener("click", () => doRankUp());
@@ -1415,15 +1793,28 @@ function bindUI() {
     });
   });
 }
+   
 
 function boot() {
   state = load() || newGame();
 
+  state.helpers = (state.helpers || []).filter(h => {
+  if (!h.official) return true;
+  if (!h.endDate) return true;
+
+  return Date.now() <=
+    new Date(h.endDate + "T23:59:59").getTime();
+});
+   
   if (typeof state.guildRank !== "number") state.guildRank = 1;
   if (typeof state.gold !== "number") state.gold = 0;
   if (!Array.isArray(state.cats)) state.cats = [];
   if (typeof state.guildName !== "string") state.guildName = "Cozy Cat Guild";
-
+  if (!state.guildId)
+  state.guildId = uid();
+  if (!state.favoriteCatId)
+  state.favoriteCatId = null;
+   
   if (typeof state.endingSeen !== "boolean") state.endingSeen = false;
   if (typeof state.postGame !== "boolean") state.postGame = false;
    
@@ -1444,11 +1835,12 @@ function boot() {
   showStartScreen();
 
   maybeGenerateDividendsOnLogin();
-
+  applyEventHelpers();
   renderAll();
 
   setInterval(tick, 1000);
   setInterval(toggleDumbbells, 500);
+
 }
 
 /* =========================
@@ -1639,6 +2031,7 @@ function finishTutorialCats(firstCat) {
   }
 
   state.cats.push(firstCat);
+  registerCatDex(firstCat);
 
   const personalities = ["あまえんぼ", "ツンデレ", "クール", "やんちゃ"];
   const remain = personalities.filter(p => p !== firstCat.personality);
@@ -1647,6 +2040,8 @@ function finishTutorialCats(firstCat) {
   const extra1 = makeCat(remain[0], randomName());
   const extra2 = makeCat(remain[1], randomName());
   state.cats.push(extra1, extra2);
+  registerCatDex(extra1);
+  registerCatDex(extra2);
 
   state.tutorialStage = 1;
 
@@ -1830,6 +2225,7 @@ function openTutorialQuestSetupModal() {
 
   const partyList = document.getElementById("partyList");
   const qPreview = document.getElementById("qPreview");
+  const partyPowerPreview = document.getElementById("partyPowerPreview");
   const btnStart = document.getElementById("qStart");
 
   document.getElementById("qCancel")?.addEventListener("click", closeModal);
@@ -1919,7 +2315,295 @@ function startTutorialQuest(partyIds, slotIdx) {
   renderAll();
   save();
 }
+function openSettingsModal() {
+  const html = `
+    <div class="panelCard">
+      <div style="font-size:16px;font-weight:900;">☁ 自動保存済み</div>
+      <div class="dim" style="margin-top:6px;">
+        ゲームは自動で保存されています。<br>
+        念のため、バックアップコード機能も今後追加予定です。
+      </div>
+    </div>
 
+    <div class="panelCard" style="margin-top:10px;">
+      <div><b>バックアップ</b></div>
+      <div class="dim" style="margin-top:6px;">
+        セーブコード発行・読込は次の段階で追加します。
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <button class="ghost smallBtn" id="btnExportSave">
+          セーブコード発行
+        </button>
+        <button class="ghost smallBtn" id="btnImportSave">
+          セーブコード読込
+        </button>
+      </div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div><b>その他</b></div>
+      <div class="dim" style="margin-top:6px;">
+        Version 0.7
+      </div>
+
+      <button class="ghost smallBtn" id="btnSettingsReset" style="margin-top:10px;">
+        データリセット
+      </button>
+    </div>
+
+    <div class="modalFooter">
+      <button class="primary" id="settingsClose">閉じる</button>
+    </div>
+  `;
+
+  openModal("設定", html);
+
+  document.getElementById("settingsClose")
+    ?.addEventListener("click", closeModal);
+
+  document.getElementById("btnSettingsReset")
+    ?.addEventListener("click", () => {
+      closeModal();
+      openResetModal();
+    });
+  document.getElementById("btnExportSave")
+  ?.addEventListener("click", () => {
+    const code = exportSaveCode();
+
+    openModal("セーブコード発行", `
+      <div class="panelCard">
+        <div class="dim">
+          このコードをメモ帳などに保存してください。
+        </div>
+        <textarea
+          id="saveCodeTextarea"
+          readonly
+          style="width:100%;height:180px;margin-top:10px;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;"
+        >${code}</textarea>
+
+        <button class="ghost smallBtn" id="btnCopySaveCode" style="margin-top:10px;width:100%;">
+          コードをコピー
+        </button>
+      </div>
+
+      <div class="modalFooter">
+        <button class="primary" id="saveCodeClose">閉じる</button>
+      </div>
+    `);
+    document.getElementById("btnCopySaveCode")
+      ?.addEventListener("click", async () => {
+        const text = document.getElementById("saveCodeTextarea")?.value || "";
+
+        try {
+          await navigator.clipboard.writeText(text);
+          pushLog("セーブコードをコピーしたにゃ");
+        } catch {
+          pushLog("コピーに失敗したにゃ。手動で選択してコピーしてね");
+        }
+      });
+    document.getElementById("saveCodeClose")
+      ?.addEventListener("click", closeModal);
+  });
+
+document.getElementById("btnImportSave")
+  ?.addEventListener("click", () => {
+    openModal("セーブコード読込", `
+      <div class="panelCard">
+        <div class="dim">
+          保存しておいたセーブコードを貼り付けてください。
+        </div>
+        <textarea id="importSaveCodeInput"
+  style="width:100%;height:180px;margin-top:10px;padding:10px;border-radius:10px;border:1px solid #232a36;background:#10141b;color:#e9ecf1;"></textarea>
+
+<button
+  class="ghost"
+  id="pasteSaveCodeBtn"
+  style="margin-top:10px;width:100%;"
+>
+  📋 クリップボードから貼り付け
+</button>
+      </div>
+
+      <div class="modalFooter">
+        <button class="ghost" id="importCancel">キャンセル</button>
+        <button class="primary" id="importConfirm">読込</button>
+      </div>
+    `);
+
+    document.getElementById("importCancel")
+  ?.addEventListener("click", closeModal);
+
+document.getElementById("pasteSaveCodeBtn")
+  ?.addEventListener("click", async () => {
+
+    try {
+
+      const text =
+        await navigator.clipboard.readText();
+
+      document.getElementById(
+        "importSaveCodeInput"
+      ).value = text;
+
+      toast("貼り付けたにゃ");
+
+    } catch {
+
+      toast("貼り付けできなかったにゃ");
+
+    }
+
+  });
+
+    document.getElementById("importConfirm")
+      ?.addEventListener("click", () => {
+        try {
+          const code = document.getElementById("importSaveCodeInput")?.value || "";
+          importSaveCode(code);
+
+          closeModal();
+          pushLog("セーブコードから復元したにゃ");
+          renderAll();
+
+        } catch (e) {
+          pushLog("セーブコードの読込に失敗したにゃ");
+        }
+      });
+  });
+}
+
+function openHelperGuideModal() {
+  const html = `
+    <div class="panelCard">
+      <div><b>🐾 すけっととは？</b></div>
+      <div class="dim" style="margin-top:8px;line-height:1.7;">
+        他のギルドのネコを、クエストに1匹だけ連れていける機能です。<br>
+        すけっとは成功率に加算されます。
+      </div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div><b>使い方</b></div>
+      <div class="dim" style="margin-top:8px;line-height:1.7;">
+        ① ネコ詳細で「すけっと登録」する<br>
+        ② クエスト画面で「すけっとコード発行」する<br>
+        ③ 受け取ったコードを「すけっとコード読込」で登録する<br>
+        ④ クエスト受注時にすけっとを選ぶ
+      </div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div><b>ルール</b></div>
+      <div class="dim" style="margin-top:8px;line-height:1.7;">
+        ・すけっとは1クエスト1匹まで<br>
+        ・同じすけっとを同時に他のクエストには選べません<br>
+        ・通常すけっとは削除できます<br>
+        ・イベントすけっとは削除できません※期間で自動消去
+      </div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="primary" id="helperGuideClose">OK</button>
+    </div>
+  `;
+
+  openModal("すけっとガイド", html);
+
+  document.getElementById("helperGuideClose")
+    ?.addEventListener("click", closeModal);
+}
+
+function applyEventHelpers() {
+  state.helpers ??= [];
+  state.eventHelperClaims ??= {};
+
+  // 初心者混乱防止：イベント助っ人はRank2以降に配布
+  if (!state.tutorialDone || state.guildRank < 2) {
+    return;
+  }
+
+  const now = Date.now();
+
+  // 以下そのまま
+
+  state.helpers = state.helpers.filter(h => {
+    if (!h.official) return true;
+    if (!h.endDate) return true;
+
+    const end =
+      new Date(h.endDate + "T23:59:59").getTime();
+
+    return now <= end;
+  });
+
+  for (const event of EVENT_HELPERS) {
+    const start =
+      new Date(event.startDate + "T00:00:00").getTime();
+
+    const end =
+      new Date(event.endDate + "T23:59:59").getTime();
+
+    if (now < start || now > end) continue;
+
+    if (state.eventHelperClaims[event.eventId]) continue;
+
+    const helper = {
+      id: uid(),
+      official: true,
+      ...event,
+    };
+
+    state.helpers.push(helper);
+    registerCatDex(helper);
+    state.eventHelperClaims[event.eventId] = true;
+
+    pushLog(`${helper.name} がイベントすけっととしてやってきたにゃ`);
+
+    openEventHelperGiftModal(helper);
+  }
+
+  save();
+}
+
+function openEventHelperGiftModal(helper) {
+  const html = `
+    <div class="panelCard" style="text-align:center;">
+
+      <div style="font-size:18px;font-weight:900;">
+        🎁 期間限定すけっと！
+      </div>
+
+      <img
+        src="${helper.eventImage || getQuestCatImage(helper)}"
+        alt=""
+        style="
+          width:160px;
+          margin-top:12px;
+          image-rendering:pixelated;
+        "
+      >
+
+      <div style="margin-top:10px;font-size:18px;font-weight:900;">
+        ${escapeHtml(helper.name)} がやってきた！
+      </div>
+
+      <div class="dim" style="margin-top:6px;">
+        開催期間：${helper.startDate} ～ ${helper.endDate}
+      </div>
+
+    </div>
+
+    <div class="modalFooter">
+      <button class="primary" id="eventHelperGiftClose">OK</button>
+    </div>
+  `;
+
+  openModal("イベントすけっと", html);
+
+  document.getElementById("eventHelperGiftClose")
+    ?.addEventListener("click", closeModal);
+}
 /* =========================
    Guild rename
    ========================= */
@@ -2163,23 +2847,22 @@ function getQuestMainLabel(main) {
   return main;
 }
 function rollQuestOffers() {
-  const cap = RANK.maxQuestLevel(state.guildRank); // 1..10
-  let minLv = Math.max(1, cap - 2);
-
-  let low = minLv;
-  let high = cap;
-  while (high - low + 1 < 3 && low > 1) low--;
-  while (high - low + 1 < 3 && high < 10) high++;
-
-  const pool = [];
-  for (let lv = low; lv <= high; lv++) pool.push(lv);
-  shuffleArray(pool);
+  const cap = RANK.maxQuestLevel(state.guildRank);
 
   const types = questTypes();
   const offers = {};
-  for (let i = 0; i < types.length; i++) {
-    offers[types[i].id] = pool[i];
+
+  // どれか1種類は必ず現在の最高Lvにする
+  const shuffledTypes = [...types];
+  shuffleArray(shuffledTypes);
+
+  offers[shuffledTypes[0].id] = cap;
+
+  // 残り2種類は Lv1〜最高Lv からランダム
+  for (let i = 1; i < shuffledTypes.length; i++) {
+    offers[shuffledTypes[i].id] = randInt(1, cap);
   }
+
   state.questOffers = offers;
   save();
 }
@@ -2206,17 +2889,34 @@ function openQuestSetupModal(type) {
     </div>
 
     <div class="panelCard" style="margin-top:10px;">
+      <div class="dim" style="margin-bottom:8px;">
+        すけっと（任意・1匹まで / 本日あと ${getHelperUseLeft()} 回）
+      </div>
+      <div id="helperPickList" class="modalList"></div>
+    </div>
+    
+    <div class="panelCard" style="margin-top:10px;">
       <div class="dim" style="margin-bottom:8px;">参加ネコ（最大3）</div>
       <div id="partyList" class="modalList"></div>
     </div>
 
     <div class="panelCard" style="margin-top:10px;">
-      <div class="dim" style="margin-bottom:8px;">難易度Lv（自動）</div>
-      <div class="row">
-        <div><b>Lv${fixedLv}</b></div>
-        <div class="dim">必要総戦力: ${QUEST.NEED_TOTAL[fixedLv - 1]}</div>
-      </div>
+  <div class="dim" style="margin-bottom:8px;">難易度Lv（自動）</div>
+  <div class="row">
+    <div><b>Lv${fixedLv}</b></div>
+    <div class="dim">
+      必要戦力: <b>${getQuestNeedTotal(fixedLv)}</b>
     </div>
+  </div>
+
+  <div
+    id="partyPowerPreview"
+    class="dim"
+    style="margin-top:8px;"
+  >
+    現在の戦力: 0 / ${getQuestNeedTotal(fixedLv)}
+  </div>
+</div>
 
     <div class="panelCard" style="margin-top:10px;">
       <div class="dim" style="margin-bottom:8px;">時間タイプ</div>
@@ -2235,13 +2935,16 @@ function openQuestSetupModal(type) {
   openModal("クエスト受注", html);
 
   const partyList = document.getElementById("partyList");
+  const helperPickList = document.getElementById("helperPickList");
   const timeList = document.getElementById("timeList");
   const qPreview = document.getElementById("qPreview");
+  const partyPowerPreview = document.getElementById("partyPowerPreview");
   const btnStart = document.getElementById("qStart");
 
   document.getElementById("qCancel")?.addEventListener("click", closeModal);
 
   let pickTime = null;
+  let pickHelperId = null;
   const selected = new Set();
 
   partyList.innerHTML = idle.map(c => `
@@ -2267,6 +2970,63 @@ function openQuestSetupModal(type) {
     updatePreview();
   });
 
+ helperPickList.innerHTML = (state.helpers || []).map(h => {
+  return `
+    <div class="modalItem" data-helper="${h.id}">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <b>${escapeHtml(h.name)}</b>
+        <span class="dim">Lv${h.level}</span>
+      </div>
+
+      <div class="dim" style="margin-top:6px;">
+        ${escapeHtml(h.personality)}
+        / STR ${h.str}
+        / SPD ${h.spd}
+        / INT ${h.int}
+      </div>
+    </div>
+  `;
+}).join("") || `<div class="dim">登録すけっとなし</div>`;
+
+helperPickList.addEventListener("click", (e) => {
+  const item = e.target.closest(".modalItem");
+  if (!item) return;
+
+  const helper = (state.helpers || []).find(
+    h => h.id === item.dataset.helper
+  );
+
+  if (!helper) return;
+
+  const alreadyHelping = (state.questJobs || []).some(
+    q => q?.helper?.id === helper.id
+  );
+
+  if (alreadyHelping) {
+    pushLog("このすけっとは別のクエストを手伝い中にゃ");
+    return;
+  }
+
+  if (getHelperUseLeft() <= 0) {
+    pushLog("今日のすけっと使用回数を使い切ったにゃ");
+    return;
+  }
+
+  if (pickHelperId === item.dataset.helper) {
+    pickHelperId = null;
+    item.style.outline = "";
+  } else {
+    helperPickList.querySelectorAll(".modalItem").forEach(x => {
+      x.style.outline = "";
+    });
+
+    pickHelperId = item.dataset.helper;
+    item.style.outline = "2px solid var(--blue)";
+  }
+
+  updatePreview();
+});
+   
   timeList.innerHTML = QUEST.TIME_TYPES.map(t => `
     <div class="modalItem" data-time="${t.key}">
       <b>${t.key}（${t.label}）</b>
@@ -2288,13 +3048,31 @@ function openQuestSetupModal(type) {
     const ok = partyIds.length > 0 && !!pickTime;
     btnStart.disabled = !ok;
 
+    const party = partyIds.map(catById).filter(Boolean);
+    const currentPower = party.reduce(
+      (sum, c) => sum + c.str + c.spd + c.int,
+      0
+    );
+
+    const needPower = getQuestNeedTotal(fixedLv);
+
+    if (partyPowerPreview) {
+      partyPowerPreview.innerHTML = `
+        現在の戦力: <b>${currentPower}</b> / 必要戦力: <b>${needPower}</b>
+      `;
+    }
+
     qPreview.innerHTML = `
       <div class="dim">【${type.icon} ${type.name}】 Lv${fixedLv} / ${pickTime ?? "?"}</div>
     `;
     if (!ok) return;
 
     const def = makeQuestDef(type, fixedLv, pickTime);
-    const calc = calcQuestChance(def, partyIds);
+
+    const helper =
+      (state.helpers || []).find(h => h.id === pickHelperId) || null;
+
+    const calc = calcQuestChance(def, partyIds, helper);
     qPreview.innerHTML = `
       時間: ${def.durationMin}分 / 基準Gold: ${def.baseGold.toLocaleString()}G<br>
       成功率(概算): <b>${calc.p}%</b>（属性ボーナス ${calc.attrBonus >= 0 ? "+" : ""}${calc.attrBonus}%）
@@ -2304,8 +3082,12 @@ function openQuestSetupModal(type) {
   btnStart.addEventListener("click", () => {
     const partyIds = Array.from(selected);
     const def = makeQuestDef(type, fixedLv, pickTime);
+
+    const helper =
+      (state.helpers || []).find(h => h.id === pickHelperId) || null;
+
     closeModal();
-    startQuest(def, partyIds, slotIdx);
+    startQuest(def, partyIds, slotIdx, helper);
   });
 }
 
@@ -2360,8 +3142,12 @@ function calcPersonalityBonus(def, party) {
   return bonus;
 }
 
-function calcQuestChance(def, partyIds) {
+function calcQuestChance(def, partyIds, helper = null) {
   const party = partyIds.map(catById).filter(Boolean);
+
+  if (helper) {
+    party.push(helper);
+  }
 
   if (party.length === 0) {
     return { p: 10, attrBonus: 0 };
@@ -2429,7 +3215,26 @@ function calcQuestChance(def, partyIds) {
   };
 }
 
-function startQuest(def, partyIds, slotIdx) {
+function startQuest(def, partyIds, slotIdx, helper = null) {
+
+  ensureHelperDailyUse();
+
+  if (helper) {
+
+    const limit = getHelperUseLimit();
+
+    if (
+      state.helperDailyUse.count >= limit
+    ) {
+
+      pushLog(
+        "今日のすけっと使用回数を使い切ったにゃ"
+      );
+
+      return;
+    }
+
+  }
   ensureQuestState();
 
   for (const id of partyIds) {
@@ -2439,16 +3244,20 @@ function startQuest(def, partyIds, slotIdx) {
     }
   }
 
-  const calc = calcQuestChance(def, partyIds);
+  const calc = calcQuestChance(def, partyIds, helper);
   const goldMult = RANK.goldMult(state.guildRank);
 
   const now = Date.now();
   const endAt = now + def.durationMin * 60 * 1000;
 
+  if (helper) {
+  state.helperDailyUse.count++;
+}
   state.questJobs[slotIdx] = {
     slotNo: slotIdx + 1,
     def,
     partyIds,
+    helper,
     pSuccess: calc.p,
     goldMult,
     startAt: now,
@@ -2894,6 +3703,7 @@ function hireCat(catId) {
 
   const hired = state.hire.candidates.splice(idx, 1)[0];
   state.cats.push(hired);
+  registerCatDex(hired);
   pushLog(`${hired.name} を雇用！（${cost.toLocaleString()}G）`);
   renderAll();
   save();
@@ -2982,6 +3792,76 @@ if (c.level <= 1) {
   });
 }
 
+function openRemoveHelperModal(helperId) {
+
+  const helper =
+    (state.helpers || []).find(
+      h => h.id === helperId
+    );
+
+  if (!helper) return;
+
+  const html = `
+    <div class="panelCard">
+
+      <div>
+        <b>${escapeHtml(helper.name)}</b>
+        をすけっと一覧から削除しますか？
+      </div>
+
+      <div class="dim" style="margin-top:8px;">
+        この操作は取り消せません。
+      </div>
+
+    </div>
+
+    <div class="modalFooter">
+
+      <button
+        class="ghost"
+        id="helperRemoveCancel"
+      >
+        キャンセル
+      </button>
+
+      <button
+        class="primary"
+        id="helperRemoveConfirm"
+      >
+        削除
+      </button>
+
+    </div>
+  `;
+
+  openModal("すけっと削除", html);
+
+  document
+    .getElementById("helperRemoveCancel")
+    ?.addEventListener("click", closeModal);
+
+  document
+    .getElementById("helperRemoveConfirm")
+    ?.addEventListener("click", () => {
+
+      state.helpers =
+        state.helpers.filter(
+          h => h.id !== helperId
+        );
+
+      pushLog(
+        `${helper.name} をすけっと一覧から削除したにゃ`
+      );
+
+      save();
+
+      closeModal();
+
+      renderQuestTab();
+
+    });
+
+}
 /* =========================
    Pending / Collect
    ========================= */
@@ -3456,6 +4336,13 @@ function switchTab(tab) {
 function renderQuestTab() {
   ensureQuestOffers();
   ensureAlpaca();
+  ensureHelperDailyUse();
+  ensureHelperAdBonus();
+
+  if (!Array.isArray(state.helpers)) {
+    state.helpers = [];
+  }
+
   if (!state.questOffers) rollQuestOffers();
 
   const types = questTypes();
@@ -3463,6 +4350,95 @@ function renderQuestTab() {
   const used = (state.questJobs || []).filter(Boolean).length;
   const maxLv = RANK.maxQuestLevel(state.guildRank);
   const alpacaOffer = getAvailableAlpacaPurchase();
+
+  const normalHelpers =
+  state.helpers.filter(h => !h.official);
+
+const eventHelpers =
+  state.helpers.filter(h => h.official);
+
+const renderHelperCard = h => `
+  <div class="panelCard helperQuestCard" style="margin-top:8px;">
+
+    <div class="helperQuestRow">
+
+      ${
+        h.official
+          ? ""
+          : `
+            <button
+              class="ghost smallBtn"
+              data-remove-helper="${h.id}"
+              style="margin-left:auto;"
+            >
+              削除
+            </button>
+          `
+      }
+
+      <img
+        class="helperQuestIcon colorized"
+        src="${h.eventImage || getQuestCatImage(h)}"
+        style="--hue:${h.hue || 0}deg;"
+        alt=""
+      >
+
+      <div class="helperQuestMain">
+
+        <div class="helperQuestTop">
+
+          <b>${escapeHtml(h.name)}</b>
+
+          <span class="dim">
+            Lv${h.level}
+          </span>
+
+          <span class="dim">
+            ${escapeHtml(h.personality)}
+          </span>
+
+        </div>
+
+        <div class="dim" style="margin-top:6px;">
+
+          STR ${h.str}
+          / SPD ${h.spd}
+          / INT ${h.int}
+
+        </div>
+
+        ${
+          h.official && h.startDate && h.endDate
+            ? `
+              <div class="dim" style="margin-top:4px;">
+                開催期間：${h.startDate} ～ ${h.endDate}
+              </div>
+            `
+            : ""
+        }
+
+        ${
+          h.expiresAt
+            ? `
+              <div class="dim" style="margin-top:4px;">
+                開催期間：
+                ${h.startDate}
+                ～
+                ${h.endDate}
+              </div>
+            `
+            : ""
+        }
+      </div>
+    </div>
+  </div>
+`;
+
+const normalHelperRows =
+  normalHelpers.map(renderHelperCard).join("");
+
+const eventHelperRows =
+  eventHelpers.map(renderHelperCard).join("");
 
   el.tabQuest.innerHTML = `
     <div class="panelCard">
@@ -3475,6 +4451,133 @@ function renderQuestTab() {
         <div class="mono">派遣枠 ${used}/${ds}</div>
       </div>
     </div>
+
+    <div class="panelCard">
+      <div class="row">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <b>🐾 すけっと</b>
+            <button class="ghost smallBtn" id="btnHelperGuide">❓</button>
+          </div>
+
+          <div
+            class="dim"
+            style="
+              margin-top:4px;
+              display:flex;
+              gap:12px;
+              flex-wrap:wrap;
+            "
+          >
+            <span>
+              登録 ${state.helpers.length}/${getHelperMax()}
+            </span>
+
+            <span>
+              使用 ${getHelperUseLeft()}/${getHelperUseLimit()}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+  <button class="ghost smallBtn" id="btnExportHelper">
+    すけっとコード発行
+  </button>
+
+  <button class="ghost smallBtn" id="btnImportHelper">
+    すけっとコード読込
+  </button>
+</div>
+
+<div style="margin-top:10px;">
+
+  <button
+    class="primary"
+    id="btnHelperAd"
+    style="width:100%;"
+  >
+    ▶ すけっと支援を見る
+  </button>
+
+  <div
+    class="dim"
+    style="
+      margin-top:8px;
+      text-align:center;
+    "
+  >
+    視聴ですけっと使用回数 +1
+    /
+    本日あと
+    ${HELPER_AD_DAILY_LIMIT - state.helperAdBonus.count}
+    /
+    ${HELPER_AD_DAILY_LIMIT}
+    回
+  </div>
+
+</div>
+      <div style="margin-top:10px;">
+
+  <button
+    class="ghost smallBtn"
+    id="btnToggleHelpers"
+    style="width:100%;"
+  >
+    ${
+      state.helperListOpen
+        ? "▼ すけっと一覧を閉じる"
+        : "▶ すけっと一覧を開く"
+    }
+  </button>
+
+  ${
+    state.helperListOpen
+      ? `
+        <div style="margin-top:10px;">
+          ${
+  normalHelpers.length > 0
+    ? `
+      <div style="margin-top:10px;">
+
+        <div class="helperSectionTitle normal">
+          🐾 通常すけっと
+        </div>
+
+        ${normalHelperRows}
+
+      </div>
+    `
+    : ""
+}
+
+${
+  eventHelpers.length > 0
+    ? `
+      <div style="margin-top:14px;">
+
+       <div class="helperSectionTitle event">
+        🎁 イベントすけっと
+      </div> 
+
+        ${eventHelperRows}
+
+      </div>
+    `
+    : ""
+}
+
+${
+  state.helpers.length <= 0
+    ? `<div class="dim">すけっとなし</div>`
+    : ""
+}
+        </div>
+      `
+      : ""
+  }
+
+</div>
 
     ${
       alpacaOffer ? `
@@ -3494,33 +4597,133 @@ function renderQuestTab() {
       ` : ""
     }
 
-        ${types.map(t => {
-  const lv = state.questOffers[t.id];
-  const danger = getQuestDangerLabel(lv);
-  const flavor = getQuestFlavor(t.id, lv);
+    ${types.map(t => {
+      const lv = state.questOffers[t.id];
+      const danger = getQuestDangerLabel(lv);
+      const flavor = getQuestFlavor(t.id, lv);
 
-  return `
-    <div class="panelCard">
-      <div class="row">
-        <div style="min-width:0; flex:1;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <b>${t.icon} ${t.name}</b>
-            ${makeQuestLevelBadge(lv)}
+      return `
+        <div class="panelCard">
+          <div class="row">
+            <div style="min-width:0; flex:1;">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <b>${t.icon} ${t.name}</b>
+                ${makeQuestLevelBadge(lv)}
+              </div>
+
+              <div class="dim" style="margin-top:6px;">${danger}</div>
+              <div class="dim" style="margin-top:4px;">${flavor}</div>
+              <div class="dim" style="margin-top:4px;">属性：${getQuestMainLabel(t.main)}</div>
+            </div>
+
+            <button class="primary smallBtn" data-qtype="${t.id}">受注</button>
           </div>
-
-          <div class="dim" style="margin-top:6px;">${danger}</div>
-          <div class="dim" style="margin-top:4px;">${flavor}</div>
-          <div class="dim" style="margin-top:4px;">属性：${getQuestMainLabel(t.main)}</div>
         </div>
-
-        <button class="primary smallBtn" data-qtype="${t.id}">受注</button>
-      </div>
-    </div>
-  `;
-}).join("")}
+      `;
+    }).join("")}
 
     ${renderQuestRunning()}
   `;
+
+  document.getElementById("btnExportHelper")?.addEventListener("click", () => {
+    try {
+      const code = exportHelperCode();
+
+      openModal("すけっとコード発行", `
+        <div class="panelCard">
+          <div class="dim">このコードを相手に渡してください。</div>
+          <textarea
+            id="helperCodeTextarea"
+            readonly
+            style="width:100%;height:150px;margin-top:10px;"
+          >${code}</textarea>
+
+          <button class="ghost smallBtn" id="btnCopyHelperCode" style="margin-top:10px;width:100%;">
+            コードをコピー
+          </button>
+        </div>
+        <div class="modalFooter">
+          <button class="primary" id="helperCodeClose">閉じる</button>
+        </div>
+      `);
+      document.getElementById("btnCopyHelperCode")
+        ?.addEventListener("click", async () => {
+          const text = document.getElementById("helperCodeTextarea")?.value || "";
+
+          try {
+            await navigator.clipboard.writeText(text);
+            pushLog("すけっとコードをコピーしたにゃ");
+          } catch {
+           pushLog("コピーに失敗したにゃ。手動で選択してコピーしてね");
+          }
+        });
+      document.getElementById("helperCodeClose")?.addEventListener("click", closeModal);
+    } catch {
+      pushLog("すけっと登録ネコがいないにゃ");
+    }
+  });
+
+ document.getElementById("btnImportHelper")?.addEventListener("click", () => {
+  openModal("すけっとコード読込", `
+    <div class="panelCard">
+      <textarea
+        id="helperCodeInput"
+        placeholder="すけっとコードを貼り付け"
+        style="width:100%;height:150px;"
+      ></textarea>
+
+      <button
+        class="ghost"
+        id="pasteHelperCodeBtn"
+        style="margin-top:10px;width:100%;"
+      >
+        📋 クリップボードから貼り付け
+      </button>
+    </div>
+
+    <div class="modalFooter">
+      <button class="ghost" id="helperImportCancel">キャンセル</button>
+      <button class="primary" id="helperImportOk">読込</button>
+    </div>
+  `);
+
+  document
+    .getElementById("helperImportCancel")
+    ?.addEventListener("click", closeModal);
+
+  document
+    .getElementById("pasteHelperCodeBtn")
+    ?.addEventListener("click", async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+
+        document.getElementById("helperCodeInput").value = text;
+
+        toast("貼り付けたにゃ");
+      } catch {
+        toast("貼り付けできなかったにゃ");
+      }
+    });
+
+  document
+    .getElementById("helperImportOk")
+    ?.addEventListener("click", () => {
+      try {
+        const code =
+          document.getElementById("helperCodeInput")?.value || "";
+
+        importHelperCode(code);
+
+        closeModal();
+        pushLog("すけっとを登録したにゃ");
+        renderAll();
+      } catch {
+        pushLog("すけっとコード読込失敗");
+      }
+    });
+});
+  document.getElementById("btnHelperGuide")
+  ?.addEventListener("click", openHelperGuideModal);
 
   el.tabQuest.querySelectorAll("[data-qtype]").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -3529,9 +4732,92 @@ function renderQuestTab() {
     });
   });
 
-  document.getElementById("btnBuyAlpaca")?.addEventListener("click", () => {
-    if (alpacaOffer) buyAlpaca(alpacaOffer.stage);
+  el.tabQuest
+  .querySelectorAll("[data-remove-helper]")
+  .forEach(btn => {
+
+    btn.addEventListener("click", () => {
+
+      const helperId =
+        btn.dataset.removeHelper;
+
+      openRemoveHelperModal(helperId);
+
+    });
+
   });
+
+document.getElementById("btnBuyAlpaca")
+?.addEventListener("click", () => {
+
+  if (alpacaOffer) {
+    buyAlpaca(alpacaOffer.stage);
+  }
+
+});
+
+document.getElementById("btnHelperAd")
+?.addEventListener("click", () => {
+
+  ensureHelperAdBonus();
+
+  if (state.helperAdBonus.count >= HELPER_AD_DAILY_LIMIT) {
+    pushLog("今日はこれ以上支援を受けられないにゃ");
+    return;
+  }
+
+  openModal("すけっと支援", `
+    <div class="panelCard">
+      <img
+        src="img/helper_support.png"
+        alt=""
+        style="
+          width:100%;
+          border-radius:14px;
+          display:block;
+        "
+      >
+
+      <div class="dim" style="margin-top:10px;text-align:center;">
+        すけっと支援を受け取っています...
+      </div>
+    </div>
+  `);
+
+  setTimeout(() => {
+    closeModal();
+
+    ensureHelperAdBonus();
+
+    if (state.helperAdBonus.count >= HELPER_AD_DAILY_LIMIT) {
+      pushLog("今日はこれ以上支援を受けられないにゃ");
+      renderQuestTab();
+      save();
+      return;
+    }
+
+    state.helperAdBonus.count++;
+
+    pushLog("すけっと使用回数が1回増えたにゃ");
+
+    save();
+    renderQuestTab();
+
+  }, 3000);
+
+});
+
+   document.getElementById("btnToggleHelpers")
+?.addEventListener("click", () => {
+
+  state.helperListOpen =
+    !state.helperListOpen;
+
+  save();
+
+  renderQuestTab();
+
+});
 }
 
 function renderQuestRunning() {
@@ -3597,7 +4883,13 @@ function renderCatsTab() {
         </div>
 
         <div class="catCompactName">
-          <b>${escapeHtml(c.name)}</b>
+          <b>
+            ${
+              state.favoriteCatId === c.id
+                ? "★ "
+                : ""
+            }${escapeHtml(c.name)}
+          </b>
           <span class="dim">Lv${c.level} / ${escapeHtml(c.personality)}</span>
         </div>
 
@@ -3641,11 +4933,11 @@ function renderCatsTab() {
     </div>
 
     <div class="panelCard">
-      <div><b>📖 背景ネコ図鑑</b></div>
+      <div><b>📖 ネコ図鑑</b></div>
       <div class="dim" style="margin-top:6px;">
-        デイリーボーナスで増えた日常を確認できます
+        出会ったネコやイベントネコを確認できます
       </div>
-      <button class="ghost smallBtn" id="btnBgDex" style="margin-top:10px;">
+      <button class="ghost smallBtn" id="btnCatDex" style="margin-top:10px;">
         図鑑を見る
       </button>
     </div>
@@ -3659,8 +4951,8 @@ function renderCatsTab() {
   ?.addEventListener("click", openScoutConfirmModal);
   document.getElementById("btnViewCandidates")?.addEventListener("click", () => openScoutModal(false));
 
-document.getElementById("btnBgDex")
-  ?.addEventListener("click", openBgDexModal);
+document.getElementById("btnCatDex")
+  ?.addEventListener("click", openCatDexModal);
 }
 
 function openScoutConfirmModal() {
@@ -3779,7 +5071,95 @@ function openBgDexModal() {
 
   openModal("背景ネコ図鑑", html);
 }
+function openCatDexModal() {
+  ensureCatDex();
 
+  const personalities = ["ツンデレ", "やんちゃ", "クール", "あまえんぼ"];
+const hues = CAT_HUES;
+
+const normalRows = personalities.map(p => `
+  <details class="dexPersonality">
+    <summary>${escapeHtml(p)}</summary>
+
+    <div class="dexColorGrid">
+      ${hues.map(hue => {
+        const found = state.catDex.normal.find(
+          c => c.personality === p && Number(c.hue) === Number(hue)
+        );
+
+        return `
+          <div class="dexCatIcon ${found ? "" : "locked"}">
+            ${
+              found
+                ? `
+                  <img
+                    src="${found.image}"
+                    class="colorized"
+                    style="--hue:${hue}deg;width:42px;height:42px;image-rendering:pixelated;"
+                    alt=""
+                  >
+                `
+                : "？"
+            }
+          </div>
+        `;
+      }).join("")}
+    </div>
+  </details>
+`).join("");
+
+  const eventRows = state.catDex.event.map(c => `
+    <div class="dexRow">
+      <img
+        src="${c.image}"
+        class="helperQuestIcon"
+        alt=""
+      >
+
+      <div>
+        <div><b>${escapeHtml(c.name)}</b></div>
+      </div>
+    </div>
+  `).join("");
+
+  const html = `
+    <div class="panelCard">
+      <div class="sectionTitle">🐱 通常ネコ</div>
+      ${normalRows || `<div class="dim">未登録</div>`}
+    </div>
+
+    <div class="panelCard" style="margin-top:12px;">
+      <div class="sectionTitle">🎁 イベントネコ</div>
+      ${eventRows || `<div class="dim">未登録</div>`}
+    </div>
+
+    <div class="panelCard" style="margin-top:12px;">
+
+  <div class="sectionTitle">
+    🏠 背景ネコ
+  </div>
+
+  <button
+    class="ghost smallBtn"
+    id="btnOpenBgDex"
+    style="margin-top:10px;"
+  >
+    背景ネコ図鑑を見る
+  </button>
+
+</div>
+  `;
+
+  openModal("ネコ図鑑", html);
+  document.getElementById("btnOpenBgDex")
+  ?.addEventListener("click", () => {
+
+    closeModal();
+
+    openBgDexModal();
+
+  });
+}
 /* =========================
    Background Cat
    ========================= */
@@ -4271,6 +5651,14 @@ function openCatDetailModal(catId) {
         style="--hue:${c.hue}deg;width:64px;height:64px;display:block;image-rendering:pixelated;"
         alt=""
       />
+
+      <button
+        class="ghost smallBtn"
+        id="catDetailZoom"
+        style="position:absolute;right:-6px;bottom:-6px;border-radius:999px;"
+      >
+        🔍
+      </button>
     </div>
 
       <div style="min-width:0;">
@@ -4284,19 +5672,32 @@ function openCatDetailModal(catId) {
       <div class="dim">EXP ${c.exp}/${LEVEL.expToNext(c.level)}</div>
     </div>
 
-    <div class="modalFooter">
-      <button class="ghost" id="catDetailClose">閉じる</button>
-      <button class="ghost" id="catDetailRename">名前変更</button>
-      
-      <button
-        class="ghost"
-        id="catDetailFire"
-        ${canFire ? "" : "disabled"}
-        style="${canFire ? "" : "opacity:.6;"}"
-      >
-        ${canFire ? "解雇" : fireLockedReason}
-      </button>
-    </div>
+    <div style="margin-top:12px;">
+  <button class="ghost" id="catDetailFavorite" style="width:100%;">
+    ${
+      state.favoriteCatId === c.id
+        ? "★ すけっと中"
+        : "☆ すけっと登録"
+    }
+  </button>
+</div>
+
+<div class="modalFooter">
+  <button class="ghost" id="catDetailClose">閉じる</button>
+
+  <button class="ghost" id="catDetailRename">
+    名前変更
+  </button>
+
+  <button
+    class="ghost"
+    id="catDetailFire"
+    ${canFire ? "" : "disabled"}
+    style="${canFire ? "" : "opacity:.6;"}"
+  >
+    ${canFire ? "解雇" : fireLockedReason}
+  </button>
+</div>
   `;
 
   openModal("ネコ詳細", html);
@@ -4307,11 +5708,61 @@ function openCatDetailModal(catId) {
     closeModal();
     openRenameCatModal(catId);
   });
-  
+  document.getElementById("catDetailZoom")
+  ?.addEventListener("click", () => {
+
+    openCatZoomModal(c);
+
+  }); 
   document.getElementById("catDetailFire")?.addEventListener("click", () => {
-    closeModal();
-    openFireCatModal(catId);
-  });
+  closeModal();
+  openFireCatModal(catId);
+});
+   document.getElementById("catDetailFavorite")?.addEventListener("click", () => {
+  if (state.favoriteCatId === c.id) {
+    state.favoriteCatId = null;
+    pushLog(`${c.name} をすけっと登録から外したにゃ`);
+  } else {
+    state.favoriteCatId = c.id;
+    pushLog(`${c.name} をすけっと登録したにゃ`);
+  }
+
+  save();
+  renderAll();
+
+  openCatDetailModal(c.id);
+});
+}
+
+function openCatZoomModal(cat) {
+
+  const img = getDisplayCatImage(cat);
+
+  const html = `
+    <div style="text-align:center;">
+
+      <img
+        src="${img}"
+        class="colorized"
+        style="
+          --hue:${cat.hue}deg;
+          width:240px;
+          image-rendering:pixelated;
+        "
+      >
+
+      <div style="margin-top:12px;font-size:20px;">
+        ${
+  state.favoriteCatId === cat.id
+    ? "★ "
+    : ""
+}${escapeHtml(cat.name)}
+      </div>
+
+    </div>
+  `;
+
+  openModal("ネコ鑑賞", html);
 }
 
 function renderTrainingTab() {
