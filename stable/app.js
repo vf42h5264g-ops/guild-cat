@@ -4850,19 +4850,37 @@ function renderQuestRunning() {
         .filter(Boolean);
 
     const partyHtml = partyCats.map(c => `
-      <img
-        src="${getQuestCatImage(c)}"
-        class="catSprite colorized"
-        style="
-          --hue:${c.hue}deg;
-          width:32px;
-          height:32px;
-          image-rendering:pixelated;
-        "
-        title="${escapeAttr(c.name)}"
-        alt=""
-      >
-    `).join("");
+  <div style="
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+  ">
+    <img
+      src="${getQuestCatImage(c)}"
+      class="catSprite colorized"
+      style="
+        --hue:${c.hue}deg;
+        width:32px;
+        height:32px;
+        image-rendering:pixelated;
+      "
+      alt=""
+    >
+    <div
+      class="dim"
+      style="
+        font-size:10px;
+        max-width:48px;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+      "
+    >
+      ${escapeHtml(c.name)}
+    </div>
+  </div>
+`).join("");
 
     const helperHtml = job.helper ? `
       <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
