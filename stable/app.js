@@ -232,8 +232,8 @@ const EVENT_HELPERS = [
     int: 58,
     hue: 0,
 
-    startDate: "2026-05-29",
-    endDate: "2026-05-29",
+    startDate: "2026-05-31",
+    endDate: "2026-06-7",
   },
 ];
 
@@ -2518,14 +2518,11 @@ function applyEventHelpers() {
   state.helpers ??= [];
   state.eventHelperClaims ??= {};
 
-  // 初心者混乱防止：イベント助っ人はRank2以降に配布
   if (!state.tutorialDone || state.guildRank < 2) {
     return;
   }
 
   const now = Date.now();
-
-  // 以下そのまま
 
   state.helpers = state.helpers.filter(h => {
     if (!h.official) return true;
@@ -2546,7 +2543,12 @@ function applyEventHelpers() {
 
     if (now < start || now > end) continue;
 
-    if (state.eventHelperClaims[event.eventId]) continue;
+    const alreadyHas =
+      state.helpers.some(h =>
+        h.official && h.eventId === event.eventId
+      );
+
+    if (alreadyHas) continue;
 
     const helper = {
       id: uid(),
@@ -2556,11 +2558,17 @@ function applyEventHelpers() {
 
     state.helpers.push(helper);
     registerCatDex(helper);
+
+    const firstClaim =
+      !state.eventHelperClaims[event.eventId];
+
     state.eventHelperClaims[event.eventId] = true;
 
     pushLog(`${helper.name} がイベントすけっととしてやってきたにゃ`);
 
-    openEventHelperGiftModal(helper);
+    if (firstClaim) {
+      openEventHelperGiftModal(helper);
+    }
   }
 
   save();
@@ -3049,6 +3057,14 @@ helperPickList.addEventListener("click", (e) => {
     btnStart.disabled = !ok;
 
     const party = partyIds.map(catById).filter(Boolean);
+
+    const helper =
+      (state.helpers || []).find(h => h.id === pickHelperId) || null;
+
+    if (helper) {
+      party.push(helper);
+    }
+
     const currentPower = party.reduce(
       (sum, c) => sum + c.str + c.spd + c.int,
       0
@@ -4826,16 +4842,63 @@ function renderQuestRunning() {
 
   return running.map(job => {
     const remain = Math.max(0, job.endAt - Date.now());
+
     const label = job.tutorial
       ? `チュートリアル（1分）`
       : `${job.def.name} Lv${job.def.level}${job.def.timeType} / ${job.def.durationMin}分`;
+
+    const partyCats =
+      (job.partyIds || [])
+        .map(catById)
+        .filter(Boolean);
+
+    const partyHtml = partyCats.map(c => `
+      <img
+        src="${getQuestCatImage(c)}"
+        class="catSprite colorized"
+        style="
+          --hue:${c.hue}deg;
+          width:32px;
+          height:32px;
+          image-rendering:pixelated;
+        "
+        title="${escapeAttr(c.name)}"
+        alt=""
+      >
+    `).join("");
+
+    const helperHtml = job.helper ? `
+      <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
+        <span class="dim">すけっと</span>
+        <img
+          src="${job.helper.eventImage || getQuestCatImage(job.helper)}"
+          class="catSprite colorized"
+          style="
+            --hue:${job.helper.hue || 0}deg;
+            width:32px;
+            height:32px;
+            image-rendering:pixelated;
+          "
+          title="${escapeAttr(job.helper.name)}"
+          alt=""
+        >
+      </div>
+    ` : "";
+
     return `
       <div class="panelCard">
         <div class="row">
           <div>
             <div><span class="statusDot quest"></span><b>クエスト中</b></div>
             <div class="dim">${escapeHtml(label)}</div>
+
+            <div style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap;">
+              ${partyHtml}
+            </div>
+
+            ${helperHtml}
           </div>
+
           <div class="mono">${formatRemain(remain)}</div>
         </div>
       </div>
