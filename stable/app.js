@@ -4855,14 +4855,17 @@ function renderQuestRunning() {
     flex-direction:column;
     align-items:center;
     gap:2px;
+    width:44px;
   ">
     <img
       src="${getQuestCatImage(c)}"
-      class="catSprite colorized"
+      class="colorized"
       style="
         --hue:${c.hue}deg;
-        width:32px;
-        height:32px;
+        width:36px;
+        height:36px;
+        object-fit:contain;
+        display:block;
         image-rendering:pixelated;
       "
       alt=""
@@ -4870,12 +4873,13 @@ function renderQuestRunning() {
     <div
       class="dim"
       style="
-        font-size:10px;
-        max-width:48px;
-        overflow:hidden;
-        text-overflow:ellipsis;
-        white-space:nowrap;
-      "
+  --hue:${job.helper.hue || 0}deg;
+  width:36px;
+  height:36px;
+  object-fit:contain;
+  display:block;
+  image-rendering:pixelated;
+"
     >
       ${escapeHtml(c.name)}
     </div>
@@ -4887,7 +4891,7 @@ function renderQuestRunning() {
         <span class="dim">すけっと</span>
         <img
           src="${job.helper.eventImage || getQuestCatImage(job.helper)}"
-          class="catSprite colorized"
+          class="colorized"
           style="
             --hue:${job.helper.hue || 0}deg;
             width:32px;
