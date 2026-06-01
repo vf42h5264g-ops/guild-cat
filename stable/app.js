@@ -4610,6 +4610,7 @@ ${
       ` : ""
     }
 
+    ${renderQuestRunning()}
     ${types.map(t => {
       const lv = state.questOffers[t.id];
       const danger = getQuestDangerLabel(lv);
@@ -4635,7 +4636,6 @@ ${
       `;
     }).join("")}
 
-    ${renderQuestRunning()}
   `;
 
   document.getElementById("btnExportHelper")?.addEventListener("click", () => {
