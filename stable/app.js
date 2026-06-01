@@ -220,7 +220,7 @@ const DAILY_BONUS = {
 
 const EVENT_HELPERS = [
   {
-    eventId: "event_test_1",
+    eventId: "event_test_2",
     eventImage: "img/event/event_1.png",
 
     name: "祝祭のルナ",
@@ -233,7 +233,7 @@ const EVENT_HELPERS = [
     hue: 0,
 
     startDate: "2026-05-31",
-    endDate: "2026-06-7",
+    endDate: "2026-06-07",
   },
 ];
 
