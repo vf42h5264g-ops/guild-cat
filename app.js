@@ -220,7 +220,7 @@ const DAILY_BONUS = {
 
 const EVENT_HELPERS = [
   {
-    eventId: "event_test_1",
+    eventId: "event_test_2",
     eventImage: "img/event/event_1.png",
 
     name: "祝祭のルナ",
@@ -233,7 +233,7 @@ const EVENT_HELPERS = [
     hue: 0,
 
     startDate: "2026-05-31",
-    endDate: "2026-06-6",
+    endDate: "2026-06-07",
   },
 ];
 
@@ -2518,14 +2518,11 @@ function applyEventHelpers() {
   state.helpers ??= [];
   state.eventHelperClaims ??= {};
 
-  // 初心者混乱防止：イベント助っ人はRank2以降に配布
   if (!state.tutorialDone || state.guildRank < 2) {
     return;
   }
 
   const now = Date.now();
-
-  // 以下そのまま
 
   state.helpers = state.helpers.filter(h => {
     if (!h.official) return true;
@@ -2546,7 +2543,12 @@ function applyEventHelpers() {
 
     if (now < start || now > end) continue;
 
-    if (state.eventHelperClaims[event.eventId]) continue;
+    const alreadyHas =
+      state.helpers.some(h =>
+        h.official && h.eventId === event.eventId
+      );
+
+    if (alreadyHas) continue;
 
     const helper = {
       id: uid(),
@@ -2556,11 +2558,17 @@ function applyEventHelpers() {
 
     state.helpers.push(helper);
     registerCatDex(helper);
+
+    const firstClaim =
+      !state.eventHelperClaims[event.eventId];
+
     state.eventHelperClaims[event.eventId] = true;
 
     pushLog(`${helper.name} がイベントすけっととしてやってきたにゃ`);
 
-    openEventHelperGiftModal(helper);
+    if (firstClaim) {
+      openEventHelperGiftModal(helper);
+    }
   }
 
   save();
@@ -3049,6 +3057,14 @@ helperPickList.addEventListener("click", (e) => {
     btnStart.disabled = !ok;
 
     const party = partyIds.map(catById).filter(Boolean);
+
+    const helper =
+      (state.helpers || []).find(h => h.id === pickHelperId) || null;
+
+    if (helper) {
+      party.push(helper);
+    }
+
     const currentPower = party.reduce(
       (sum, c) => sum + c.str + c.spd + c.int,
       0
@@ -3068,9 +3084,6 @@ helperPickList.addEventListener("click", (e) => {
     if (!ok) return;
 
     const def = makeQuestDef(type, fixedLv, pickTime);
-
-    const helper =
-      (state.helpers || []).find(h => h.id === pickHelperId) || null;
 
     const calc = calcQuestChance(def, partyIds, helper);
     qPreview.innerHTML = `
@@ -4597,6 +4610,7 @@ ${
       ` : ""
     }
 
+    ${renderQuestRunning()}
     ${types.map(t => {
       const lv = state.questOffers[t.id];
       const danger = getQuestDangerLabel(lv);
@@ -4622,7 +4636,6 @@ ${
       `;
     }).join("")}
 
-    ${renderQuestRunning()}
   `;
 
   document.getElementById("btnExportHelper")?.addEventListener("click", () => {
@@ -4826,16 +4839,91 @@ function renderQuestRunning() {
 
   return running.map(job => {
     const remain = Math.max(0, job.endAt - Date.now());
+
     const label = job.tutorial
       ? `チュートリアル（1分）`
       : `${job.def.name} Lv${job.def.level}${job.def.timeType} / ${job.def.durationMin}分`;
+
+    const partyCats =
+      (job.partyIds || [])
+        .map(catById)
+        .filter(Boolean);
+
+    const partyHtml = partyCats.map(c => `
+      <div style="
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        gap:2px;
+        width:44px;
+      ">
+        <img
+          src="${getQuestCatImage(c)}"
+          class="colorized"
+          style="
+            --hue:${c.hue}deg;
+            width:36px;
+            height:36px;
+            object-fit:contain;
+            display:block;
+            image-rendering:pixelated;
+          "
+          alt=""
+        >
+
+        <div
+          class="dim"
+          style="
+            font-size:10px;
+            max-width:44px;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+            text-align:center;
+          "
+        >
+          ${escapeHtml(c.name)}
+        </div>
+      </div>
+    `).join("");
+
+    const helperHtml = job.helper ? `
+      <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
+        <span class="dim">すけっと</span>
+
+        <img
+          src="${job.helper.eventImage || getQuestCatImage(job.helper)}"
+          class="colorized"
+          style="
+            --hue:${job.helper.hue || 0}deg;
+            width:36px;
+            height:36px;
+            object-fit:contain;
+            display:block;
+            image-rendering:pixelated;
+          "
+          title="${escapeAttr(job.helper.name)}"
+          alt=""
+        >
+
+        <span class="dim">${escapeHtml(job.helper.name)}</span>
+      </div>
+    ` : "";
+
     return `
       <div class="panelCard">
         <div class="row">
           <div>
             <div><span class="statusDot quest"></span><b>クエスト中</b></div>
             <div class="dim">${escapeHtml(label)}</div>
+
+            <div style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap;">
+              ${partyHtml}
+            </div>
+
+            ${helperHtml}
           </div>
+
           <div class="mono">${formatRemain(remain)}</div>
         </div>
       </div>
