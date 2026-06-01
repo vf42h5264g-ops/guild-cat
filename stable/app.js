@@ -4850,57 +4850,63 @@ function renderQuestRunning() {
         .filter(Boolean);
 
     const partyHtml = partyCats.map(c => `
-  <div style="
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:2px;
-    width:44px;
-  ">
-    <img
-      src="${getQuestCatImage(c)}"
-      class="colorized"
-      style="
-        --hue:${c.hue}deg;
-        width:36px;
-        height:36px;
-        object-fit:contain;
-        display:block;
-        image-rendering:pixelated;
-      "
-      alt=""
-    >
-    <div
-      class="dim"
-      style="
-  --hue:${job.helper.hue || 0}deg;
-  width:36px;
-  height:36px;
-  object-fit:contain;
-  display:block;
-  image-rendering:pixelated;
-"
-    >
-      ${escapeHtml(c.name)}
-    </div>
-  </div>
-`).join("");
+      <div style="
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        gap:2px;
+        width:44px;
+      ">
+        <img
+          src="${getQuestCatImage(c)}"
+          class="colorized"
+          style="
+            --hue:${c.hue}deg;
+            width:36px;
+            height:36px;
+            object-fit:contain;
+            display:block;
+            image-rendering:pixelated;
+          "
+          alt=""
+        >
+
+        <div
+          class="dim"
+          style="
+            font-size:10px;
+            max-width:44px;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+            text-align:center;
+          "
+        >
+          ${escapeHtml(c.name)}
+        </div>
+      </div>
+    `).join("");
 
     const helperHtml = job.helper ? `
       <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
         <span class="dim">すけっと</span>
+
         <img
           src="${job.helper.eventImage || getQuestCatImage(job.helper)}"
           class="colorized"
           style="
             --hue:${job.helper.hue || 0}deg;
-            width:32px;
-            height:32px;
+            width:36px;
+            height:36px;
+            object-fit:contain;
+            display:block;
             image-rendering:pixelated;
           "
           title="${escapeAttr(job.helper.name)}"
           alt=""
         >
+
+        <span class="dim">${escapeHtml(job.helper.name)}</span>
       </div>
     ` : "";
 
