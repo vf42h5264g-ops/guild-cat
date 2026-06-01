@@ -3085,9 +3085,6 @@ helperPickList.addEventListener("click", (e) => {
 
     const def = makeQuestDef(type, fixedLv, pickTime);
 
-    const helper =
-      (state.helpers || []).find(h => h.id === pickHelperId) || null;
-
     const calc = calcQuestChance(def, partyIds, helper);
     qPreview.innerHTML = `
       時間: ${def.durationMin}分 / 基準Gold: ${def.baseGold.toLocaleString()}G<br>
