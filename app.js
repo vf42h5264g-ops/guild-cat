@@ -4503,33 +4503,7 @@ const eventHelperRows =
   </button>
 </div>
 
-<div style="margin-top:10px;">
-
-  <button
-    class="primary"
-    id="btnHelperAd"
-    style="width:100%;"
-  >
-    ▶ すけっと支援を見る
-  </button>
-
-  <div
-    class="dim"
-    style="
-      margin-top:8px;
-      text-align:center;
-    "
-  >
-    視聴ですけっと使用回数 +1
-    /
-    本日あと
-    ${HELPER_AD_DAILY_LIMIT - state.helperAdBonus.count}
-    /
-    ${HELPER_AD_DAILY_LIMIT}
-    回
-  </div>
-
-</div>
+▶ すけっと支援を見る
       <div style="margin-top:10px;">
 
   <button
@@ -5875,26 +5849,31 @@ function renderTrainingTab() {
       </div>
     </div>
 
-    <div class="panelCard">
-      <div><b>🎁 ギルド協会の支援物資</b></div>
+    ${
+  adLeft > 0
+    ? `
+      <div class="panelCard">
+        <div><b>🎁 ギルド協会の支援物資</b></div>
 
-      <div class="dim" style="margin-top:6px;">
-        広告を見るとマタタビを1個もらえます
+        <div class="dim" style="margin-top:6px;">
+          広告を見るとマタタビを1個もらえます
+        </div>
+
+        <div class="dim">
+          本日あと ${adLeft}/${AD_REWARD.DAILY_LIMIT} 回
+        </div>
+
+        <button
+          id="watchMatatabiAd"
+          class="primary adBtn"
+          style="margin-top:10px;width:100%;"
+        >
+          広告を見る
+        </button>
       </div>
-
-      <div class="dim">
-        本日あと ${adLeft}/${AD_REWARD.DAILY_LIMIT} 回
-      </div>
-
-      <button
-        id="watchMatatabiAd"
-        class="primary adBtn"
-        style="margin-top:10px;width:100%;"
-        ${adLeft <= 0 ? "disabled" : ""}
-      >
-        ${adLeft <= 0 ? "本日の受取済み" : "広告を見る"}
-      </button>
-    </div>
+    `
+    : ""
+}
   `;
 
   const slotCount = state.trainingJobs.length;
