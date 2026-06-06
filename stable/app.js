@@ -4520,33 +4520,39 @@ const eventHelperRows =
   </button>
 </div>
 
-<div style="margin-top:10px;">
+${
+  (HELPER_AD_DAILY_LIMIT - state.helperAdBonus.count) > 0
+    ? `
+      <div style="margin-top:10px;">
 
-  <button
-    class="primary"
-    id="btnHelperAd"
-    style="width:100%;"
-  >
-    ▶ すけっと支援を見る
-  </button>
+        <button
+          class="primary"
+          id="btnHelperAd"
+          style="width:100%;"
+        >
+          ▶ すけっと支援を見る
+        </button>
 
-  <div
-    class="dim"
-    style="
-      margin-top:8px;
-      text-align:center;
-    "
-  >
-    視聴ですけっと使用回数 +1
-    /
-    本日あと
-    ${HELPER_AD_DAILY_LIMIT - state.helperAdBonus.count}
-    /
-    ${HELPER_AD_DAILY_LIMIT}
-    回
-  </div>
+        <div
+          class="dim"
+          style="
+            margin-top:8px;
+            text-align:center;
+          "
+        >
+          視聴ですけっと使用回数 +1
+          /
+          本日あと
+          ${HELPER_AD_DAILY_LIMIT - state.helperAdBonus.count}
+          /
+          ${HELPER_AD_DAILY_LIMIT}
+          回
+        </div>
 
-</div>
+      </div>
+    `
+    : ""
+}
       <div style="margin-top:10px;">
 
   <button
