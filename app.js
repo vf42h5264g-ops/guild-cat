@@ -235,6 +235,23 @@ const EVENT_HELPERS = [
     startDate: "2026-05-31",
     endDate: "2026-06-07",
   },
+
+    {
+    eventId: "event_test_3",
+    eventImage: "img/event/event_3.png",
+
+    name: "雨傘のモコ",
+    level: 14,
+    personality: "イベント",
+
+    str: 50,
+    spd: 10,
+    int: 10,
+    hue: 0,
+
+    startDate: "2026-06-14",
+    endDate: "2026-06-27",
+  },
 ];
 
 function pickRandom(arr) {
