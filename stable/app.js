@@ -27,7 +27,7 @@ const RANK = {
     return 3 + Math.floor(rank / 2);
   },
   trainingSlots(rank) {
-    return 1 + Math.floor((rank - 1) / 2);
+    return Math.min(9, 1 + Math.floor(rank / 2));
   },
   dispatchSlots(rank) {
     return 1;
@@ -4845,6 +4845,8 @@ ${
 
 </div>
 
+</div> <!-- すけっと panelCard を閉じる -->
+
     ${
       alpacaOffer ? `
         <div class="panelCard">
@@ -4978,8 +4980,6 @@ ${
   document
     .getElementById("helperImportCancel")
     ?.addEventListener("click", closeModal);
-  document.getElementById("btnRefreshQuests")
-  ?.addEventListener("click", refreshQuestOffersPaid);
     
   document
     .getElementById("pasteHelperCodeBtn")
@@ -5013,7 +5013,9 @@ ${
     });
 });
   document.getElementById("btnHelperGuide")
-  ?.addEventListener("click", openHelperGuideModal);  
+  ?.addEventListener("click", openHelperGuideModal);
+  document.getElementById("btnRefreshQuests")
+  ?.addEventListener("click", refreshQuestOffersPaid);
   el.tabQuest.querySelectorAll("[data-qtype]").forEach(btn => {
     btn.addEventListener("click", () => {
       const t = types.find(x => x.id === btn.dataset.qtype);
