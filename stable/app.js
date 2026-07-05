@@ -6201,19 +6201,15 @@ function renderTrainingTab() {
         const { unlockCost } = getTrainingSlotMeta(slotNo);
 
         slots.push(`
-          <div class="panelCard" style="margin-top:8px;">
-            <div class="row">
-              <div>
-                <div><b>枠 ${slotNo}</b> <span class="dim">（未開放）</span></div>
-                <div class="dim">開放費: ${unlockCost.toLocaleString()}G</div>
-              </div>
-
-              <button class="primary smallBtn" data-unlock-slot="${slotNo}">
-                開放
-              </button>
-            </div>
-          </div>
-        `);
+  <button
+    class="ghost smallBtn"
+    data-unlock-slot="${slotNo}"
+    style="flex:1;min-width:90px;opacity:.75;"
+  >
+    🔒 開放<br>
+    <span class="dim">${unlockCost.toLocaleString()}G</span>
+  </button>
+`);
 
         continue;
       }
@@ -6223,35 +6219,49 @@ function renderTrainingTab() {
         const cat = catById(job.catId);
 
         slots.push(`
-          <div class="panelCard" style="margin-top:8px;">
-            <div class="row">
-              <div>
-                <div><b>${escapeHtml(cat?.name || "訓練中")}</b> <span class="dim">訓練中</span></div>
-                <div class="dim">${job.durationMin}分 / EXP ${job.expGain}</div>
-              </div>
-              <div class="mono">${formatRemain(remain)}</div>
-            </div>
-          </div>
-        `);
+  <button
+    class="ghost smallBtn"
+    disabled
+    style="
+      flex:1;
+      min-width:90px;
+      opacity:.9;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:4px;
+      line-height:1.3;
+    "
+  >
+    <img
+      src="${getTrainingImage(cat, 1)}"
+      class="colorized"
+      style="
+        --hue:${cat?.hue || 0}deg;
+        width:32px;
+        height:32px;
+        image-rendering:pixelated;
+      "
+      alt=""
+    >
+    <span>${escapeHtml(cat?.name || "訓練中")}</span>
+    <span class="dim">${formatRemain(remain)}</span>
+  </button>
+`);
 
         continue;
       }
 
       slots.push(`
-        <div class="panelCard" style="margin-top:8px;">
-          <div class="row">
-            <div>
-              <div><b>空き枠</b></div>
-              <div class="dim">EXP倍率 x${mult.toFixed(2)}</div>
-            </div>
-
-            <button class="primary smallBtn" data-start-slot="${slotNo}">
-              訓練する
-            </button>
-          </div>
-        </div>
-      `);
-    }
+  <button
+    class="primary smallBtn"
+    data-start-slot="${slotNo}"
+    style="flex:1;min-width:90px;"
+  >
+    訓練する<br>
+    <span class="dim">x${mult.toFixed(2)}</span>
+  </button>
+`);
 
     const lockedByRank =
       eq.slotStart > slotCount;
@@ -6295,9 +6305,16 @@ function renderTrainingTab() {
           }
         </div>
 
-        <div style="margin-top:10px;">
-          ${slots.join("") || `<div class="dim">まだ枠がありません</div>`}
-        </div>
+        <div
+  style="
+    margin-top:10px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  "
+>
+  ${slots.join("") || `<div class="dim">まだ枠がありません</div>`}
+</div>
       </div>
     `;
   }).join("");
