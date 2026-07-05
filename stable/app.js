@@ -252,6 +252,23 @@ const EVENT_HELPERS = [
     startDate: "2026-06-02",
     endDate: "2026-06-14",
   },
+
+    {
+    eventId: "event_test_4",
+    eventImage: "img/event/event_4.png",
+
+    name: "スイカ割りココ",
+    level: 16,
+    personality: "イベント",
+
+    str: 25,
+    spd: 10,
+    int: 60,
+    hue: 0,
+
+    startDate: "2026-07-05",
+    endDate: "2026-07-22",
+  },
 ];
 
 function pickRandom(arr) {
