@@ -5216,11 +5216,38 @@ function renderCatsTab() {
   const hasCandidates = (state.hire?.candidates?.length || 0) > 0;
   const canFire = RANK.canFire(state.guildRank);
 
-  const catsHtml = (state.cats || []).map(c => {
-  const busy = isCatBusy(c.id);
-  const statusText = busy === "quest" ? "クエスト" : busy === "training" ? "訓練" : "待機";
-  const dotClass = busy === "quest" ? "quest" : busy === "training" ? "training" : "";
+  const catsHtml = `
+  <div class="catGrid">
+    ${(state.cats || []).map(c => {
+      const training = isCatBusy(c.id) === "training";
 
+      return `
+        <button
+          class="catGridItem"
+          data-cat-detail="${c.id}"
+        >
+          <div class="catGridLv">Lv${c.level}</div>
+
+          <img
+            src="${getDetailCatImage(c)}"
+            class="catGridImg colorized ${training ? "catDumbbell" : ""} ${
+              (state.trainingJobs || []).some(j => j?.catId === c.id && j.matatabi)
+                ? "matatabiBoost"
+                : ""
+            }"
+            ${training ? `data-jim="${c.id}"` : ""}
+            style="--hue:${c.hue}deg;"
+            alt=""
+          />
+
+          <div class="catGridName">
+            ${state.favoriteCatId === c.id ? "★ " : ""}${escapeHtml(c.name)}
+          </div>
+        </button>
+      `;
+    }).join("")}
+  </div>
+`;
   const fireLockedReason =
   !RANK.canFire(state.guildRank) ? "Rank5で解放" :
   c.level <= 1 ? "Lv2から解雇可" :
@@ -5230,44 +5257,6 @@ function renderCatsTab() {
   
   const training = busy === "training";
   
-     
-  return `
-    <div class="panelCard catCompactCard">
-      <div class="catCompactRow">
-        <div class="catMiniSpriteWrap">
-          <img
-            src="${getDetailCatImage(c)}"
-            class="catSprite colorized ${training ? "catDumbbell" : ""} ${
-              (state.trainingJobs || []).some(j => j?.catId === c.id && j.matatabi)
-                ? "matatabiBoost"
-                : ""
-            }"
-            ${training ? `data-jim="${c.id}"` : ""}
-            style="--hue:${c.hue}deg;width:32px;height:32px;display:block;image-rendering:pixelated;"
-            alt=""
-          />
-        </div>
-
-        <div class="catCompactName">
-          <b>
-            ${
-              state.favoriteCatId === c.id
-                ? "★ "
-                : ""
-            }${escapeHtml(c.name)}
-          </b>
-          <span class="dim">Lv${c.level} / ${escapeHtml(c.personality)}</span>
-        </div>
-
-        <div class="catCompactStatus">
-          <span class="statusDot ${dotClass}"></span>${statusText}
-        </div>
-
-        <button class="ghost smallBtn" data-cat-detail="${c.id}">詳細</button>
-      </div>
-    </div>
-  `;
-}).join("");
 
   el.tabCats.innerHTML = `
     <div class="panelCard">
@@ -5281,7 +5270,11 @@ function renderCatsTab() {
     </div>
 
     
-    ${catsHtml || `<div class="panelCard"><div class="dim">ネコがいません。チュートリアルから開始してください。</div></div>`}
+    ${
+  (state.cats || []).length > 0
+    ? catsHtml
+    : `<div class="panelCard"><div class="dim">ネコがいません。チュートリアルから開始してください。</div></div>`
+}
 
     <div class="panelCard">
       <div><b>雇用</b> <span class="dim">雇用枠 ${state.cats.length}/${hs}</span></div>
