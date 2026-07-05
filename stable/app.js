@@ -5248,16 +5248,7 @@ function renderCatsTab() {
     }).join("")}
   </div>
 `;
-  const fireLockedReason =
-  !RANK.canFire(state.guildRank) ? "Rank5で解放" :
-  c.level <= 1 ? "Lv2から解雇可" :
-  (state.cats || []).length <= 1 ? "最後の1匹は不可" :
-  busy ? "待機中のみ解雇可" :
-  "";
   
-  const training = busy === "training";
-  
-
   el.tabCats.innerHTML = `
     <div class="panelCard">
       <div class="row">
@@ -6255,6 +6246,7 @@ function renderTrainingTab() {
     <span class="dim">x${mult.toFixed(2)}</span>
   </button>
 `);
+    }
 
     const lockedByRank =
       eq.slotStart > slotCount;
