@@ -50,7 +50,48 @@ const TRAINING = {
   USE_COST_PER_MIN: 8,
   MULT_PER_PAID_SLOT: 0.5,
 };
+const TRAINING_EQUIPMENTS = [
+  {
+    id: "dumbbell",
+    name: "鉄アレイ",
+    icon: "🏋️",
+    baseMult: 1.0,
+    slotStart: 1,
+    slotEnd: 3,
+    costMult: 1,
+  },
+  {
+    id: "roller",
+    name: "腹筋ローラー",
+    icon: "🛞",
+    baseMult: 2.5,
+    slotStart: 4,
+    slotEnd: 6,
+    costMult: 2.5,
+  },
+  {
+    id: "bench",
+    name: "ベンチプレス",
+    icon: "🏋️",
+    baseMult: 4.0,
+    slotStart: 7,
+    slotEnd: 9,
+    costMult: 4,
+  },
+];
 
+const TRAINING_UPGRADE_BASE_COSTS = [
+  0,
+  5000,
+  10000,
+  20000,
+  40000,
+  70000,
+  110000,
+  170000,
+  250000,
+  350000,
+];
 const HIRING = {
   hireCost(rank) {
     return rank * 5000;
@@ -753,6 +794,7 @@ function exportSaveCode() {
   questJobs: state.questJobs,
   trainingSlots: state.trainingSlots,
   trainingJobs: state.trainingJobs,
+  trainingFacility: state.trainingFacility,
 
   alpaca: state.alpaca,
   invest: state.invest,
@@ -871,6 +913,7 @@ state.eventHelperClaims ??= {};
 if (!state.questOffers) {
   rollQuestOffers();
 }
+ensureTrainingFacility();
 
 save();
 renderAll();
@@ -1275,10 +1318,41 @@ function watchMatatabiAd() {
 /* =========================
    Training slot economy
    ========================= */
+function getTrainingEquipmentBySlot(slotNo) {
+  return TRAINING_EQUIPMENTS.find(eq =>
+    slotNo >= eq.slotStart && slotNo <= eq.slotEnd
+  ) || TRAINING_EQUIPMENTS[0];
+}
+
+function getTrainingEquipmentLevel(equipmentId) {
+  ensureTrainingFacility();
+
+  return state.trainingFacility.levels[equipmentId] || 1;
+}
+
+function getTrainingEquipmentExpMult(equipmentId) {
+  const eq = TRAINING_EQUIPMENTS.find(x => x.id === equipmentId);
+  const lv = getTrainingEquipmentLevel(equipmentId);
+
+  return eq.baseMult + (lv - 1) * 0.25;
+}
+
 function getTrainingSlotMeta(slotNo) {
-  const unlockCost = TRAINING.UNLOCK_BASE * Math.pow(slotNo - 1, 2);
-  const expMult = 1 + TRAINING.MULT_PER_PAID_SLOT * (slotNo - 1);
-  return { unlockCost, expMult };
+  const eq = getTrainingEquipmentBySlot(slotNo);
+
+  const unlockCost =
+    TRAINING.UNLOCK_BASE * Math.pow(slotNo - 1, 2);
+
+  const expMult =
+    getTrainingEquipmentExpMult(eq.id);
+
+  return {
+    unlockCost,
+    expMult,
+    equipmentId: eq.id,
+    equipmentName: eq.name,
+    equipmentIcon: eq.icon,
+  };
 }
 function calcTrainingUseCost(slotNo, durationMin) {
   if (slotNo === 1) return 0;
@@ -1431,6 +1505,7 @@ function openDailyBonusModal() {
    State ensure
    ========================= */
 function ensureTrainingState() {
+ensureTrainingFacility();  
   const slotCount = RANK.trainingSlots(state.guildRank);
   if (!Array.isArray(state.trainingSlots)) state.trainingSlots = [];
   if (!Array.isArray(state.trainingJobs)) state.trainingJobs = [];
@@ -1445,6 +1520,23 @@ function ensureTrainingState() {
   // 余分があれば切る（ランクダウンはないが保険）
   state.trainingSlots = state.trainingSlots.slice(0, slotCount);
   state.trainingJobs = state.trainingJobs.slice(0, slotCount);
+}
+function ensureTrainingFacility() {
+  state.trainingFacility ??= {
+    levels: {
+      dumbbell: 1,
+      roller: 1,
+      bench: 1,
+    },
+  };
+
+  state.trainingFacility.levels ??= {};
+
+  for (const eq of TRAINING_EQUIPMENTS) {
+    if (typeof state.trainingFacility.levels[eq.id] !== "number") {
+      state.trainingFacility.levels[eq.id] = 1;
+    }
+  }
 }
 function ensureDailyBonus() {
   if (!state.dailyBonus) {
@@ -1747,7 +1839,14 @@ function newGame() {
     questJobs: [],
     trainingSlots: [],
     trainingJobs: [],
-
+    trainingFacility: {
+  levels: {
+    dumbbell: 1,
+    roller: 1,
+    bench: 1,
+  },
+},
+     
     alpaca: {
       owned: 1,          // 初期1頭 = 派遣枠1
       boughtAt6: false,  // Rank6解放分を買ったか
@@ -1882,6 +1981,7 @@ function boot() {
    
   ensureQuestState();
   ensureTrainingState();
+  ensureTrainingFacility();
   ensurePending();
   ensureHire();
   ensureTutorial();
@@ -3321,6 +3421,52 @@ function calcQuestChance(def, partyIds, helper = null) {
   };
 }
 
+function getTrainingUpgradeCost(equipmentId) {
+  ensureTrainingFacility();
+
+  const eq = TRAINING_EQUIPMENTS.find(x => x.id === equipmentId);
+  if (!eq) return 0;
+
+  const lv = getTrainingEquipmentLevel(equipmentId);
+
+  if (lv >= 10) return null;
+
+  const base =
+    TRAINING_UPGRADE_BASE_COSTS[lv] || 999999999;
+
+  return Math.floor(base * eq.costMult);
+}
+
+function upgradeTrainingEquipment(equipmentId) {
+  ensureTrainingFacility();
+
+  const lv = getTrainingEquipmentLevel(equipmentId);
+
+  if (lv >= 10) {
+    pushLog("この設備はこれ以上強化できないにゃ");
+    return;
+  }
+
+  const cost = getTrainingUpgradeCost(equipmentId);
+  const eq = TRAINING_EQUIPMENTS.find(x => x.id === equipmentId);
+
+  if (state.gold < cost) {
+    pushLog(`Gold不足：${eq.name}の強化に ${cost.toLocaleString()}G 必要`);
+    return;
+  }
+
+  state.gold -= cost;
+  state.trainingFacility.levels[equipmentId]++;
+
+  const nextLv = state.trainingFacility.levels[equipmentId];
+  const mult = getTrainingEquipmentExpMult(equipmentId);
+
+  pushLog(`${eq.icon} ${eq.name} が Lv${nextLv} に強化！ EXP倍率 x${mult.toFixed(2)}`);
+
+  renderAll();
+  save();
+}
+
 function startQuest(def, partyIds, slotIdx, helper = null) {
 
   ensureHelperDailyUse();
@@ -3488,12 +3634,16 @@ function openTrainingStartModal(slotNo) {
     return;
   }
 
-  const { expMult } = getTrainingSlotMeta(slotNo);
+  const {
+  expMult,
+  equipmentName,
+  equipmentIcon
+} = getTrainingSlotMeta(slotNo);
 
   const html = `
     <div class="panelCard">
-      <div><b>訓練枠 ${slotNo}</b></div>
-      <div class="dim">EXP: 1/分 × 倍率 x${expMult.toFixed(1)}（受取式 / 両立不可）</div>
+      <div><b>${equipmentIcon} ${equipmentName}</b></div>
+<div class="dim">EXP: 1/分 × 倍率 x${expMult.toFixed(2)}（受取式 / 両立不可）</div>
     </div>
 
     <div class="panelCard" style="margin-top:10px;">
@@ -4337,6 +4487,7 @@ if (bg) {
    
   ensureQuestState();
   ensureTrainingState();
+  ensureTrainingFacility();
   ensurePending();
   ensureHire();
   ensureTutorial();
@@ -5980,6 +6131,7 @@ function openCatZoomModal(cat) {
 
 function renderTrainingTab() {
   ensureTrainingState();
+  ensureTrainingFacility();
   ensureAdState();
 
   const adLeft =
@@ -6001,103 +6153,184 @@ function renderTrainingTab() {
     </div>
 
     ${
-  adLeft > 0
-    ? `
-      <div class="panelCard">
-        <div><b>🎁 ギルド協会の支援物資</b></div>
+      adLeft > 0
+        ? `
+          <div class="panelCard">
+            <div><b>🎁 ギルド協会の支援物資</b></div>
 
-        <div class="dim" style="margin-top:6px;">
-          広告を見るとマタタビを1個もらえます
-        </div>
+            <div class="dim" style="margin-top:6px;">
+              広告を見るとマタタビを1個もらえます
+            </div>
 
-        <div class="dim">
-          本日あと ${adLeft}/${AD_REWARD.DAILY_LIMIT} 回
-        </div>
+            <div class="dim">
+              本日あと ${adLeft}/${AD_REWARD.DAILY_LIMIT} 回
+            </div>
 
-        <button
-          id="watchMatatabiAd"
-          class="primary adBtn"
-          style="margin-top:10px;width:100%;"
-        >
-          広告を見る
-        </button>
-      </div>
-    `
-    : ""
-}
+            <button
+              id="watchMatatabiAd"
+              class="primary adBtn"
+              style="margin-top:10px;width:100%;"
+            >
+              広告を見る
+            </button>
+          </div>
+        `
+        : ""
+    }
   `;
 
   const slotCount = state.trainingJobs.length;
   const usedTraining = state.trainingJobs.filter(Boolean).length;
 
-  const cards = [];
-  for (let slotNo = 1; slotNo <= slotCount; slotNo++) {
-    const slot = state.trainingSlots[slotNo - 1];
-    const job = state.trainingJobs[slotNo - 1];
-    const { unlockCost, expMult } = getTrainingSlotMeta(slotNo);
+  const equipmentHtml = TRAINING_EQUIPMENTS.map(eq => {
+    const lv = getTrainingEquipmentLevel(eq.id);
+    const mult = getTrainingEquipmentExpMult(eq.id);
+    const upgradeCost = getTrainingUpgradeCost(eq.id);
 
-    if (job) {
-      const remain = Math.max(0, job.endAt - Date.now());
-      cards.push(`
-        <div class="panelCard">
+    const slots = [];
+
+    for (let slotNo = eq.slotStart; slotNo <= eq.slotEnd; slotNo++) {
+      if (slotNo > slotCount) continue;
+
+      const slot = state.trainingSlots[slotNo - 1];
+      const job = state.trainingJobs[slotNo - 1];
+
+      if (!slot?.unlocked) {
+        const { unlockCost } = getTrainingSlotMeta(slotNo);
+
+        slots.push(`
+          <div class="panelCard" style="margin-top:8px;">
+            <div class="row">
+              <div>
+                <div><b>枠 ${slotNo}</b> <span class="dim">（未開放）</span></div>
+                <div class="dim">開放費: ${unlockCost.toLocaleString()}G</div>
+              </div>
+
+              <button class="primary smallBtn" data-unlock-slot="${slotNo}">
+                開放
+              </button>
+            </div>
+          </div>
+        `);
+
+        continue;
+      }
+
+      if (job) {
+        const remain = Math.max(0, job.endAt - Date.now());
+        const cat = catById(job.catId);
+
+        slots.push(`
+          <div class="panelCard" style="margin-top:8px;">
+            <div class="row">
+              <div>
+                <div><b>${escapeHtml(cat?.name || "訓練中")}</b> <span class="dim">訓練中</span></div>
+                <div class="dim">${job.durationMin}分 / EXP ${job.expGain}</div>
+              </div>
+              <div class="mono">${formatRemain(remain)}</div>
+            </div>
+          </div>
+        `);
+
+        continue;
+      }
+
+      slots.push(`
+        <div class="panelCard" style="margin-top:8px;">
           <div class="row">
             <div>
-              <div><b>訓練枠 ${slotNo}</b> <span class="dim">（訓練中）</span></div>
-              <div class="dim">EXP: ${job.expGain} / 使用料: ${job.useCost.toLocaleString()}G / 倍率: x${expMult.toFixed(1)}</div>
+              <div><b>空き枠</b></div>
+              <div class="dim">EXP倍率 x${mult.toFixed(2)}</div>
             </div>
-            <div class="mono">${formatRemain(remain)}</div>
+
+            <button class="primary smallBtn" data-start-slot="${slotNo}">
+              訓練する
+            </button>
           </div>
         </div>
       `);
-      continue;
     }
 
-    if (!slot.unlocked) {
-      cards.push(`
+    const lockedByRank =
+      eq.slotStart > slotCount;
+
+    if (lockedByRank) {
+      return `
         <div class="panelCard">
-          <div class="row">
-            <div>
-              <div><b>訓練枠 ${slotNo}</b> <span class="dim">（未開放）</span></div>
-              <div class="dim">開放費: ${unlockCost.toLocaleString()}G / 倍率: x${expMult.toFixed(1)}</div>
-            </div>
-            <button class="primary smallBtn" data-unlock-slot="${slotNo}">開放</button>
+          <div>
+            <b>${eq.icon} ${escapeHtml(eq.name)}</b>
+            <span class="dim">未解放</span>
+          </div>
+          <div class="dim" style="margin-top:6px;">
+            訓練枠 ${eq.slotStart} 解放時に使えるようになります
           </div>
         </div>
-      `);
-      continue;
+      `;
     }
 
-    cards.push(`
+    return `
       <div class="panelCard">
         <div class="row">
           <div>
-            <div><b>訓練枠 ${slotNo}</b> <span class="dim">（使用可）</span></div>
-            <div class="dim">倍率: x${expMult.toFixed(1)} / ${slotNo === 1 ? "使用料: 0G" : "使用料: 時間に応じて発生"}</div>
+            <div><b>${eq.icon} ${escapeHtml(eq.name)} Lv${lv}</b></div>
+            <div class="dim">EXP倍率 x${mult.toFixed(2)}</div>
+            <div class="dim">最大3枠</div>
           </div>
-          <button class="primary smallBtn" data-start-slot="${slotNo}">訓練する</button>
+
+          ${
+            lv >= 10
+              ? `<div class="mono">MAX</div>`
+              : `
+                <button
+                  class="ghost smallBtn"
+                  data-upgrade-equipment="${eq.id}"
+                  ${state.gold >= upgradeCost ? "" : "disabled"}
+                  style="${state.gold >= upgradeCost ? "" : "opacity:.6;"}"
+                >
+                  強化 ${upgradeCost.toLocaleString()}G
+                </button>
+              `
+          }
+        </div>
+
+        <div style="margin-top:10px;">
+          ${slots.join("") || `<div class="dim">まだ枠がありません</div>`}
         </div>
       </div>
-    `);
-  }
+    `;
+  }).join("");
 
   el.tabTraining.innerHTML = `
-  ${itemAndAdHtml}
+    ${itemAndAdHtml}
 
-  <div class="panelCard">
-      <div><b>訓練</b> <span class="dim">1EXP/分 / 受取式 / クエストと両立不可</span></div>
-      <div class="dim">空き: ${(slotCount - usedTraining)}/${slotCount}（枠2以降は開放費＋使用料あり）</div>
+    <div class="panelCard">
+      <div><b>訓練場</b> <span class="dim">設備ごとにEXP倍率が変わります</span></div>
+      <div class="dim">空き: ${(slotCount - usedTraining)}/${slotCount} / 設備Lvは最大10</div>
     </div>
-    ${cards.join("")}
+
+    ${equipmentHtml}
   `;
 
   el.tabTraining.querySelectorAll("[data-unlock-slot]").forEach(btn => {
-    btn.addEventListener("click", () => unlockTrainingSlot(Number(btn.dataset.unlockSlot)));
+    btn.addEventListener("click", () =>
+      unlockTrainingSlot(Number(btn.dataset.unlockSlot))
+    );
   });
+
   el.tabTraining.querySelectorAll("[data-start-slot]").forEach(btn => {
-    btn.addEventListener("click", () => openTrainingStartModal(Number(btn.dataset.startSlot)));
+    btn.addEventListener("click", () =>
+      openTrainingStartModal(Number(btn.dataset.startSlot))
+    );
   });
+
+  el.tabTraining.querySelectorAll("[data-upgrade-equipment]").forEach(btn => {
+    btn.addEventListener("click", () =>
+      upgradeTrainingEquipment(btn.dataset.upgradeEquipment)
+    );
+  });
+
   document.getElementById("watchMatatabiAd")
-  ?.addEventListener("click", watchMatatabiAd);
+    ?.addEventListener("click", watchMatatabiAd);
 }
 
 function renderInvestTab() {
