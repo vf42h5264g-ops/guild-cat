@@ -128,6 +128,11 @@ const QUEST = {
   },
 };
 
+const QUEST_REFRESH = {
+  BASE_PER_RANK: 1000,
+  MULT: 1.5,
+};
+
 const QUEST_RESULT_LINES = {
   battle: {
     success: [
@@ -753,6 +758,7 @@ function exportSaveCode() {
   invest: state.invest,
 
   questOffers: null,
+questRefresh: state.questRefresh,
      
   dailyBonus: state.dailyBonus,
   adReward: state.adReward,
@@ -837,6 +843,13 @@ ensureInvest();
 ensureAlpaca();
 ensureDailyBonus();
 ensureQuestOffers();
+
+if (!state.questRefresh) {
+  state.questRefresh = {
+    date: todayKey(),
+    count: 0,
+  };
+}
 ensureAdState();
 ensureHelperDailyUse();
 ensureHelperAdBonus();
@@ -1504,6 +1517,16 @@ function ensureQuestState() {
 }
 function ensureQuestOffers() {
   if (!("questOffers" in state)) state.questOffers = null;
+
+  state.questRefresh ??= {
+    date: todayKey(),
+    count: 0,
+  };
+
+  if (state.questRefresh.date !== todayKey()) {
+    state.questRefresh.date = todayKey();
+    state.questRefresh.count = 0;
+  }
 }
 function ensurePending() {
   if (!Array.isArray(state.pendingResults)) state.pendingResults = [];
@@ -1737,6 +1760,11 @@ function newGame() {
     },
 
     questOffers: null,
+
+questRefresh: {
+  date: todayKey(),
+  count: 0,
+},
 
     dailyBonus: {
       lastClaimDate: null,
@@ -2906,6 +2934,37 @@ function rollQuestOffers() {
   }
 
   state.questOffers = offers;
+  save();
+}
+function getQuestRefreshCost() {
+  ensureQuestOffers();
+
+  const base =
+    state.guildRank * QUEST_REFRESH.BASE_PER_RANK;
+
+  return Math.ceil(
+    base * Math.pow(QUEST_REFRESH.MULT, state.questRefresh.count)
+  );
+}
+
+function refreshQuestOffersPaid() {
+  ensureQuestOffers();
+
+  const cost = getQuestRefreshCost();
+
+  if (state.gold < cost) {
+    pushLog(`Gold不足：クエスト更新に ${cost.toLocaleString()}G 必要`);
+    return;
+  }
+
+  state.gold -= cost;
+  state.questRefresh.count++;
+
+  rollQuestOffers();
+
+  pushLog(`🔄 クエストを更新したにゃ（${cost.toLocaleString()}G）`);
+
+  renderAll();
   save();
 }
 
@@ -4396,7 +4455,10 @@ function renderQuestTab() {
   const ds = getDispatchSlots();
   const used = (state.questJobs || []).filter(Boolean).length;
   const maxLv = RANK.maxQuestLevel(state.guildRank);
-  const alpacaOffer = getAvailableAlpacaPurchase();
+const alpacaOffer = getAvailableAlpacaPurchase();
+
+const questRefreshCost = getQuestRefreshCost();
+const nextQuestRefreshCost = Math.ceil(questRefreshCost * QUEST_REFRESH.MULT);
 
   const normalHelpers =
   state.helpers.filter(h => !h.official);
@@ -4649,7 +4711,29 @@ ${
         </div>
       ` : ""
     }
+    <div class="panelCard">
+  <div class="row">
+    <div>
+      <div><b>🔄 クエスト更新</b></div>
+      <div class="dim">
+        費用: ${questRefreshCost.toLocaleString()}G
+        / 本日 ${state.questRefresh.count}回更新
+      </div>
+      <div class="dim">
+        次回: ${nextQuestRefreshCost.toLocaleString()}G
+      </div>
+    </div>
 
+    <button
+      class="ghost smallBtn"
+      id="btnRefreshQuests"
+      ${state.gold >= questRefreshCost ? "" : "disabled"}
+      style="${state.gold >= questRefreshCost ? "" : "opacity:.6;"}"
+    >
+      更新
+    </button>
+  </div>
+</div>
     ${renderQuestRunning()}
     ${types.map(t => {
       const lv = state.questOffers[t.id];
@@ -4743,7 +4827,9 @@ ${
   document
     .getElementById("helperImportCancel")
     ?.addEventListener("click", closeModal);
-
+  document.getElementById("btnRefreshQuests")
+  ?.addEventListener("click", refreshQuestOffersPaid);
+    
   document
     .getElementById("pasteHelperCodeBtn")
     ?.addEventListener("click", async () => {
@@ -4776,8 +4862,7 @@ ${
     });
 });
   document.getElementById("btnHelperGuide")
-  ?.addEventListener("click", openHelperGuideModal);
-
+  ?.addEventListener("click", openHelperGuideModal);  
   el.tabQuest.querySelectorAll("[data-qtype]").forEach(btn => {
     btn.addEventListener("click", () => {
       const t = types.find(x => x.id === btn.dataset.qtype);
