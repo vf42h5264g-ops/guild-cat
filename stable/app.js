@@ -3656,25 +3656,24 @@ function openTrainingStartModal(slotNo) {
       <div id="tDur" class="modalList"></div>
     </div>
 
-    <div class="checkRow ${((state.items?.matatabi || 0) <= 0) ? "disabled" : ""}">
+    <label
+  class="matatabiSelect ${
+    (state.items?.matatabi || 0) <= 0 ? "disabled" : ""
+  }"
+>
+  <input
+    type="checkbox"
+    id="useMatatabi"
+    ${((state.items?.matatabi || 0) <= 0) ? "disabled" : ""}
+  >
 
-  <label>
-
-    <input
-      type="checkbox"
-      id="useMatatabi"
-      ${((state.items?.matatabi || 0) <= 0) ? "disabled" : ""}
-    >
-
-    🌿 マタタビを使う
-
+  <span class="matatabiSelectText">
+    <span><b>🌿 マタタビを使う</b></span>
     <span class="dim">
-      (所持: ${state.items?.matatabi || 0})
+      訓練EXP 2倍 ／ 所持 ${state.items?.matatabi || 0}
     </span>
-
-  </label>
-
-</div>
+  </span>
+</label>
 
     <div class="modalFooter">
       <button class="ghost" id="tCancel">戻る</button>
@@ -5229,16 +5228,16 @@ function renderCatsTab() {
           <div class="catGridLv">Lv${c.level}</div>
 
           <img
-            src="${getDetailCatImage(c)}"
-            class="catGridImg colorized ${training ? "catDumbbell" : ""} ${
-              (state.trainingJobs || []).some(j => j?.catId === c.id && j.matatabi)
-                ? "matatabiBoost"
-                : ""
-            }"
-            ${training ? `data-jim="${c.id}"` : ""}
-            style="--hue:${c.hue}deg;"
-            alt=""
-          />
+  src="${getDetailCatImage(c)}"
+  class="catGridImg colorized ${
+    (state.trainingJobs || []).some(j => j?.catId === c.id && j.matatabi)
+      ? "matatabiBoost"
+      : ""
+  }"
+  ${training ? `data-jim="${c.id}"` : ""}
+  style="--hue:${c.hue}deg;"
+  alt="${escapeAttr(c.name)}"
+/>
 
           <div class="catGridName">
             ${state.favoriteCatId === c.id ? "★ " : ""}${escapeHtml(c.name)}
@@ -6005,11 +6004,7 @@ function openCatDetailModal(catId) {
 >
       <img
   src="${getDetailCatImage(c)}"
-  class="
-    catSprite
-    colorized
-    ${busy === "training" ? "catDumbbell" : ""}
-  "
+  class="catSprite colorized"
   ${busy === "training" ? `data-jim="${c.id}"` : ""}
   style="
     --hue:${c.hue}deg;
@@ -6238,16 +6233,19 @@ function renderTrainingTab() {
     "
   >
     <img
-      src="${getTrainingImage(cat, 1)}"
-      class="colorized"
-      style="
-        --hue:${cat?.hue || 0}deg;
-        width:64px;
-        height:64px;
-        image-rendering:pixelated;
-      "
-      alt=""
-    >
+  src="${cat ? getTrainingImage(cat, 1) : ""}"
+  class="colorized"
+  data-jim="${cat?.id || ""}"
+  style="
+    --hue:${cat?.hue || 0}deg;
+    width:72px;
+    height:72px;
+    object-fit:contain;
+    display:block;
+    image-rendering:pixelated;
+  "
+  alt="${escapeAttr(cat?.name || "訓練中")}"
+>
     <span>${escapeHtml(cat?.name || "訓練中")}</span>
     <span class="dim">${formatRemain(remain)}</span>
   </button>
@@ -6433,15 +6431,20 @@ function tick() {
 function toggleDumbbells() {
   jimFlip = !jimFlip;
 
-  document.querySelectorAll("[data-jim]").forEach(img => {
-    const cat = catById(img.dataset.jim);
-    if (!cat) return;
+  document
+    .querySelectorAll("img[data-jim]")
+    .forEach(img => {
+      const catId = img.dataset.jim;
+      if (!catId) return;
 
-    img.src = getTrainingImage(
-      cat,
-      jimFlip ? 2 : 1
-    );
-  });
+      const cat = catById(catId);
+      if (!cat) return;
+
+      img.src = getTrainingImage(
+        cat,
+        jimFlip ? 2 : 1
+      );
+    });
 }
 
 /* =========================
