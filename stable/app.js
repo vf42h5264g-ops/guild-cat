@@ -6222,8 +6222,8 @@ function renderTrainingTab() {
       class="colorized"
       style="
         --hue:${cat?.hue || 0}deg;
-        width:32px;
-        height:32px;
+        width:64px;
+        height:64px;
         image-rendering:pixelated;
       "
       alt=""
