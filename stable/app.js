@@ -3047,6 +3047,69 @@ function getQuestRefreshCost() {
   );
 }
 
+function openQuestRefreshConfirmModal() {
+  ensureQuestOffers();
+
+  const cost = getQuestRefreshCost();
+  const nextCost = Math.ceil(cost * QUEST_REFRESH.MULT);
+
+  const html = `
+    <div class="panelCard">
+      <div><b>🔄 クエストを更新しますか？</b></div>
+
+      <div class="dim" style="margin-top:8px;line-height:1.7;">
+        現在表示されている3件のクエストを更新します。<br>
+        この操作は取り消せません。
+      </div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div class="row">
+        <span class="dim">今回の費用</span>
+        <b>${cost.toLocaleString()}G</b>
+      </div>
+
+      <div class="row" style="margin-top:8px;">
+        <span class="dim">更新後の次回費用</span>
+        <span>${nextCost.toLocaleString()}G</span>
+      </div>
+
+      <div class="row" style="margin-top:8px;">
+        <span class="dim">所持Gold</span>
+        <span>${state.gold.toLocaleString()}G</span>
+      </div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="ghost" id="questRefreshCancel">
+        キャンセル
+      </button>
+
+      <button
+        class="primary"
+        id="questRefreshConfirm"
+        ${state.gold >= cost ? "" : "disabled"}
+        style="${state.gold >= cost ? "" : "opacity:.6;"}"
+      >
+        ${cost.toLocaleString()}Gで更新
+      </button>
+    </div>
+  `;
+
+  openModal("クエスト更新確認", html);
+
+  document
+    .getElementById("questRefreshCancel")
+    ?.addEventListener("click", closeModal);
+
+  document
+    .getElementById("questRefreshConfirm")
+    ?.addEventListener("click", () => {
+      closeModal();
+      refreshQuestOffersPaid();
+    });
+}
+
 function refreshQuestOffersPaid() {
   ensureQuestOffers();
 
@@ -4877,13 +4940,13 @@ ${
     </div>
 
     <button
-      class="ghost smallBtn"
-      id="btnRefreshQuests"
-      ${state.gold >= questRefreshCost ? "" : "disabled"}
-      style="${state.gold >= questRefreshCost ? "" : "opacity:.6;"}"
-    >
-      更新
-    </button>
+  class="primary smallBtn"
+  id="btnRefreshQuests"
+  ${state.gold >= questRefreshCost ? "" : "disabled"}
+  style="${state.gold >= questRefreshCost ? "" : "opacity:.6;"}"
+>
+  更新
+</button>
   </div>
 </div>
     ${renderQuestRunning()}
@@ -5014,7 +5077,7 @@ ${
   document.getElementById("btnHelperGuide")
   ?.addEventListener("click", openHelperGuideModal);
   document.getElementById("btnRefreshQuests")
-  ?.addEventListener("click", refreshQuestOffersPaid);
+  ?.addEventListener("click", openQuestRefreshConfirmModal);
   el.tabQuest.querySelectorAll("[data-qtype]").forEach(btn => {
     btn.addEventListener("click", () => {
       const t = types.find(x => x.id === btn.dataset.qtype);
