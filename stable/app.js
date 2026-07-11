@@ -5994,13 +5994,33 @@ function openCatDetailModal(catId) {
   
   const html = `
   <div class="panelCard" style="display:flex;gap:12px;align-items:center;">
-    <div class="catSpriteWrap" style="position:relative;width:64px;height:64px;flex:0 0 64px;">
+    <div
+  class="catSpriteWrap"
+  style="
+    position:relative;
+    width:96px;
+    height:96px;
+    flex:0 0 96px;
+  "
+>
       <img
-        src="${getDetailCatImage(c)}"
-        class="catSprite colorized"
-        style="--hue:${c.hue}deg;width:64px;height:64px;display:block;image-rendering:pixelated;"
-        alt=""
-      />
+  src="${getDetailCatImage(c)}"
+  class="
+    catSprite
+    colorized
+    ${busy === "training" ? "catDumbbell" : ""}
+  "
+  ${busy === "training" ? `data-jim="${c.id}"` : ""}
+  style="
+    --hue:${c.hue}deg;
+    width:96px;
+    height:96px;
+    object-fit:contain;
+    display:block;
+    image-rendering:pixelated;
+  "
+  alt="${escapeAttr(c.name)}"
+/>
 
       <button
         class="ghost smallBtn"
@@ -6412,19 +6432,16 @@ function tick() {
 /* Training dumbbell animation */
 function toggleDumbbells() {
   jimFlip = !jimFlip;
-  const jobs = state.trainingJobs || [];
-  for (const job of jobs) {
-    if (!job) continue;
-    const img = document.querySelector(`img[data-jim="${job.catId}"]`);
-    if (!img) continue;
-    const cat =
-  state.cats.find(c => c.id === job.catId);
 
-img.src = getTrainingImage(
-  cat,
-  jimFlip ? 2 : 1
-);
-  }
+  document.querySelectorAll("[data-jim]").forEach(img => {
+    const cat = catById(img.dataset.jim);
+    if (!cat) return;
+
+    img.src = getTrainingImage(
+      cat,
+      jimFlip ? 2 : 1
+    );
+  });
 }
 
 /* =========================
