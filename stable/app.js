@@ -12,6 +12,9 @@
 
 const LS_SAVE = "ccg_save_v3";
 
+const GAME_VERSION = "0.9";
+const UPDATE_NOTICE_VERSION = "0.9";
+
 /* =========================
    Economy / Rules
    ========================= */
@@ -821,6 +824,7 @@ questRefresh: state.questRefresh,
 
   endingSeen: state.endingSeen,
   postGame: state.postGame,
+  lastSeenUpdateVersion: state.lastSeenUpdateVersion,
 
   // ログは復元時に空でOK
   logs: []
@@ -1501,6 +1505,70 @@ function openDailyBonusModal() {
   });
 }
 
+function shouldShowUpdateNotice() {
+  if (!state.tutorialDone) return false;
+
+  return state.lastSeenUpdateVersion !== UPDATE_NOTICE_VERSION;
+}
+
+function openUpdateNoticeModal(onClose) {
+  const html = `
+    <div class="panelCard">
+      <div style="font-size:20px;font-weight:900;">
+        🐾 Version ${UPDATE_NOTICE_VERSION}
+      </div>
+
+      <div class="dim" style="margin-top:6px;">
+        Cozy Cat Guildをアップデートしました！
+      </div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div><b>今回の主な更新</b></div>
+
+      <div
+        class="dim"
+        style="
+          margin-top:10px;
+          line-height:1.8;
+        "
+      >
+        ・訓練場を設備形式にリニューアル<br>
+        ・鉄アレイ、腹筋ローラー、ベンチプレスを追加<br>
+        ・訓練設備をGoldで強化できるようになりました<br>
+        ・ネコ一覧を3列表示に変更<br>
+        ・クエスト更新機能を追加<br>
+        ・各種UIを見やすく調整
+      </div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div class="dim">
+        これからも小さなネコギルドをよろしくお願いします。
+      </div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="primary" id="updateNoticeClose">
+        ゲームをはじめる
+      </button>
+    </div>
+  `;
+
+  openModal("更新情報", html);
+
+  document
+    .getElementById("updateNoticeClose")
+    ?.addEventListener("click", () => {
+      state.lastSeenUpdateVersion = UPDATE_NOTICE_VERSION;
+
+      save();
+      closeModal();
+
+      onClose?.();
+    });
+}
+
 /* =========================
    State ensure
    ========================= */
@@ -1878,6 +1946,8 @@ questRefresh: {
 
     endingSeen: false,
     postGame: false,
+
+    lastSeenUpdateVersion: "",
   };
 }
 
@@ -1978,6 +2048,10 @@ function boot() {
    
   if (typeof state.endingSeen !== "boolean") state.endingSeen = false;
   if (typeof state.postGame !== "boolean") state.postGame = false;
+
+  if (typeof state.lastSeenUpdateVersion !== "string") {
+  state.lastSeenUpdateVersion = "";
+}
    
   ensureQuestState();
   ensureTrainingState();
@@ -2029,13 +2103,26 @@ function showStartScreen() {
 function openMain() {
   el.startScreen?.classList.add("hidden");
   el.mainScreen?.classList.remove("hidden");
+
   renderAll();
 
-  if (state.tutorialDone && canClaimDailyBonus()) {
+  const showDailyBonus = () => {
+    if (state.tutorialDone && canClaimDailyBonus()) {
+      setTimeout(() => {
+        openDailyBonusModal();
+      }, 250);
+    }
+  };
+
+  if (shouldShowUpdateNotice()) {
     setTimeout(() => {
-      openDailyBonusModal();
-    }, 300);
+      openUpdateNoticeModal(showDailyBonus);
+    }, 250);
+
+    return;
   }
+
+  showDailyBonus();
 }
 
 /* =========================
