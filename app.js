@@ -12,6 +12,9 @@
 
 const LS_SAVE = "ccg_save_v3";
 
+const GAME_VERSION = "0.9";
+const UPDATE_NOTICE_VERSION = "0.9";
+
 /* =========================
    Economy / Rules
    ========================= */
@@ -27,7 +30,7 @@ const RANK = {
     return 3 + Math.floor(rank / 2);
   },
   trainingSlots(rank) {
-    return 1 + Math.floor((rank - 1) / 2);
+    return Math.min(9, 1 + Math.floor(rank / 2));
   },
   dispatchSlots(rank) {
     return 1;
@@ -50,7 +53,48 @@ const TRAINING = {
   USE_COST_PER_MIN: 8,
   MULT_PER_PAID_SLOT: 0.5,
 };
+const TRAINING_EQUIPMENTS = [
+  {
+    id: "dumbbell",
+    name: "鉄アレイ",
+    icon: "🏋️",
+    baseMult: 1.0,
+    slotStart: 1,
+    slotEnd: 3,
+    costMult: 1,
+  },
+  {
+    id: "roller",
+    name: "腹筋ローラー",
+    icon: "🛞",
+    baseMult: 2.5,
+    slotStart: 4,
+    slotEnd: 6,
+    costMult: 2.5,
+  },
+  {
+    id: "bench",
+    name: "ベンチプレス",
+    icon: "🏋️",
+    baseMult: 4.0,
+    slotStart: 7,
+    slotEnd: 9,
+    costMult: 4,
+  },
+];
 
+const TRAINING_UPGRADE_BASE_COSTS = [
+  0,
+  5000,
+  10000,
+  20000,
+  40000,
+  70000,
+  110000,
+  170000,
+  250000,
+  350000,
+];
 const HIRING = {
   hireCost(rank) {
     return rank * 5000;
@@ -126,6 +170,11 @@ const QUEST = {
     if (result === "成功") return 1.3;
     return 0.7;
   },
+};
+
+const QUEST_REFRESH = {
+  BASE_PER_RANK: 1000,
+  MULT: 1.5,
 };
 
 const QUEST_RESULT_LINES = {
@@ -236,7 +285,7 @@ const EVENT_HELPERS = [
     endDate: "2026-06-07",
   },
 
-   {
+    {
     eventId: "event_test_3",
     eventImage: "img/event/event_3.png",
 
@@ -249,15 +298,15 @@ const EVENT_HELPERS = [
     int: 10,
     hue: 0,
 
-    startDate: "2026-06-14",
-    endDate: "2026-06-27",
+    startDate: "2026-06-02",
+    endDate: "2026-06-14",
   },
 
-   {
+    {
     eventId: "event_test_4",
     eventImage: "img/event/event_4.png",
 
-    name: "スイカ割りのココ",
+    name: "スイカ割りココ",
     level: 16,
     personality: "イベント",
 
@@ -266,8 +315,8 @@ const EVENT_HELPERS = [
     int: 60,
     hue: 0,
 
-    startDate: "2026-07-06",
-    endDate: "2026-07-25",
+    startDate: "2026-07-05",
+    endDate: "2026-07-22",
   },
 ];
 
@@ -748,11 +797,13 @@ function exportSaveCode() {
   questJobs: state.questJobs,
   trainingSlots: state.trainingSlots,
   trainingJobs: state.trainingJobs,
+  trainingFacility: state.trainingFacility,
 
   alpaca: state.alpaca,
   invest: state.invest,
 
   questOffers: null,
+questRefresh: state.questRefresh,
      
   dailyBonus: state.dailyBonus,
   adReward: state.adReward,
@@ -773,6 +824,7 @@ function exportSaveCode() {
 
   endingSeen: state.endingSeen,
   postGame: state.postGame,
+  lastSeenUpdateVersion: state.lastSeenUpdateVersion,
 
   // ログは復元時に空でOK
   logs: []
@@ -837,6 +889,13 @@ ensureInvest();
 ensureAlpaca();
 ensureDailyBonus();
 ensureQuestOffers();
+
+if (!state.questRefresh) {
+  state.questRefresh = {
+    date: todayKey(),
+    count: 0,
+  };
+}
 ensureAdState();
 ensureHelperDailyUse();
 ensureHelperAdBonus();
@@ -858,6 +917,7 @@ state.eventHelperClaims ??= {};
 if (!state.questOffers) {
   rollQuestOffers();
 }
+ensureTrainingFacility();
 
 save();
 renderAll();
@@ -1262,10 +1322,41 @@ function watchMatatabiAd() {
 /* =========================
    Training slot economy
    ========================= */
+function getTrainingEquipmentBySlot(slotNo) {
+  return TRAINING_EQUIPMENTS.find(eq =>
+    slotNo >= eq.slotStart && slotNo <= eq.slotEnd
+  ) || TRAINING_EQUIPMENTS[0];
+}
+
+function getTrainingEquipmentLevel(equipmentId) {
+  ensureTrainingFacility();
+
+  return state.trainingFacility.levels[equipmentId] || 1;
+}
+
+function getTrainingEquipmentExpMult(equipmentId) {
+  const eq = TRAINING_EQUIPMENTS.find(x => x.id === equipmentId);
+  const lv = getTrainingEquipmentLevel(equipmentId);
+
+  return eq.baseMult + (lv - 1) * 0.25;
+}
+
 function getTrainingSlotMeta(slotNo) {
-  const unlockCost = TRAINING.UNLOCK_BASE * Math.pow(slotNo - 1, 2);
-  const expMult = 1 + TRAINING.MULT_PER_PAID_SLOT * (slotNo - 1);
-  return { unlockCost, expMult };
+  const eq = getTrainingEquipmentBySlot(slotNo);
+
+  const unlockCost =
+    TRAINING.UNLOCK_BASE * Math.pow(slotNo - 1, 2);
+
+  const expMult =
+    getTrainingEquipmentExpMult(eq.id);
+
+  return {
+    unlockCost,
+    expMult,
+    equipmentId: eq.id,
+    equipmentName: eq.name,
+    equipmentIcon: eq.icon,
+  };
 }
 function calcTrainingUseCost(slotNo, durationMin) {
   if (slotNo === 1) return 0;
@@ -1414,10 +1505,75 @@ function openDailyBonusModal() {
   });
 }
 
+function shouldShowUpdateNotice() {
+  if (!state.tutorialDone) return false;
+
+  return state.lastSeenUpdateVersion !== UPDATE_NOTICE_VERSION;
+}
+
+function openUpdateNoticeModal(onClose) {
+  const html = `
+    <div class="panelCard">
+      <div style="font-size:20px;font-weight:900;">
+        🐾 Version ${UPDATE_NOTICE_VERSION}
+      </div>
+
+      <div class="dim" style="margin-top:6px;">
+        Cozy Cat Guildをアップデートしました！
+      </div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div><b>今回の主な更新</b></div>
+
+      <div
+        class="dim"
+        style="
+          margin-top:10px;
+          line-height:1.8;
+        "
+      >
+        ・訓練場を設備形式にリニューアル<br>
+        ・鉄アレイ、腹筋ローラー、ベンチプレスを追加<br>
+        ・訓練設備をGoldで強化できるようになりました<br>
+        ・ネコ一覧を3列表示に変更<br>
+        ・クエスト更新機能を追加<br>
+        ・各種UIを見やすく調整
+      </div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div class="dim">
+        これからも小さなネコギルドをよろしくお願いします。
+      </div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="primary" id="updateNoticeClose">
+        ゲームをはじめる
+      </button>
+    </div>
+  `;
+
+  openModal("更新情報", html);
+
+  document
+    .getElementById("updateNoticeClose")
+    ?.addEventListener("click", () => {
+      state.lastSeenUpdateVersion = UPDATE_NOTICE_VERSION;
+
+      save();
+      closeModal();
+
+      onClose?.();
+    });
+}
+
 /* =========================
    State ensure
    ========================= */
 function ensureTrainingState() {
+ensureTrainingFacility();  
   const slotCount = RANK.trainingSlots(state.guildRank);
   if (!Array.isArray(state.trainingSlots)) state.trainingSlots = [];
   if (!Array.isArray(state.trainingJobs)) state.trainingJobs = [];
@@ -1432,6 +1588,23 @@ function ensureTrainingState() {
   // 余分があれば切る（ランクダウンはないが保険）
   state.trainingSlots = state.trainingSlots.slice(0, slotCount);
   state.trainingJobs = state.trainingJobs.slice(0, slotCount);
+}
+function ensureTrainingFacility() {
+  state.trainingFacility ??= {
+    levels: {
+      dumbbell: 1,
+      roller: 1,
+      bench: 1,
+    },
+  };
+
+  state.trainingFacility.levels ??= {};
+
+  for (const eq of TRAINING_EQUIPMENTS) {
+    if (typeof state.trainingFacility.levels[eq.id] !== "number") {
+      state.trainingFacility.levels[eq.id] = 1;
+    }
+  }
 }
 function ensureDailyBonus() {
   if (!state.dailyBonus) {
@@ -1504,6 +1677,16 @@ function ensureQuestState() {
 }
 function ensureQuestOffers() {
   if (!("questOffers" in state)) state.questOffers = null;
+
+  state.questRefresh ??= {
+    date: todayKey(),
+    count: 0,
+  };
+
+  if (state.questRefresh.date !== todayKey()) {
+    state.questRefresh.date = todayKey();
+    state.questRefresh.count = 0;
+  }
 }
 function ensurePending() {
   if (!Array.isArray(state.pendingResults)) state.pendingResults = [];
@@ -1686,7 +1869,7 @@ function addExp(cat, amount) {
    ========================= */
 function newGame() {
   return {
-    version: 0.8,
+    version: 0.9,
     guildRank: 1,
     gold: 3500,
 
@@ -1724,7 +1907,14 @@ function newGame() {
     questJobs: [],
     trainingSlots: [],
     trainingJobs: [],
-
+    trainingFacility: {
+  levels: {
+    dumbbell: 1,
+    roller: 1,
+    bench: 1,
+  },
+},
+     
     alpaca: {
       owned: 1,          // 初期1頭 = 派遣枠1
       boughtAt6: false,  // Rank6解放分を買ったか
@@ -1737,6 +1927,11 @@ function newGame() {
     },
 
     questOffers: null,
+
+questRefresh: {
+  date: todayKey(),
+  count: 0,
+},
 
     dailyBonus: {
       lastClaimDate: null,
@@ -1751,6 +1946,8 @@ function newGame() {
 
     endingSeen: false,
     postGame: false,
+
+    lastSeenUpdateVersion: "",
   };
 }
 
@@ -1851,9 +2048,14 @@ function boot() {
    
   if (typeof state.endingSeen !== "boolean") state.endingSeen = false;
   if (typeof state.postGame !== "boolean") state.postGame = false;
+
+  if (typeof state.lastSeenUpdateVersion !== "string") {
+  state.lastSeenUpdateVersion = "";
+}
    
   ensureQuestState();
   ensureTrainingState();
+  ensureTrainingFacility();
   ensurePending();
   ensureHire();
   ensureTutorial();
@@ -1901,13 +2103,26 @@ function showStartScreen() {
 function openMain() {
   el.startScreen?.classList.add("hidden");
   el.mainScreen?.classList.remove("hidden");
+
   renderAll();
 
-  if (state.tutorialDone && canClaimDailyBonus()) {
+  const showDailyBonus = () => {
+    if (state.tutorialDone && canClaimDailyBonus()) {
+      setTimeout(() => {
+        openDailyBonusModal();
+      }, 250);
+    }
+  };
+
+  if (shouldShowUpdateNotice()) {
     setTimeout(() => {
-      openDailyBonusModal();
-    }, 300);
+      openUpdateNoticeModal(showDailyBonus);
+    }, 250);
+
+    return;
   }
+
+  showDailyBonus();
 }
 
 /* =========================
@@ -2329,7 +2544,7 @@ function startTutorialQuest(partyIds, slotIdx) {
     main: "STR",
     timeType: "S",
     durationMin: 1,
-    baseGold: 5000,
+    baseGold: 2000000000,
     target: 0,
   };
 
@@ -2378,7 +2593,7 @@ function openSettingsModal() {
     <div class="panelCard" style="margin-top:10px;">
       <div><b>その他</b></div>
       <div class="dim" style="margin-top:6px;">
-        Version 0.8
+        Version 0.9
       </div>
 
       <button class="ghost smallBtn" id="btnSettingsReset" style="margin-top:10px;">
@@ -2908,6 +3123,100 @@ function rollQuestOffers() {
   state.questOffers = offers;
   save();
 }
+function getQuestRefreshCost() {
+  ensureQuestOffers();
+
+  const base =
+    state.guildRank * QUEST_REFRESH.BASE_PER_RANK;
+
+  return Math.ceil(
+    base * Math.pow(QUEST_REFRESH.MULT, state.questRefresh.count)
+  );
+}
+
+function openQuestRefreshConfirmModal() {
+  ensureQuestOffers();
+
+  const cost = getQuestRefreshCost();
+  const nextCost = Math.ceil(cost * QUEST_REFRESH.MULT);
+
+  const html = `
+    <div class="panelCard">
+      <div><b>🔄 クエストを更新しますか？</b></div>
+
+      <div class="dim" style="margin-top:8px;line-height:1.7;">
+        現在表示されている3件のクエストを更新します。<br>
+        この操作は取り消せません。
+      </div>
+    </div>
+
+    <div class="panelCard" style="margin-top:10px;">
+      <div class="row">
+        <span class="dim">今回の費用</span>
+        <b>${cost.toLocaleString()}G</b>
+      </div>
+
+      <div class="row" style="margin-top:8px;">
+        <span class="dim">更新後の次回費用</span>
+        <span>${nextCost.toLocaleString()}G</span>
+      </div>
+
+      <div class="row" style="margin-top:8px;">
+        <span class="dim">所持Gold</span>
+        <span>${state.gold.toLocaleString()}G</span>
+      </div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="ghost" id="questRefreshCancel">
+        キャンセル
+      </button>
+
+      <button
+        class="primary"
+        id="questRefreshConfirm"
+        ${state.gold >= cost ? "" : "disabled"}
+        style="${state.gold >= cost ? "" : "opacity:.6;"}"
+      >
+        ${cost.toLocaleString()}Gで更新
+      </button>
+    </div>
+  `;
+
+  openModal("クエスト更新確認", html);
+
+  document
+    .getElementById("questRefreshCancel")
+    ?.addEventListener("click", closeModal);
+
+  document
+    .getElementById("questRefreshConfirm")
+    ?.addEventListener("click", () => {
+      closeModal();
+      refreshQuestOffersPaid();
+    });
+}
+
+function refreshQuestOffersPaid() {
+  ensureQuestOffers();
+
+  const cost = getQuestRefreshCost();
+
+  if (state.gold < cost) {
+    pushLog(`Gold不足：クエスト更新に ${cost.toLocaleString()}G 必要`);
+    return;
+  }
+
+  state.gold -= cost;
+  state.questRefresh.count++;
+
+  rollQuestOffers();
+
+  pushLog(`🔄 クエストを更新したにゃ（${cost.toLocaleString()}G）`);
+
+  renderAll();
+  save();
+}
 
 function openQuestSetupModal(type) {
   ensureQuestOffers();
@@ -3262,6 +3571,52 @@ function calcQuestChance(def, partyIds, helper = null) {
   };
 }
 
+function getTrainingUpgradeCost(equipmentId) {
+  ensureTrainingFacility();
+
+  const eq = TRAINING_EQUIPMENTS.find(x => x.id === equipmentId);
+  if (!eq) return 0;
+
+  const lv = getTrainingEquipmentLevel(equipmentId);
+
+  if (lv >= 10) return null;
+
+  const base =
+    TRAINING_UPGRADE_BASE_COSTS[lv] || 999999999;
+
+  return Math.floor(base * eq.costMult);
+}
+
+function upgradeTrainingEquipment(equipmentId) {
+  ensureTrainingFacility();
+
+  const lv = getTrainingEquipmentLevel(equipmentId);
+
+  if (lv >= 10) {
+    pushLog("この設備はこれ以上強化できないにゃ");
+    return;
+  }
+
+  const cost = getTrainingUpgradeCost(equipmentId);
+  const eq = TRAINING_EQUIPMENTS.find(x => x.id === equipmentId);
+
+  if (state.gold < cost) {
+    pushLog(`Gold不足：${eq.name}の強化に ${cost.toLocaleString()}G 必要`);
+    return;
+  }
+
+  state.gold -= cost;
+  state.trainingFacility.levels[equipmentId]++;
+
+  const nextLv = state.trainingFacility.levels[equipmentId];
+  const mult = getTrainingEquipmentExpMult(equipmentId);
+
+  pushLog(`${eq.icon} ${eq.name} が Lv${nextLv} に強化！ EXP倍率 x${mult.toFixed(2)}`);
+
+  renderAll();
+  save();
+}
+
 function startQuest(def, partyIds, slotIdx, helper = null) {
 
   ensureHelperDailyUse();
@@ -3429,12 +3784,16 @@ function openTrainingStartModal(slotNo) {
     return;
   }
 
-  const { expMult } = getTrainingSlotMeta(slotNo);
+  const {
+  expMult,
+  equipmentName,
+  equipmentIcon
+} = getTrainingSlotMeta(slotNo);
 
   const html = `
     <div class="panelCard">
-      <div><b>訓練枠 ${slotNo}</b></div>
-      <div class="dim">EXP: 1/分 × 倍率 x${expMult.toFixed(1)}（受取式 / 両立不可）</div>
+      <div><b>${equipmentIcon} ${equipmentName}</b></div>
+<div class="dim">EXP: 1/分 × 倍率 x${expMult.toFixed(2)}（受取式 / 両立不可）</div>
     </div>
 
     <div class="panelCard" style="margin-top:10px;">
@@ -3447,25 +3806,24 @@ function openTrainingStartModal(slotNo) {
       <div id="tDur" class="modalList"></div>
     </div>
 
-    <div class="checkRow ${((state.items?.matatabi || 0) <= 0) ? "disabled" : ""}">
+    <label
+  class="matatabiSelect ${
+    (state.items?.matatabi || 0) <= 0 ? "disabled" : ""
+  }"
+>
+  <input
+    type="checkbox"
+    id="useMatatabi"
+    ${((state.items?.matatabi || 0) <= 0) ? "disabled" : ""}
+  >
 
-  <label>
-
-    <input
-      type="checkbox"
-      id="useMatatabi"
-      ${((state.items?.matatabi || 0) <= 0) ? "disabled" : ""}
-    >
-
-    🌿 マタタビを使う
-
+  <span class="matatabiSelectText">
+    <span><b>🌿 マタタビを使う</b></span>
     <span class="dim">
-      (所持: ${state.items?.matatabi || 0})
+      訓練EXP 2倍 ／ 所持 ${state.items?.matatabi || 0}
     </span>
-
-  </label>
-
-</div>
+  </span>
+</label>
 
     <div class="modalFooter">
       <button class="ghost" id="tCancel">戻る</button>
@@ -4278,6 +4636,7 @@ if (bg) {
    
   ensureQuestState();
   ensureTrainingState();
+  ensureTrainingFacility();
   ensurePending();
   ensureHire();
   ensureTutorial();
@@ -4396,7 +4755,10 @@ function renderQuestTab() {
   const ds = getDispatchSlots();
   const used = (state.questJobs || []).filter(Boolean).length;
   const maxLv = RANK.maxQuestLevel(state.guildRank);
-  const alpacaOffer = getAvailableAlpacaPurchase();
+const alpacaOffer = getAvailableAlpacaPurchase();
+
+const questRefreshCost = getQuestRefreshCost();
+const nextQuestRefreshCost = Math.ceil(questRefreshCost * QUEST_REFRESH.MULT);
 
   const normalHelpers =
   state.helpers.filter(h => !h.official);
@@ -4570,8 +4932,7 @@ ${
     `
     : ""
 }
-
-<div style="margin-top:10px;">
+      <div style="margin-top:10px;">
 
   <button
     class="ghost smallBtn"
@@ -4633,6 +4994,8 @@ ${
 
 </div>
 
+</div> <!-- すけっと panelCard を閉じる -->
+
     ${
       alpacaOffer ? `
         <div class="panelCard">
@@ -4650,7 +5013,29 @@ ${
         </div>
       ` : ""
     }
+    <div class="panelCard">
+  <div class="row">
+    <div>
+      <div><b>🔄 クエスト更新</b></div>
+      <div class="dim">
+        費用: ${questRefreshCost.toLocaleString()}G
+        / 本日 ${state.questRefresh.count}回更新
+      </div>
+      <div class="dim">
+        次回: ${nextQuestRefreshCost.toLocaleString()}G
+      </div>
+    </div>
 
+    <button
+  class="primary smallBtn"
+  id="btnRefreshQuests"
+  ${state.gold >= questRefreshCost ? "" : "disabled"}
+  style="${state.gold >= questRefreshCost ? "" : "opacity:.6;"}"
+>
+  更新
+</button>
+  </div>
+</div>
     ${renderQuestRunning()}
     ${types.map(t => {
       const lv = state.questOffers[t.id];
@@ -4744,7 +5129,7 @@ ${
   document
     .getElementById("helperImportCancel")
     ?.addEventListener("click", closeModal);
-
+    
   document
     .getElementById("pasteHelperCodeBtn")
     ?.addEventListener("click", async () => {
@@ -4778,7 +5163,8 @@ ${
 });
   document.getElementById("btnHelperGuide")
   ?.addEventListener("click", openHelperGuideModal);
-
+  document.getElementById("btnRefreshQuests")
+  ?.addEventListener("click", openQuestRefreshConfirmModal);
   el.tabQuest.querySelectorAll("[data-qtype]").forEach(btn => {
     btn.addEventListener("click", () => {
       const t = types.find(x => x.id === btn.dataset.qtype);
@@ -4979,59 +5365,39 @@ function renderCatsTab() {
   const hasCandidates = (state.hire?.candidates?.length || 0) > 0;
   const canFire = RANK.canFire(state.guildRank);
 
-  const catsHtml = (state.cats || []).map(c => {
-  const busy = isCatBusy(c.id);
-  const statusText = busy === "quest" ? "クエスト" : busy === "training" ? "訓練" : "待機";
-  const dotClass = busy === "quest" ? "quest" : busy === "training" ? "training" : "";
+  const catsHtml = `
+  <div class="catGrid">
+    ${(state.cats || []).map(c => {
+      const training = isCatBusy(c.id) === "training";
 
-  const fireLockedReason =
-  !RANK.canFire(state.guildRank) ? "Rank5で解放" :
-  c.level <= 1 ? "Lv2から解雇可" :
-  (state.cats || []).length <= 1 ? "最後の1匹は不可" :
-  busy ? "待機中のみ解雇可" :
-  "";
-  
-  const training = busy === "training";
-  
-     
-  return `
-    <div class="panelCard catCompactCard">
-      <div class="catCompactRow">
-        <div class="catMiniSpriteWrap">
+      return `
+        <button
+          class="catGridItem"
+          data-cat-detail="${c.id}"
+        >
+          <div class="catGridLv">Lv${c.level}</div>
+
           <img
-            src="${getDetailCatImage(c)}"
-            class="catSprite colorized ${training ? "catDumbbell" : ""} ${
-              (state.trainingJobs || []).some(j => j?.catId === c.id && j.matatabi)
-                ? "matatabiBoost"
-                : ""
-            }"
-            ${training ? `data-jim="${c.id}"` : ""}
-            style="--hue:${c.hue}deg;width:32px;height:32px;display:block;image-rendering:pixelated;"
-            alt=""
-          />
-        </div>
+  src="${getDetailCatImage(c)}"
+  class="catGridImg colorized ${
+    (state.trainingJobs || []).some(j => j?.catId === c.id && j.matatabi)
+      ? "matatabiBoost"
+      : ""
+  }"
+  ${training ? `data-jim="${c.id}"` : ""}
+  style="--hue:${c.hue}deg;"
+  alt="${escapeAttr(c.name)}"
+/>
 
-        <div class="catCompactName">
-          <b>
-            ${
-              state.favoriteCatId === c.id
-                ? "★ "
-                : ""
-            }${escapeHtml(c.name)}
-          </b>
-          <span class="dim">Lv${c.level} / ${escapeHtml(c.personality)}</span>
-        </div>
-
-        <div class="catCompactStatus">
-          <span class="statusDot ${dotClass}"></span>${statusText}
-        </div>
-
-        <button class="ghost smallBtn" data-cat-detail="${c.id}">詳細</button>
-      </div>
-    </div>
-  `;
-}).join("");
-
+          <div class="catGridName">
+            ${state.favoriteCatId === c.id ? "★ " : ""}${escapeHtml(c.name)}
+          </div>
+        </button>
+      `;
+    }).join("")}
+  </div>
+`;
+  
   el.tabCats.innerHTML = `
     <div class="panelCard">
       <div class="row">
@@ -5044,7 +5410,11 @@ function renderCatsTab() {
     </div>
 
     
-    ${catsHtml || `<div class="panelCard"><div class="dim">ネコがいません。チュートリアルから開始してください。</div></div>`}
+    ${
+  (state.cats || []).length > 0
+    ? catsHtml
+    : `<div class="panelCard"><div class="dim">ネコがいません。チュートリアルから開始してください。</div></div>`
+}
 
     <div class="panelCard">
       <div><b>雇用</b> <span class="dim">雇用枠 ${state.cats.length}/${hs}</span></div>
@@ -5773,13 +6143,29 @@ function openCatDetailModal(catId) {
   
   const html = `
   <div class="panelCard" style="display:flex;gap:12px;align-items:center;">
-    <div class="catSpriteWrap" style="position:relative;width:64px;height:64px;flex:0 0 64px;">
+    <div
+  class="catSpriteWrap"
+  style="
+    position:relative;
+    width:96px;
+    height:96px;
+    flex:0 0 96px;
+  "
+>
       <img
-        src="${getDetailCatImage(c)}"
-        class="catSprite colorized"
-        style="--hue:${c.hue}deg;width:64px;height:64px;display:block;image-rendering:pixelated;"
-        alt=""
-      />
+  src="${getDetailCatImage(c)}"
+  class="catSprite colorized"
+  ${busy === "training" ? `data-jim="${c.id}"` : ""}
+  style="
+    --hue:${c.hue}deg;
+    width:96px;
+    height:96px;
+    object-fit:contain;
+    display:block;
+    image-rendering:pixelated;
+  "
+  alt="${escapeAttr(c.name)}"
+/>
 
       <button
         class="ghost smallBtn"
@@ -5896,6 +6282,7 @@ function openCatZoomModal(cat) {
 
 function renderTrainingTab() {
   ensureTrainingState();
+  ensureTrainingFacility();
   ensureAdState();
 
   const adLeft =
@@ -5917,103 +6304,205 @@ function renderTrainingTab() {
     </div>
 
     ${
-  adLeft > 0
-    ? `
-      <div class="panelCard">
-        <div><b>🎁 ギルド協会の支援物資</b></div>
+      adLeft > 0
+        ? `
+          <div class="panelCard">
+            <div><b>🎁 ギルド協会の支援物資</b></div>
 
-        <div class="dim" style="margin-top:6px;">
-          広告を見るとマタタビを1個もらえます
-        </div>
+            <div class="dim" style="margin-top:6px;">
+              広告を見るとマタタビを1個もらえます
+            </div>
 
-        <div class="dim">
-          本日あと ${adLeft}/${AD_REWARD.DAILY_LIMIT} 回
-        </div>
+            <div class="dim">
+              本日あと ${adLeft}/${AD_REWARD.DAILY_LIMIT} 回
+            </div>
 
-        <button
-          id="watchMatatabiAd"
-          class="primary adBtn"
-          style="margin-top:10px;width:100%;"
-        >
-          広告を見る
-        </button>
-      </div>
-    `
-    : ""
-}
+            <button
+              id="watchMatatabiAd"
+              class="primary adBtn"
+              style="margin-top:10px;width:100%;"
+            >
+              広告を見る
+            </button>
+          </div>
+        `
+        : ""
+    }
   `;
 
   const slotCount = state.trainingJobs.length;
   const usedTraining = state.trainingJobs.filter(Boolean).length;
 
-  const cards = [];
-  for (let slotNo = 1; slotNo <= slotCount; slotNo++) {
-    const slot = state.trainingSlots[slotNo - 1];
-    const job = state.trainingJobs[slotNo - 1];
-    const { unlockCost, expMult } = getTrainingSlotMeta(slotNo);
+  const equipmentHtml = TRAINING_EQUIPMENTS.map(eq => {
+    const lv = getTrainingEquipmentLevel(eq.id);
+    const mult = getTrainingEquipmentExpMult(eq.id);
+    const upgradeCost = getTrainingUpgradeCost(eq.id);
 
-    if (job) {
-      const remain = Math.max(0, job.endAt - Date.now());
-      cards.push(`
-        <div class="panelCard">
-          <div class="row">
-            <div>
-              <div><b>訓練枠 ${slotNo}</b> <span class="dim">（訓練中）</span></div>
-              <div class="dim">EXP: ${job.expGain} / 使用料: ${job.useCost.toLocaleString()}G / 倍率: x${expMult.toFixed(1)}</div>
-            </div>
-            <div class="mono">${formatRemain(remain)}</div>
-          </div>
-        </div>
-      `);
-      continue;
+    const slots = [];
+
+    for (let slotNo = eq.slotStart; slotNo <= eq.slotEnd; slotNo++) {
+      if (slotNo > slotCount) continue;
+
+      const slot = state.trainingSlots[slotNo - 1];
+      const job = state.trainingJobs[slotNo - 1];
+
+      if (!slot?.unlocked) {
+        const { unlockCost } = getTrainingSlotMeta(slotNo);
+
+        slots.push(`
+  <button
+    class="ghost smallBtn"
+    data-unlock-slot="${slotNo}"
+    style="flex:1;min-width:90px;opacity:.75;"
+  >
+    🔒 開放<br>
+    <span class="dim">${unlockCost.toLocaleString()}G</span>
+  </button>
+`);
+
+        continue;
+      }
+
+      if (job) {
+        const remain = Math.max(0, job.endAt - Date.now());
+        const cat = catById(job.catId);
+
+        slots.push(`
+  <button
+    class="ghost smallBtn"
+    disabled
+    style="
+      flex:1;
+      min-width:90px;
+      opacity:.9;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:4px;
+      line-height:1.3;
+    "
+  >
+    <img
+  src="${cat ? getTrainingImage(cat, 1) : ""}"
+  class="colorized"
+  data-jim="${cat?.id || ""}"
+  style="
+    --hue:${cat?.hue || 0}deg;
+    width:72px;
+    height:72px;
+    object-fit:contain;
+    display:block;
+    image-rendering:pixelated;
+  "
+  alt="${escapeAttr(cat?.name || "訓練中")}"
+>
+    <span>${escapeHtml(cat?.name || "訓練中")}</span>
+    <span class="dim">${formatRemain(remain)}</span>
+  </button>
+`);
+
+        continue;
+      }
+
+      slots.push(`
+  <button
+    class="primary smallBtn"
+    data-start-slot="${slotNo}"
+    style="flex:1;min-width:90px;"
+  >
+    訓練する<br>
+    <span class="dim">x${mult.toFixed(2)}</span>
+  </button>
+`);
     }
 
-    if (!slot.unlocked) {
-      cards.push(`
+    const lockedByRank =
+      eq.slotStart > slotCount;
+
+    if (lockedByRank) {
+      return `
         <div class="panelCard">
-          <div class="row">
-            <div>
-              <div><b>訓練枠 ${slotNo}</b> <span class="dim">（未開放）</span></div>
-              <div class="dim">開放費: ${unlockCost.toLocaleString()}G / 倍率: x${expMult.toFixed(1)}</div>
-            </div>
-            <button class="primary smallBtn" data-unlock-slot="${slotNo}">開放</button>
+          <div>
+            <b>${eq.icon} ${escapeHtml(eq.name)}</b>
+            <span class="dim">未解放</span>
+          </div>
+          <div class="dim" style="margin-top:6px;">
+            訓練枠 ${eq.slotStart} 解放時に使えるようになります
           </div>
         </div>
-      `);
-      continue;
+      `;
     }
 
-    cards.push(`
+    return `
       <div class="panelCard">
         <div class="row">
           <div>
-            <div><b>訓練枠 ${slotNo}</b> <span class="dim">（使用可）</span></div>
-            <div class="dim">倍率: x${expMult.toFixed(1)} / ${slotNo === 1 ? "使用料: 0G" : "使用料: 時間に応じて発生"}</div>
+            <div><b>${eq.icon} ${escapeHtml(eq.name)} Lv${lv}</b></div>
+            <div class="dim">EXP倍率 x${mult.toFixed(2)}</div>
+            <div class="dim">最大3枠</div>
           </div>
-          <button class="primary smallBtn" data-start-slot="${slotNo}">訓練する</button>
+
+          ${
+            lv >= 10
+              ? `<div class="mono">MAX</div>`
+              : `
+                <button
+                  class="ghost smallBtn"
+                  data-upgrade-equipment="${eq.id}"
+                  ${state.gold >= upgradeCost ? "" : "disabled"}
+                  style="${state.gold >= upgradeCost ? "" : "opacity:.6;"}"
+                >
+                  強化 ${upgradeCost.toLocaleString()}G
+                </button>
+              `
+          }
         </div>
+
+        <div
+  style="
+    margin-top:10px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  "
+>
+  ${slots.join("") || `<div class="dim">まだ枠がありません</div>`}
+</div>
       </div>
-    `);
-  }
+    `;
+  }).join("");
 
   el.tabTraining.innerHTML = `
-  ${itemAndAdHtml}
+    ${itemAndAdHtml}
 
-  <div class="panelCard">
-      <div><b>訓練</b> <span class="dim">1EXP/分 / 受取式 / クエストと両立不可</span></div>
-      <div class="dim">空き: ${(slotCount - usedTraining)}/${slotCount}（枠2以降は開放費＋使用料あり）</div>
+    <div class="panelCard">
+      <div><b>訓練場</b> <span class="dim">設備ごとにEXP倍率が変わります</span></div>
+      <div class="dim">空き: ${(slotCount - usedTraining)}/${slotCount} / 設備Lvは最大10</div>
     </div>
-    ${cards.join("")}
+
+    ${equipmentHtml}
   `;
 
   el.tabTraining.querySelectorAll("[data-unlock-slot]").forEach(btn => {
-    btn.addEventListener("click", () => unlockTrainingSlot(Number(btn.dataset.unlockSlot)));
+    btn.addEventListener("click", () =>
+      unlockTrainingSlot(Number(btn.dataset.unlockSlot))
+    );
   });
+
   el.tabTraining.querySelectorAll("[data-start-slot]").forEach(btn => {
-    btn.addEventListener("click", () => openTrainingStartModal(Number(btn.dataset.startSlot)));
+    btn.addEventListener("click", () =>
+      openTrainingStartModal(Number(btn.dataset.startSlot))
+    );
   });
+
+  el.tabTraining.querySelectorAll("[data-upgrade-equipment]").forEach(btn => {
+    btn.addEventListener("click", () =>
+      upgradeTrainingEquipment(btn.dataset.upgradeEquipment)
+    );
+  });
+
   document.getElementById("watchMatatabiAd")
-  ?.addEventListener("click", watchMatatabiAd);
+    ?.addEventListener("click", watchMatatabiAd);
 }
 
 function renderInvestTab() {
@@ -6091,19 +6580,21 @@ function tick() {
 /* Training dumbbell animation */
 function toggleDumbbells() {
   jimFlip = !jimFlip;
-  const jobs = state.trainingJobs || [];
-  for (const job of jobs) {
-    if (!job) continue;
-    const img = document.querySelector(`img[data-jim="${job.catId}"]`);
-    if (!img) continue;
-    const cat =
-  state.cats.find(c => c.id === job.catId);
 
-img.src = getTrainingImage(
-  cat,
-  jimFlip ? 2 : 1
-);
-  }
+  document
+    .querySelectorAll("img[data-jim]")
+    .forEach(img => {
+      const catId = img.dataset.jim;
+      if (!catId) return;
+
+      const cat = catById(catId);
+      if (!cat) return;
+
+      img.src = getTrainingImage(
+        cat,
+        jimFlip ? 2 : 1
+      );
+    });
 }
 
 /* =========================
